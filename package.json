@@ -1,0 +1,14 @@
+{
+  "engines": {
+    "node": "20.11.1"
+  },
+  "dependencies": {
+    "nvm": "^0.0.4"
+  },
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "npm --prefix ui run dev",
+    "build": "npm --prefix ui run build",
+    "preview": "npm --prefix ui run preview"
+  }
+}
