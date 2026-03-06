@@ -6,7 +6,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 
 if (!isSupabaseConfigured) {
-  console.warn('Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en el archivo .env')
+  console.warn('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in your environment variables.')
 }
 
 export const supabase = isSupabaseConfigured

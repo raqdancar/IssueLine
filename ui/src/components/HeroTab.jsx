@@ -1,0 +1,102 @@
+import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
+
+const alignmentColors = {
+  good: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+  neutral: 'text-amber-600 bg-amber-50 border-amber-100',
+  bad: 'text-rose-600 bg-rose-50 border-rose-100',
+}
+
+const fallbackImage =
+  'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=400&q=60'
+
+const statLabels = ['intelligence', 'strength', 'speed', 'durability', 'power', 'combat']
+
+function HeroTab({ hero }) {
+  const alignment = hero.alignment?.toLowerCase()
+  const badgeClasses = alignmentColors[alignment] ?? 'text-slate-600 bg-slate-100 border-slate-200'
+  const heroImages = hero.heroImages ?? []
+  const primaryImage = heroImages[0]
+  const imageSrc = primaryImage?.public_url ?? hero.images?.md ?? hero.images?.sm ?? fallbackImage
+  const imageAlt = primaryImage?.alt ?? hero.name
+  const displayName = hero.full_name || hero.biography?.['full-name'] || hero.name
+  const stats = hero.powerstats ?? {}
+
+  const detailHref = hero.slug ? `/heroes/${hero.slug}` : null
+
+  const portrait = (
+    <img
+      src={imageSrc}
+      alt={imageAlt}
+      className="h-28 w-28 rounded-xl object-cover shadow transition duration-200 hover:scale-[1.02]"
+      loading="lazy"
+    />
+  )
+
+  return (
+    <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-start gap-4">
+        {detailHref ? (
+          <Link to={detailHref} aria-label={`View details for ${hero.name}`} className="inline-block focus:outline-none">
+            {portrait}
+          </Link>
+        ) : (
+          portrait
+        )}
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold text-slate-900">{hero.name}</h3>
+            {alignment ? (
+              <span
+                className={cn(
+                  'rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide',
+                  badgeClasses
+                )}
+              >
+                {alignment}
+              </span>
+            ) : null}
+          </div>
+          {displayName && displayName !== hero.name ? (
+            <p className="text-sm text-slate-500">aka {displayName}</p>
+          ) : null}
+          <p className="mt-2 text-xs uppercase tracking-wide text-slate-400">
+            {hero.publisher ?? 'Independent'}
+          </p>
+        </div>
+      </div>
+
+      {heroImages.length > 1 ? (
+        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+          {heroImages.slice(1, 4).map((image) => (
+            <span
+              key={image.id}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-2 py-0.5"
+            >
+              <span className="font-semibold text-slate-700">{image.variant}</span>
+              <span className="text-slate-400">{Math.round((image.size_bytes ?? 0) / 1024)} KB</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <dl className="grid grid-cols-2 gap-3 text-sm text-slate-600 sm:grid-cols-3">
+        {statLabels.map((label) => (
+          <div
+            key={label}
+            className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 shadow-inner"
+          >
+            <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
+            <dd className="text-lg font-semibold text-slate-800">
+              {Number.isFinite(Number(stats[label]))
+                ? Number(stats[label])
+                : (stats[label] ?? '—')}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </article>
+  )
+}
+
+export default HeroTab

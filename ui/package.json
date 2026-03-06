@@ -7,16 +7,19 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed:superheroes": "node ./scripts/superhero-ingest.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
     "lucide-react": "^0.577.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-router-dom": "^7.1.5",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

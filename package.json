@@ -1,14 +1,14 @@
 {
   "engines": {
-    "node": "20.11.1"
-  },
-  "dependencies": {
-    "nvm": "^0.0.4"
+    "node": "20.17.0"
   },
   "scripts": {
     "start": "npm run dev",
     "dev": "npm --prefix ui run dev",
     "build": "npm --prefix ui run build",
-    "preview": "npm --prefix ui run preview"
+    "preview": "npm --prefix ui run preview",
+    "seed:superheroes": "npm --prefix ui run seed:superheroes --",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:start": "npm --prefix backend run start"
   }
 }
