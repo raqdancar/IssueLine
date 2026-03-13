@@ -34,7 +34,7 @@ function HeroTab({ hero }) {
   )
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg">
       <div className="flex items-start gap-4">
         {detailHref ? (
           <Link to={detailHref} aria-label={`View details for ${hero.name}`} className="inline-block focus:outline-none">
@@ -45,11 +45,11 @@ function HeroTab({ hero }) {
         )}
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold text-slate-900">{hero.name}</h3>
+            <h3 className="text-balance title-sm">{hero.name}</h3>
             {alignment ? (
               <span
                 className={cn(
-                  'rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide',
+                  'eyebrow rounded-full border px-2.5 py-0.5 tracking-normal',
                   badgeClasses
                 )}
               >
@@ -58,11 +58,9 @@ function HeroTab({ hero }) {
             ) : null}
           </div>
           {displayName && displayName !== hero.name ? (
-            <p className="text-sm text-slate-500">aka {displayName}</p>
+            <p className="body-xs text-slate-500">aka {displayName}</p>
           ) : null}
-          <p className="mt-2 text-xs uppercase tracking-wide text-slate-400">
-            {hero.publisher ?? 'Independent'}
-          </p>
+          <p className="eyebrow mt-2">{hero.publisher ?? 'Independent'}</p>
         </div>
       </div>
 
@@ -73,8 +71,8 @@ function HeroTab({ hero }) {
               key={image.id}
               className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-2 py-0.5"
             >
-              <span className="font-semibold text-slate-700">{image.variant}</span>
-              <span className="text-slate-400">{Math.round((image.size_bytes ?? 0) / 1024)} KB</span>
+              <span className="title-xs text-slate-700">{image.variant}</span>
+              <span className="body-xs text-slate-400">{Math.round((image.size_bytes ?? 0) / 1024)} KB</span>
             </span>
           ))}
         </div>
@@ -86,11 +84,11 @@ function HeroTab({ hero }) {
             key={label}
             className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 shadow-inner"
           >
-            <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
-            <dd className="text-lg font-semibold text-slate-800">
+            <dt className="eyebrow text-slate-400">{label}</dt>
+            <dd className="title-xs text-slate-800">
               {Number.isFinite(Number(stats[label]))
                 ? Number(stats[label])
-                : (stats[label] ?? 'â€”')}
+                : (stats[label] ?? '—')}
             </dd>
           </div>
         ))}

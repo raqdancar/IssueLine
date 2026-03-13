@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -121,4 +120,30 @@
   body {
     @apply bg-background text-foreground;
     }
+}
+
+@layer utilities {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-slate-400;
+  }
+
+  .title-xs {
+    @apply text-sm font-semibold text-slate-700 leading-snug;
+  }
+
+  .title-sm {
+    @apply text-base font-semibold text-slate-900 leading-tight;
+  }
+
+  .title-md {
+    @apply text-lg font-semibold text-slate-900 leading-tight;
+  }
+
+  .body-sm {
+    @apply text-sm text-slate-600 leading-relaxed;
+  }
+
+  .body-xs {
+    @apply text-xs text-slate-500 leading-snug;
+  }
 }

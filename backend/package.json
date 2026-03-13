@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "sync:gcd": "node ./scripts/gcd-series-sync.mjs",
+    "link:issue-covers": "node ./scripts/link-issue-covers.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",

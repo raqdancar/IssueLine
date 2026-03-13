@@ -1,0 +1,190 @@
+import { setTimeout as delay } from 'node:timers/promises'
+import { environment } from '../src/config/environment.js'
+import { getHeroBySlug } from '../src/services/heroTimelineService.js'
+import { syncSeriesIssuesForHero } from '../src/services/gcdIssueSyncService.js'
+import { gcdGet } from '../src/services/gcdClient.js'
+
+const printUsage = () => {
+  console.log(
+    'Usage: node ./scripts/gcd-series-sync.mjs <hero-slug> <series-id> [--batch=12] [--delay=65000] [--offset=0] [--issue-start=131] [--issue-end=168]'
+  )
+}
+
+const parseArgs = () => {
+  const [, , slug = 'doctor-strange', seriesId = '824', ...rest] = process.argv
+  const options = {
+    batch: 12,
+    delay: 65000,
+    offset: 0,
+    issueStart: null,
+    issueEnd: null,
+  }
+
+  for (const token of rest) {
+    const [key, value] = token.replace(/^--/, '').split('=')
+    if (key === 'batch' && value) {
+      options.batch = Number(value)
+    } else if (key === 'delay' && value) {
+      options.delay = Number(value)
+    } else if (key === 'start' && value) {
+      options.offset = Number(value)
+    } else if (key === 'offset' && value) {
+      options.offset = Number(value)
+    } else if ((key === 'issue' || key === 'issue-start') && value) {
+      options.issueStart = value
+    } else if ((key === 'issue-end' || key === 'end') && value) {
+      options.issueEnd = value
+    }
+  }
+
+  return { slug, seriesId, options }
+}
+
+const findOffsetForIssue = async (seriesId, descriptor) => {
+  const series = await gcdGet(`series/${seriesId}/`)
+  const descriptors = series?.issue_descriptors ?? []
+  const normalized = descriptor.toString().trim().toLowerCase()
+  const index = descriptors.findIndex(
+    (entry) => entry.replace(/\s*\[.*?\]\s*/g, '').trim().toLowerCase() === normalized
+  )
+  if (index === -1) {
+    throw new Error(`Issue descriptor "${descriptor}" was not found in series ${seriesId}.`)
+  }
+  return index
+}
+
+const normalizeDescriptorNumber = (descriptor) => {
+  if (!descriptor) return null
+  const normalized = descriptor.replace(/\s*\[.*?\]\s*/g, '').trim()
+  const numeric = Number(normalized)
+  return Number.isNaN(numeric) ? null : numeric
+}
+
+const buildIssueQueue = async (seriesId, startDescriptor, endDescriptor) => {
+  const series = await gcdGet(`series/${seriesId}/`)
+  const descriptors = series?.issue_descriptors ?? []
+  const issues = series?.active_issues ?? []
+
+  if (!descriptors.length || !issues.length) {
+    return []
+  }
+
+  const normalizedStart = startDescriptor ? Number(startDescriptor) : null
+  const normalizedEnd = endDescriptor ? Number(endDescriptor) : null
+
+  return descriptors
+    .map((descriptor, index) => ({
+      descriptor,
+      number: normalizeDescriptorNumber(descriptor),
+      url: issues[index],
+    }))
+    .filter((entry) => {
+      if (!entry.url || entry.number === null) return false
+      if (/\[british]/i.test(entry.descriptor)) return false
+      if (normalizedStart !== null && entry.number < normalizedStart) return false
+      if (normalizedEnd !== null && entry.number > normalizedEnd) return false
+      return true
+    })
+}
+
+const main = async () => {
+  if (!environment.gcd.allowManualSync) {
+    throw new Error('GCD_ALLOW_MANUAL_SYNC must be true to run the sync script.')
+  }
+
+  const { slug, seriesId, options } = parseArgs()
+
+  if (!slug || !seriesId) {
+    printUsage()
+    process.exit(1)
+  }
+
+  const hero = await getHeroBySlug(slug)
+  if (!hero) {
+    throw new Error(`Hero with slug "${slug}" was not found.`)
+  }
+
+  const descriptorRangeSpecified = options.issueStart || options.issueEnd
+
+  if (descriptorRangeSpecified) {
+    const queue = await buildIssueQueue(seriesId, options.issueStart, options.issueEnd)
+    if (!queue.length) {
+      throw new Error('No issues found for the requested descriptor range.')
+    }
+
+    console.log(
+      `Syncing descriptors ${options.issueStart ?? queue[0].number} to ${options.issueEnd ?? queue.at(-1).number} ` +
+        `for ${hero.name} in batches of ${options.batch}.`
+    )
+
+    let processed = 0
+    let batchNumber = 0
+
+    while (processed < queue.length) {
+      const chunk = queue.slice(processed, processed + options.batch)
+      const chunkUrls = chunk.map((entry) => entry.url)
+      const chunkLabels = `${chunk[0].descriptor}–${chunk.at(-1).descriptor}`
+      const result = await syncSeriesIssuesForHero({
+        hero,
+        seriesId,
+        issueUrlsOverride: chunkUrls,
+      })
+
+      console.log(
+        `Batch ${++batchNumber} (${chunkLabels}): fetched ${result.fetchedIssues}, ` +
+          `upserted ${result.upsertedIssues}, timeline entries ${result.timelineInserted}.`
+      )
+
+      processed += chunk.length
+      if (processed >= queue.length) {
+        console.log('Requested descriptor range completed.')
+        break
+      }
+      console.log(`Waiting ${options.delay} ms before next batch...`)
+      await delay(options.delay)
+    }
+    return
+  }
+
+  let resolvedOffset = options.offset
+  if (options.issueStart) {
+    resolvedOffset = await findOffsetForIssue(seriesId, options.issueStart)
+    console.log(`Resolved issue descriptor "${options.issueStart}" to offset ${resolvedOffset}.`)
+  }
+
+  console.log(
+    `Syncing GCD series ${seriesId} for ${hero.name} in batches of ${options.batch} issues starting at index ${resolvedOffset}.`
+  )
+  console.log(`Respecting ~${environment.gcd.rateLimitSoftPerMinute}/min by waiting ${options.delay} ms between requests.`)
+
+  let nextOffset = resolvedOffset
+  let batches = 0
+
+  while (nextOffset !== null) {
+    const result = await syncSeriesIssuesForHero({
+      hero,
+      seriesId,
+      limit: options.batch,
+      offset: nextOffset,
+    })
+
+    console.log(
+      `Batch ${++batches}: fetched ${result.fetchedIssues}, upserted ${result.upsertedIssues},` +
+        ` timeline entries ${result.timelineInserted}.`
+    )
+
+    if (result.nextOffset === null) {
+      console.log('Series exhausted or target reached. Sync complete.')
+      break
+    }
+
+    nextOffset = result.nextOffset
+    console.log(`Waiting ${options.delay} ms before requesting next batch starting at index ${nextOffset}...`)
+    await delay(options.delay)
+  }
+}
+
+main().catch((error) => {
+  console.error('GCD series sync failed:', error)
+  process.exit(1)
+})

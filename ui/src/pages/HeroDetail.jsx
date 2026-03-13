@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'
+import HeroTimelineCinematic from '@/components/HeroTimelineCinematic'
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 
@@ -15,6 +16,7 @@ function HeroDetail() {
     hero: null,
     error: null,
   })
+  const [timelineView, setTimelineView] = useState('classic')
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !slug) {
@@ -80,9 +82,9 @@ function HeroDetail() {
     () => (
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-widest text-slate-400">Hero timeline</p>
-          <h2 className="text-lg font-semibold text-slate-900">{hero?.name ?? slug}</h2>
-          {hero?.publisher ? <p className="text-sm text-slate-500">{hero.publisher}</p> : null}
+          <p className="eyebrow">Hero timeline</p>
+          <h2 className="title-md">{hero?.name ?? slug}</h2>
+          {hero?.publisher ? <p className="body-sm">{hero.publisher}</p> : null}
         </div>
         <Button asChild variant="outline">
           <Link to="/">Back to roster</Link>
@@ -96,7 +98,7 @@ function HeroDetail() {
     return (
       <section className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-slate-700 shadow">
         {detailHeader}
-        <p className="mt-4 text-sm">
+        <p className="mt-4 body-sm">
           Configure <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to view hero details.
         </p>
       </section>
@@ -108,9 +110,9 @@ function HeroDetail() {
       {detailHeader}
       <div className="mt-6">
         {status === 'loading' ? (
-          <p className="text-sm text-slate-500">Loading hero data...</p>
+          <p className="body-sm text-slate-500">Loading hero data...</p>
         ) : status === 'error' ? (
-          <p className="text-sm text-rose-600">{error}</p>
+          <p className="body-sm text-rose-600">{error}</p>
         ) : hero ? (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-[200px,1fr]">
@@ -122,23 +124,23 @@ function HeroDetail() {
               />
               <div className="space-y-3 text-sm text-slate-600">
                 {alignment ? (
-                  <span className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs uppercase tracking-wide text-slate-500">
+                  <span className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 eyebrow text-slate-500">
                     Alignment: {alignment}
                   </span>
                 ) : null}
                 {hero.full_name ? (
-                  <p>
-                    <span className="text-slate-400">Full name:</span> {hero.full_name}
+                  <p className="body-sm">
+                    <span className="body-xs text-slate-400">Full name:</span> {hero.full_name}
                   </p>
                 ) : null}
                 {hero.biography?.['place-of-birth'] ? (
-                  <p>
-                    <span className="text-slate-400">Origin:</span> {hero.biography['place-of-birth']}
+                  <p className="body-sm">
+                    <span className="body-xs text-slate-400">Origin:</span> {hero.biography['place-of-birth']}
                   </p>
                 ) : null}
                 {hero.work?.occupation ? (
-                  <p>
-                    <span className="text-slate-400">Occupation:</span> {hero.work.occupation}
+                  <p className="body-sm">
+                    <span className="body-xs text-slate-400">Occupation:</span> {hero.work.occupation}
                   </p>
                 ) : null}
               </div>
@@ -147,18 +149,50 @@ function HeroDetail() {
             <dl className="grid grid-cols-2 gap-3 text-sm text-slate-600 sm:grid-cols-3">
               {statLabels.map((label) => (
                 <div key={label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 shadow-inner">
-                  <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
-                  <dd className="text-lg font-semibold text-slate-800">
+                  <dt className="eyebrow text-slate-400">{label}</dt>
+                  <dd className="title-xs text-slate-800">
                     {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? '—'}
                   </dd>
                 </div>
               ))}
             </dl>
 
-            <HeroTimeline slug={hero.slug} heroName={hero.name} />
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="eyebrow text-slate-500">Timeline style</p>
+                <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-sm text-slate-600">
+                  {[
+                    { id: 'classic', label: 'Classic' },
+                    { id: 'cinematic', label: 'Cinematic' },
+                  ].map((option) => {
+                    const isActive = timelineView === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setTimelineView(option.id)}
+                        className={`rounded-full px-3 py-1 font-semibold transition ${
+                          isActive
+                            ? 'bg-white text-slate-900 shadow'
+                            : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {option.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              {timelineView === 'classic' ? (
+                <HeroTimeline slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
+              ) : (
+                <HeroTimelineCinematic slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
+              )}
+            </div>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Select a hero from the roster to view their timeline.</p>
+          <p className="body-sm text-slate-500">Select a hero from the roster to view their timeline.</p>
         )}
       </div>
     </section>

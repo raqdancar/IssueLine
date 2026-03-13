@@ -1,4 +1,16 @@
 import { supabaseServiceClient } from './supabaseClient.js'
+import { getHeroIssueCoverPathMap } from './heroIssuesService.js'
+
+const normalizeIssueDate = (value) => {
+  if (!value) {
+    throw new Error('Issue date is required.')
+  }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid issue date provided: ${value}`)
+  }
+  return date.toISOString().slice(0, 10)
+}
 
 export const getHeroBySlug = async (slug) => {
   const normalizedSlug = slug?.trim().toLowerCase()
@@ -26,13 +38,45 @@ export const getHeroTimelineEntries = async (heroApiId) => {
     .from('hero_timelines')
     .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, created_at')
     .eq('hero_api_id', heroApiId)
-    .order('issue_date', { ascending: false })
+    .order('issue_date', { ascending: true })
 
   if (error) {
     throw new Error(`Failed to fetch timeline entries: ${error.message}`)
   }
 
-  return data ?? []
+  const entries = data ?? []
+  const gcdIssueIds = entries
+    .map((entry) => {
+      const metadata = entry.metadata ?? {}
+      if (metadata.gcdIssueId) return Number(metadata.gcdIssueId)
+      if (metadata.gcd_issue_id) return Number(metadata.gcd_issue_id)
+      return null
+    })
+    .filter((value) => Number.isFinite(value))
+
+  const coverLookup = gcdIssueIds.length ? await getHeroIssueCoverPathMap(heroApiId, gcdIssueIds) : new Map()
+
+  if (!coverLookup.size) {
+    return entries
+  }
+
+  return entries.map((entry) => {
+    const metadata = entry.metadata ?? null
+    if (!metadata) return entry
+    const gcdIssueId = metadata.gcdIssueId ?? metadata.gcd_issue_id
+    const coverPath = coverLookup.get(Number(gcdIssueId))
+    if (!coverPath) {
+      return entry
+    }
+    return {
+      ...entry,
+      metadata: {
+        ...metadata,
+        coverImagePath: coverPath,
+        cover_image_path: coverPath,
+      },
+    }
+  })
 }
 
 export const createHeroTimelineEntry = async ({
@@ -45,7 +89,7 @@ export const createHeroTimelineEntry = async ({
   severity = 'info',
   metadata,
 }) => {
-  const normalizedDate = new Date(issueDate).toISOString().slice(0, 10)
+  const normalizedDate = normalizeIssueDate(issueDate)
 
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
@@ -67,4 +111,49 @@ export const createHeroTimelineEntry = async ({
   }
 
   return data
+}
+
+export const getExistingGcdIssueIds = async (heroApiId) => {
+  const { data, error } = await supabaseServiceClient
+    .from('hero_timelines')
+    .select('metadata')
+    .eq('hero_api_id', heroApiId)
+
+  if (error) {
+    throw new Error(`Failed to load existing hero timeline metadata: ${error.message}`)
+  }
+
+  const identifiers = new Set()
+  for (const row of data ?? []) {
+    const gcdIssueId = row?.metadata?.gcdIssueId || row?.metadata?.metronIssueId
+    if (gcdIssueId) {
+      identifiers.add(gcdIssueId)
+    }
+  }
+  return identifiers
+}
+
+export const insertHeroTimelineEntries = async (heroApiId, entries) => {
+  if (!entries?.length) {
+    return []
+  }
+
+  const payload = entries.map((entry) => ({
+    hero_api_id: heroApiId,
+    headline: entry.headline,
+    summary: entry.summary ?? null,
+    issue_code: entry.issueCode ?? null,
+    issue_date: normalizeIssueDate(entry.issueDate),
+    source_url: entry.sourceUrl ?? null,
+    severity: entry.severity ?? 'info',
+    metadata: entry.metadata ?? null,
+  }))
+
+  const { data, error } = await supabaseServiceClient.from('hero_timelines').insert(payload).select('*')
+
+  if (error) {
+    throw new Error(`Failed to create hero timeline entries: ${error.message}`)
+  }
+
+  return data ?? []
 }
