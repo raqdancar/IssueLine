@@ -23,6 +23,10 @@ const severityVariants = {
     title: 'text-rose-900',
   },
 }
+const timelineSortOptions = [
+  { label: 'Newest first', value: 'desc' },
+  { label: 'Oldest first', value: 'asc' },
+]
 
 const formatDate = (value) => {
   try {
@@ -36,6 +40,7 @@ const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
 function HeroTimeline({ slug, heroName, fallbackImage }) {
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
+  const [sortDirection, setSortDirection] = useState('desc')
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
     entries: [],
@@ -78,12 +83,16 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 
   const severityLookup = useMemo(() => severityVariants, [])
   const orderedEntries = useMemo(() => {
+    const direction = sortDirection === 'asc' ? 1 : -1
     return [...entries].sort((a, b) => {
       const aDate = new Date(a.issue_date ?? 0).getTime()
       const bDate = new Date(b.issue_date ?? 0).getTime()
-      return aDate - bDate
+      const safeADate = Number.isNaN(aDate) ? 0 : aDate
+      const safeBDate = Number.isNaN(bDate) ? 0 : bDate
+      if (safeADate === safeBDate) return 0
+      return direction * (safeADate - safeBDate)
     })
-  }, [entries])
+  }, [entries, sortDirection])
 
   if (!slug) {
     return (
@@ -103,10 +112,34 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 
   return (
     <section className="mt-4 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="title-xs">{heroName} timeline</p>
           <p className="body-xs text-slate-500">Events sync from the IssueLine backend.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="body-xs text-slate-500">Sort by date:</span>
+          <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+            {timelineSortOptions.map((option) => {
+              const isActive = sortDirection === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => setSortDirection(option.value)}
+                  className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                    isActive
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+
+          </div>
         </div>
       </div>
       <div className="mt-4 space-y-4">
@@ -237,3 +270,8 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 }
 
 export default HeroTimeline
+
+
+
+
+

@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
+
+const timelineSortOptions = [
+  { label: 'Newest first', value: 'desc' },
+  { label: 'Oldest first', value: 'asc' },
+]
+
 
 const formatDate = (value) => {
   if (!value) return 'Date TBA'
@@ -29,7 +35,7 @@ const resolveYear = (entry) => {
   return 'Unknown'
 }
 
-const groupEntriesByYear = (entries) => {
+const groupEntriesByYear = (entries, direction = 'desc') => {
   const groups = new Map()
   for (const entry of entries) {
     const year = resolveYear(entry)
@@ -39,22 +45,33 @@ const groupEntriesByYear = (entries) => {
     groups.get(year).push(entry)
   }
 
+  const directionValue = direction === 'asc' ? 1 : -1
   const sorter = (a, b) => {
     if (a[0] === 'Unknown') return 1
     if (b[0] === 'Unknown') return -1
-    return Number(a[0]) - Number(b[0])
+    return directionValue * (Number(a[0]) - Number(b[0]))
+  }
+
+  const getIssueTime = (entry) => {
+    const timestamp = new Date(entry.issue_date ?? 0).getTime()
+    return Number.isNaN(timestamp) ? 0 : timestamp
   }
 
   return Array.from(groups.entries())
     .sort(sorter)
     .map(([year, yearEntries]) => ({
       year,
-      entries: yearEntries.sort((a, b) => new Date(a.issue_date ?? 0) - new Date(b.issue_date ?? 0)),
+      entries: [...yearEntries].sort((a, b) => {
+        const result = getIssueTime(a) - getIssueTime(b)
+        if (result === 0) return 0
+        return directionValue * result
+      }),
     }))
 }
 
 function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
+  const [sortDirection, setSortDirection] = useState('desc')
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
     entries: [],
@@ -91,7 +108,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
     return () => controller.abort()
   }, [backendBaseUrl, slug])
 
-  const groupedEntries = useMemo(() => groupEntriesByYear(entries), [entries])
+  const groupedEntries = useMemo(() => groupEntriesByYear(entries, sortDirection), [entries, sortDirection])
 
   if (!slug) {
     return (
@@ -121,9 +138,32 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
           <h3 className="title-sm text-white">{heroName}</h3>
           <p className="body-xs text-slate-400">Grouped by publication year</p>
         </div>
-        <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
-          {status}
-        </span>
+        <div className="flex flex-col items-end gap-3 text-xs text-slate-300 sm:flex-row sm:items-center">
+          <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
+            {status}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Sort</span>
+            <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
+              {timelineSortOptions.map((option) => {
+                const isActive = sortDirection === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setSortDirection(option.value)}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                      isActive ? 'bg-white text-slate-900 shadow' : 'text-slate-200 hover:text-white'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       </div>
       <div className="relative mt-6 space-y-6">
         {status === 'loading' ? (
@@ -229,3 +269,6 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
 }
 
 export default HeroTimelineCinematic
+
+
+
