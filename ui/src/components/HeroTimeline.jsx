@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { CalendarDays, Eye, EyeOff } from 'lucide-react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 
 const severityVariants = {
@@ -37,10 +38,42 @@ const formatDate = (value) => {
 }
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
+const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' })
+
+const resolveMonthBucket = (entry) => {
+  const metadata = entry.metadata ?? {}
+  const rawDate =
+    entry.issue_date ||
+    metadata.issueDate ||
+    metadata.issue_date ||
+    metadata.keyDate ||
+    metadata.key_date ||
+    metadata.publication_date ||
+    metadata.publicationDate
+
+  if (rawDate) {
+    const parsed = new Date(rawDate)
+    if (!Number.isNaN(parsed.getTime())) {
+      const key = `${parsed.getUTCFullYear()}-${String(parsed.getUTCMonth() + 1).padStart(2, '0')}`
+      return { key, label: monthFormatter.format(parsed) }
+    }
+  }
+
+  return { key: 'unknown', label: 'Unknown date' }
+}
+
+const getEntryDomId = (entry, index) => {
+  if (entry?.id) {
+    return `timeline-entry-${entry.id}`
+  }
+  return `timeline-entry-${index}`
+}
 
 function HeroTimeline({ slug, heroName, fallbackImage }) {
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [sortDirection, setSortDirection] = useState('desc')
+  const [activeAnchor, setActiveAnchor] = useState(null)
+  const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
     entries: [],
@@ -94,6 +127,51 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     })
   }, [entries, sortDirection])
 
+  const monthAnchors = useMemo(() => {
+    const orderedKeys = []
+    const groups = new Map()
+
+    orderedEntries.forEach((entry, index) => {
+      const bucket = resolveMonthBucket(entry)
+      if (!groups.has(bucket.key)) {
+        orderedKeys.push(bucket.key)
+        groups.set(bucket.key, {
+          ...bucket,
+          count: 0,
+          targetId: getEntryDomId(entry, index),
+        })
+      }
+      const group = groups.get(bucket.key)
+      group.count += 1
+    })
+
+    return orderedKeys.map((key) => groups.get(key))
+  }, [orderedEntries])
+
+  useEffect(() => {
+    if (!monthAnchors.length) {
+      setActiveAnchor(null)
+      return
+    }
+    setActiveAnchor((current) => {
+      if (current && monthAnchors.some((anchor) => anchor.key === current)) {
+        return current
+      }
+      return monthAnchors[0].key
+    })
+  }, [monthAnchors])
+
+  const handleAnchorClick = (anchor) => {
+    setActiveAnchor(anchor.key)
+    if (typeof document === 'undefined') return
+    const target = document.getElementById(anchor.targetId)
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const canShowMonthNavigator = monthAnchors.length > 1
+
   if (!slug) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 body-xs text-slate-500">
@@ -117,7 +195,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
           <p className="title-xs">{heroName} timeline</p>
           <p className="body-xs text-slate-500">Events sync from the IssueLine backend.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="body-xs text-slate-500">Sort by date:</span>
           <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
             {timelineSortOptions.map((option) => {
@@ -150,11 +228,61 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
         ) : orderedEntries.length === 0 ? (
           <p className="body-sm text-slate-500">No issues have been logged for this hero yet.</p>
         ) : (
-          <ol className="space-y-4">
-            {orderedEntries.map((entry, index) => {
-              const variant = severityLookup[entry.severity] ?? severityLookup.info
-              const isLast = index === orderedEntries.length - 1
-              const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? 'Issue'
+          <div className="flex flex-col gap-4 lg:flex-row">
+            {canShowMonthNavigator && isNavigatorVisible ? (
+              <aside className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm backdrop-blur lg:sticky lg:top-6 lg:max-h-[80vh] lg:w-60">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">Jump to</p>
+                  <button
+                    type="button"
+                    onClick={() => setIsNavigatorVisible((value) => !value)}
+                    className="rounded-full border border-slate-200 bg-white p-1 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                    aria-label={isNavigatorVisible ? 'Hide timeline index' : 'Show timeline index'}
+                  >
+                    {isNavigatorVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 lg:flex-col">
+                  {monthAnchors.map((anchor) => {
+                    const isActive = activeAnchor === anchor.key
+                    return (
+                      <button
+                        key={anchor.key}
+                        type="button"
+                        aria-current={isActive ? 'true' : undefined}
+                        onClick={() => handleAnchorClick(anchor)}
+                        className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                          isActive
+                            ? 'border-slate-900 bg-slate-900 text-white shadow'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/40 hover:text-slate-900'
+                        }`}
+                      >
+                        <span>{anchor.label}</span>
+                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{anchor.count}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </aside>
+            ) : null}
+            <div className="flex-1">
+              {canShowMonthNavigator && !isNavigatorVisible ? (
+                <div className="mb-3 flex justify-start">
+                  <button
+                    type="button"
+                    onClick={() => setIsNavigatorVisible(true)}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Show timeline index
+                  </button>
+                </div>
+              ) : null}
+              <ol className="space-y-4">
+                {orderedEntries.map((entry, index) => {
+                  const variant = severityLookup[entry.severity] ?? severityLookup.info
+                  const isLast = index === orderedEntries.length - 1
+                  const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? 'Issue'
               const meta = entry.metadata ?? {}
               const coverImage = resolveIssueCoverImage(meta, fallbackImage)
               const seriesName = meta.series_name ?? meta.seriesName
@@ -165,11 +293,16 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
               const pageCount = meta.page_count ?? meta.pageCount
               const editing = meta.editing
               const rating = meta.rating
-              return (
-                <li key={entry.id ?? `${issueLabel}-${index}`} className="relative pl-9">
-                  <span
-                    className={`absolute left-0 top-2 h-3 w-3 rounded-full border-2 ${variant.dot}`}
-                    aria-hidden="true"
+                  const entryDomId = getEntryDomId(entry, index)
+                  return (
+                    <li
+                      key={entry.id ?? `${issueLabel}-${index}`}
+                      id={entryDomId}
+                      className="relative pl-9"
+                    >
+                      <span
+                        className={`absolute left-0 top-2 h-3 w-3 rounded-full border-2 ${variant.dot}`}
+                        aria-hidden="true"
                   />
                   {!isLast && (
                     <span className="absolute left-1.5 top-6 block h-full w-px bg-gradient-to-b from-slate-200 to-transparent" />
@@ -177,9 +310,17 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                   <article
                     className={`rounded-xl border ${variant.panel} p-3 shadow-sm transition hover:-translate-y-0.5`}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 body-xs text-slate-500">
-                      <span>{formatDate(entry.issue_date)}</span>
-                      {issueLabel ? <span className="title-xs text-slate-700">{issueLabel}</span> : null}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+                        <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                        {formatDate(entry.issue_date)}
+                      </span>
+                      {seriesName || number ? (
+                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
+                          <span>{seriesName ?? 'Issue'}</span>
+                          {number ? <span className="text-slate-500">#{number}</span> : null}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                       <div className="shrink-0">
@@ -259,10 +400,12 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                       </div>
                     </div>
                   </article>
-                </li>
-              )
-            })}
-          </ol>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+          </div>
         )}
       </div>
     </section>
