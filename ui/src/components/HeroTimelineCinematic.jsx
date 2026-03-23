@@ -185,6 +185,10 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                   const meta = entry.metadata ?? {}
                   const issueLabel = meta.issueLabel ?? entry.issue_code ?? entry.headline
                   const coverImage = resolveIssueCoverImage(meta, fallbackImage)
+                  const stageName =
+                    meta.stage_name ?? meta.stageName ?? meta.stage?.name ?? meta.stage?.label ?? null
+                  const stageSummary =
+                    meta.stage_summary ?? meta.stageSummary ?? meta.stage?.short_summary ?? meta.stage?.summary ?? null
                   return (
                     <article
                       key={entry.id ?? `${issueLabel}-${entry.issue_date}`}
@@ -218,9 +222,18 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                           </span>
                           {meta.number ? <span>No. {meta.number}</span> : null}
                           {meta.volume ? <span>Vol. {meta.volume}</span> : null}
+                          {stageName ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/40 bg-emerald-300/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
+                              Stage
+                              <span className="text-white">{stageName}</span>
+                            </span>
+                          ) : null}
                         </div>
                         <h4 className="title-sm text-white">{entry.headline}</h4>
                         {entry.summary ? <p className="body-sm text-slate-200/80">{entry.summary}</p> : null}
+                        {stageSummary ? (
+                          <p className="text-xs text-emerald-100/80">{stageSummary}</p>
+                        ) : null}
                         <dl className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
                           <div>
                             <dt className="font-semibold text-slate-100">Release</dt>

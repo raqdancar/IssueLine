@@ -282,7 +282,7 @@ function App() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8">
+      <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         <Routes>
           <Route
             path="/"
@@ -302,7 +302,7 @@ function App() {
       </main>
 
       <footer className="mt-auto border-t border-slate-200 bg-slate-900/5">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6 lg:flex-row">
+        <div className="flex w-full flex-col gap-4 px-4 py-6 lg:flex-row lg:px-10 xl:px-16 2xl:px-24">
           <article className="rounded-2xl bg-white p-6 shadow-lg lg:w-96">
             <h2 className="text-lg font-semibold">Session &amp; audit</h2>
             {sessionDetails ? (
@@ -424,3 +424,5 @@ function EnvironmentNotice() {
 }
 
 export default App
+
+

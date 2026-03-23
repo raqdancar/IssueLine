@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'
 import HeroTimelineCinematic from '@/components/HeroTimelineCinematic'
@@ -96,7 +96,7 @@ function HeroDetail() {
 
   if (!isSupabaseConfigured || !supabase) {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-slate-700 shadow">
+      <section className="w-full rounded-[32px] border border-slate-100 bg-white/80 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 lg:p-8">
         {detailHeader}
         <p className="mt-4 body-sm">
           Configure <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to view hero details.
@@ -106,7 +106,7 @@ function HeroDetail() {
   }
 
   return (
-    <section className="rounded-2xl bg-white p-6 shadow">
+    <section className="w-full rounded-[32px] border border-slate-100 bg-white/80 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
       {detailHeader}
       <div className="mt-6">
         {status === 'loading' ? (
@@ -114,83 +114,109 @@ function HeroDetail() {
         ) : status === 'error' ? (
           <p className="body-sm text-rose-600">{error}</p>
         ) : hero ? (
-          <div className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-[200px,1fr]">
-              <img
-                src={imageSrc}
-                alt={imageAlt}
-                className="h-52 w-52 rounded-2xl object-cover shadow-lg"
-                loading="lazy"
-              />
-              <div className="space-y-3 text-sm text-slate-600">
-                {alignment ? (
-                  <span className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 eyebrow text-slate-500">
-                    Alignment: {alignment}
-                  </span>
-                ) : null}
-                {hero.full_name ? (
-                  <p className="body-sm">
-                    <span className="body-xs text-slate-400">Full name:</span> {hero.full_name}
-                  </p>
-                ) : null}
-                {hero.biography?.['place-of-birth'] ? (
-                  <p className="body-sm">
-                    <span className="body-xs text-slate-400">Origin:</span> {hero.biography['place-of-birth']}
-                  </p>
-                ) : null}
-                {hero.work?.occupation ? (
-                  <p className="body-sm">
-                    <span className="body-xs text-slate-400">Occupation:</span> {hero.work.occupation}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-
-            <dl className="grid grid-cols-2 gap-3 text-sm text-slate-600 sm:grid-cols-3">
-              {statLabels.map((label) => (
-                <div key={label} className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 shadow-inner">
-                  <dt className="eyebrow text-slate-400">{label}</dt>
-                  <dd className="title-xs text-slate-800">
-                    {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? '—'}
-                  </dd>
+          <div className="space-y-8">
+            <div className="grid gap-8 lg:grid-cols-[minmax(160px,200px),1fr] xl:gap-12">
+              <aside className="space-y-6 rounded-3xl border border-slate-100 bg-white/85 p-5 text-sm text-slate-600 shadow-lg shadow-slate-200/60 ring-1 ring-white/70 backdrop-blur">
+                <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-full border border-slate-200 bg-slate-100/60 shadow-inner">
+                  <img
+                    src={imageSrc}
+                    alt={imageAlt}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
                 </div>
-              ))}
-            </dl>
-
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="eyebrow text-slate-500">Timeline style</p>
-                <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1 text-sm text-slate-600">
-                  {[
-                    { id: 'classic', label: 'Classic' },
-                    { id: 'cinematic', label: 'Cinematic' },
-                  ].map((option) => {
-                    const isActive = timelineView === option.id
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => setTimelineView(option.id)}
-                        className={`rounded-full px-3 py-1 font-semibold transition ${
-                          isActive
-                            ? 'bg-white text-slate-900 shadow'
-                            : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                        aria-pressed={isActive}
-                      >
-                        {option.label}
-                      </button>
-                    )
-                  })}
+                <div className="space-y-4 rounded-3xl border border-slate-100 bg-gradient-to-br from-white/90 via-slate-50/80 to-white/60 p-5 text-sm text-slate-600 shadow-inner">
+                  <p className="text-sm font-semibold text-slate-800">? Hero spotlight</p>
+                  <p>
+                    Following a character's history shouldn't feel like solving a puzzle. For decades, heroes like Doctor Strange have lived across relaunches, variant printings, crossovers, and region-specific editions.
+                  </p>
+                  <p>
+                    What used to be a single flagship run becomes paperbacks, facsimiles, or issues tucked inside larger events, leaving fans with a fragmented timeline.
+                  </p>
+                  <p className="font-semibold text-slate-800">The result?</p>
+                  <p>
+                    A confusing reading order that's hard to follow, harder to catalog, and almost impossible to collect with confidence.
+                  </p>
+                  <ul className="list-disc space-y-1 pl-5 text-slate-500">
+                    <li>Which issue actually contains this chapter?</li>
+                    <li>Is this a new story or another reprint of the same material?</li>
+                    <li>In what order should you experience every beat?</li>
+                  </ul>
+                  <p className="text-slate-800">
+                    IssueLine restores clarity with a single, beautifully organized timeline so you can enjoy every chapter without getting lost in decades of publications.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {alignment ? (
+                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                      Alignment: {alignment}
+                    </span>
+                  ) : null}
+                  {hero.full_name ? (
+                    <p className="body-sm">
+                      <span className="body-xs text-slate-400">Full name:</span> {hero.full_name}
+                    </p>
+                  ) : null}
+                  {hero.biography?.['place-of-birth'] ? (
+                    <p className="body-sm">
+                      <span className="body-xs text-slate-400">Origin:</span> {hero.biography['place-of-birth']}
+                    </p>
+                  ) : null}
+                  {hero.work?.occupation ? (
+                    <p className="body-sm">
+                      <span className="body-xs text-slate-400">Occupation:</span> {hero.work.occupation}
+                    </p>
+                  ) : null}
+                </div>
+                <dl className="grid grid-cols-2 gap-3 text-sm text-slate-600">
+                  {statLabels.map((label) => (
+                    <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 shadow-inner">
+                      <dt className="eyebrow text-slate-400">{label}</dt>
+                      <dd className="title-xs text-slate-800">
+                        {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? '�'}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </aside>
+              <div className="space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-600 shadow-inner">
+                  <div>
+                    <p className="eyebrow text-slate-500">Timeline style</p>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">Switch between layouts</p>
+                  </div>
+                  <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 text-sm text-slate-600">
+                    {[{ id: 'classic', label: 'Classic' }, { id: 'cinematic', label: 'Cinematic' }].map((option) => {
+                      const isActive = timelineView === option.id
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => setTimelineView(option.id)}
+                          className={`rounded-full px-3 py-1 font-semibold transition ${
+                            isActive ? 'bg-slate-900 text-white shadow' : 'text-slate-500 hover:text-slate-700'
+                          }`}
+                          aria-pressed={isActive}
+                        >
+                          {option.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {timelineView === 'classic' && (
+                    <HeroTimeline slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
+                  )}
+                  {timelineView === 'cinematic' && (
+                    <HeroTimelineCinematic slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
+                  )}
                 </div>
               </div>
-              {timelineView === 'classic' ? (
-                <HeroTimeline slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
-              ) : (
-                <HeroTimelineCinematic slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
-              )}
             </div>
           </div>
+
+
         ) : (
           <p className="body-sm text-slate-500">Select a hero from the roster to view their timeline.</p>
         )}
@@ -200,3 +226,17 @@ function HeroDetail() {
 }
 
 export default HeroDetail
+
+
+
+
+
+
+
+
+
+
+
+
+
+

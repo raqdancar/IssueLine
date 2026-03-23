@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Eye, EyeOff } from 'lucide-react'
-import { resolveIssueCoverImage } from '@/lib/issueImages'
+import { Eye, EyeOff } from 'lucide-react'
+import TimelineIssueCard from './TimelineIssueCard'
+import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket } from '../utils/timeline'
 
 const severityVariants = {
   info: {
@@ -29,49 +30,17 @@ const timelineSortOptions = [
   { label: 'Oldest first', value: 'asc' },
 ]
 
-const formatDate = (value) => {
-  try {
-    return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  } catch {
-    return value
-  }
-}
+const indexModeOptions = [
+  { label: 'Months', value: 'month' },
+  { label: 'Stages', value: 'stage' },
+  { label: 'Issues', value: 'issue' },
+]
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
-const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' })
-
-const resolveMonthBucket = (entry) => {
-  const metadata = entry.metadata ?? {}
-  const rawDate =
-    entry.issue_date ||
-    metadata.issueDate ||
-    metadata.issue_date ||
-    metadata.keyDate ||
-    metadata.key_date ||
-    metadata.publication_date ||
-    metadata.publicationDate
-
-  if (rawDate) {
-    const parsed = new Date(rawDate)
-    if (!Number.isNaN(parsed.getTime())) {
-      const key = `${parsed.getUTCFullYear()}-${String(parsed.getUTCMonth() + 1).padStart(2, '0')}`
-      return { key, label: monthFormatter.format(parsed) }
-    }
-  }
-
-  return { key: 'unknown', label: 'Unknown date' }
-}
-
-const getEntryDomId = (entry, index) => {
-  if (entry?.id) {
-    return `timeline-entry-${entry.id}`
-  }
-  return `timeline-entry-${index}`
-}
-
 function HeroTimeline({ slug, heroName, fallbackImage }) {
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [sortDirection, setSortDirection] = useState('desc')
+  const [indexMode, setIndexMode] = useState('month')
   const [activeAnchor, setActiveAnchor] = useState(null)
   const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
   const [{ status, entries, error }, setState] = useState({
@@ -148,18 +117,74 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     return orderedKeys.map((key) => groups.get(key))
   }, [orderedEntries])
 
+  const stageAnchors = useMemo(() => {
+    const orderedKeys = []
+    const groups = new Map()
+    orderedEntries.forEach((entry, index) => {
+      const stage = getStageKey(entry)
+      if (!stage) return
+      if (!groups.has(stage.key)) {
+        orderedKeys.push(stage.key)
+        groups.set(stage.key, {
+          key: stage.key,
+          label: stage.label,
+          summary:
+            entry.metadata?.stage_summary ??
+            entry.metadata?.stageSummary ??
+            entry.metadata?.stage?.short_summary ??
+            entry.metadata?.stage?.summary ??
+            null,
+          count: 0,
+          targetId: getEntryDomId(entry, index),
+        })
+      }
+      groups.get(stage.key).count += 1
+    })
+    return orderedKeys.map((key) => groups.get(key))
+  }, [orderedEntries])
+
+  const issueAnchors = useMemo(() => {
+    const orderedKeys = []
+    const groups = new Map()
+    orderedEntries.forEach((entry, index) => {
+      const issue = getIssueKey(entry)
+      if (!issue) return
+      if (!groups.has(issue.key)) {
+        orderedKeys.push(issue.key)
+        groups.set(issue.key, {
+          key: issue.key,
+          label: issue.label,
+          count: 0,
+          targetId: getEntryDomId(entry, index),
+        })
+      }
+      groups.get(issue.key).count += 1
+    })
+    return orderedKeys.map((key) => groups.get(key))
+  }, [orderedEntries])
+
+  const anchorLookup = useMemo(() => {
+    return {
+      month: monthAnchors,
+      stage: stageAnchors,
+      issue: issueAnchors,
+    }
+  }, [monthAnchors, stageAnchors, issueAnchors])
+
+  const availableAnchors = anchorLookup[indexMode] ?? []
+
   useEffect(() => {
-    if (!monthAnchors.length) {
+    if (!availableAnchors.length) {
       setActiveAnchor(null)
       return
     }
     setActiveAnchor((current) => {
-      if (current && monthAnchors.some((anchor) => anchor.key === current)) {
+      if (current && availableAnchors.some((anchor) => anchor.key === current)) {
         return current
       }
-      return monthAnchors[0].key
+      return availableAnchors[0]?.key ?? null
     })
-  }, [monthAnchors])
+  }, [availableAnchors])
 
   const handleAnchorClick = (anchor) => {
     setActiveAnchor(anchor.key)
@@ -170,7 +195,9 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     }
   }
 
-  const canShowMonthNavigator = monthAnchors.length > 1
+  const navigatorHasContent =
+    monthAnchors.length > 0 || stageAnchors.length > 0 || issueAnchors.length > 0
+  const canShowNavigator = navigatorHasContent
 
   if (!slug) {
     return (
@@ -189,8 +216,8 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   }
 
   return (
-    <section className="mt-4 rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="mt-8 w-full rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
           <p className="title-xs">{heroName} timeline</p>
           <p className="body-xs text-slate-500">Events sync from the IssueLine backend.</p>
@@ -220,7 +247,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
           </div>
         </div>
       </div>
-      <div className="mt-4 space-y-4">
+      <div className="mt-6 space-y-4">
         {status === 'loading' ? (
           <p className="body-sm text-slate-500">Loading timeline...</p>
         ) : status === 'error' ? (
@@ -229,8 +256,8 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
           <p className="body-sm text-slate-500">No issues have been logged for this hero yet.</p>
         ) : (
           <div className="flex flex-col gap-4 lg:flex-row">
-            {canShowMonthNavigator && isNavigatorVisible ? (
-              <aside className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm backdrop-blur lg:sticky lg:top-6 lg:max-h-[80vh] lg:w-60">
+            {canShowNavigator && isNavigatorVisible ? (
+              <aside className="w-full rounded-3xl border border-slate-100/80 bg-gradient-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur lg:sticky lg:top-6 lg:max-h-[80vh] lg:max-w-sm">
                 <div className="flex items-center justify-between gap-2">
                   <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">Jump to</p>
                   <button
@@ -242,31 +269,72 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                     {isNavigatorVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2 lg:flex-col">
-                  {monthAnchors.map((anchor) => {
-                    const isActive = activeAnchor === anchor.key
+                <div className="mt-3 inline-flex w-full rounded-full border border-slate-200 bg-white/80 p-0.5 shadow-inner">
+                  {indexModeOptions.map((option) => {
+                    const isActive = indexMode === option.value
+                    const hasAnchors = (anchorLookup[option.value] ?? []).length > 0
                     return (
                       <button
-                        key={anchor.key}
+                        key={option.value}
                         type="button"
-                        aria-current={isActive ? 'true' : undefined}
-                        onClick={() => handleAnchorClick(anchor)}
-                        className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                        disabled={!hasAnchors}
+                        onClick={() => setIndexMode(option.value)}
+                        className={`flex-1 rounded-full px-3 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                           isActive
-                            ? 'border-slate-900 bg-slate-900 text-white shadow'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/40 hover:text-slate-900'
+                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/40'
+                            : hasAnchors
+                              ? 'text-slate-600 hover:text-slate-900'
+                              : 'cursor-not-allowed text-slate-300'
                         }`}
                       >
-                        <span>{anchor.label}</span>
-                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">{anchor.count}</span>
+                        {option.label}
                       </button>
                     )
                   })}
                 </div>
+                <div className="mt-4 flex flex-col gap-2">
+                  {(anchorLookup[indexMode] ?? []).length ? (
+                    anchorLookup[indexMode].map((anchor) => {
+                      const isActive = activeAnchor === anchor.key
+                      const countBadgeClasses = isActive
+                        ? 'bg-white/25 text-white'
+                        : 'bg-slate-100 text-slate-500'
+                      return (
+                        <button
+                          key={anchor.key}
+                          type="button"
+                          aria-current={isActive ? 'true' : undefined}
+                          onClick={() => handleAnchorClick(anchor)}
+                          className={`group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                            isActive
+                              ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/30'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/40 hover:text-slate-900'
+                          }`}
+                        >
+                          <div className="flex-1 pr-2">
+                            <span>{anchor.label}</span>
+                            {indexMode === 'stage' && anchor.summary ? (
+                              <p className="mt-1 text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">
+                                {anchor.summary}
+                              </p>
+                            ) : null}
+                          </div>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] ${countBadgeClasses}`}
+                          >
+                            {anchor.count}
+                          </span>
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <p className="text-[11px] text-slate-400">No anchors for this view.</p>
+                  )}
+                </div>
               </aside>
             ) : null}
             <div className="flex-1">
-              {canShowMonthNavigator && !isNavigatorVisible ? (
+              {canShowNavigator && !isNavigatorVisible ? (
                 <div className="mb-3 flex justify-start">
                   <button
                     type="button"
@@ -279,130 +347,16 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                 </div>
               ) : null}
               <ol className="space-y-4">
-                {orderedEntries.map((entry, index) => {
-                  const variant = severityLookup[entry.severity] ?? severityLookup.info
-                  const isLast = index === orderedEntries.length - 1
-                  const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? 'Issue'
-              const meta = entry.metadata ?? {}
-              const coverImage = resolveIssueCoverImage(meta, fallbackImage)
-              const seriesName = meta.series_name ?? meta.seriesName
-              const number = meta.number
-              const volume = meta.volume
-              const publicationDate = meta.publication_date ?? meta.publicationDate
-              const price = meta.price
-              const pageCount = meta.page_count ?? meta.pageCount
-              const editing = meta.editing
-              const rating = meta.rating
-                  const entryDomId = getEntryDomId(entry, index)
-                  return (
-                    <li
-                      key={entry.id ?? `${issueLabel}-${index}`}
-                      id={entryDomId}
-                      className="relative pl-9"
-                    >
-                      <span
-                        className={`absolute left-0 top-2 h-3 w-3 rounded-full border-2 ${variant.dot}`}
-                        aria-hidden="true"
+                {orderedEntries.map((entry, index) => (
+                  <TimelineIssueCard
+                    key={entry.id ?? `${entry.issue_code ?? 'issue'}-${index}`}
+                    entry={entry}
+                    index={index}
+                    totalEntries={orderedEntries.length}
+                    severityLookup={severityLookup}
+                    fallbackImage={fallbackImage}
                   />
-                  {!isLast && (
-                    <span className="absolute left-1.5 top-6 block h-full w-px bg-gradient-to-b from-slate-200 to-transparent" />
-                  )}
-                  <article
-                    className={`rounded-xl border ${variant.panel} p-3 shadow-sm transition hover:-translate-y-0.5`}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-                        <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-                        {formatDate(entry.issue_date)}
-                      </span>
-                      {seriesName || number ? (
-                        <span className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-                          <span>{seriesName ?? 'Issue'}</span>
-                          {number ? <span className="text-slate-500">#{number}</span> : null}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-                      <div className="shrink-0">
-                        <div className="flex h-32 w-24 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:h-36 sm:w-28">
-                          {coverImage ? (
-                            <img
-                              src={coverImage}
-                              alt={meta.issueLabel ?? 'Issue cover'}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full flex-col items-center justify-center bg-slate-50 text-center">
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                                No cover
-                              </span>
-                              <span className="text-[10px] text-slate-300">Available soon</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <h4 className={`title-xs ${variant.title}`}>{entry.headline}</h4>
-                        {entry.summary ? <p className="body-sm text-slate-600">{entry.summary}</p> : null}
-                        <div className="grid gap-1 text-slate-600 body-xs sm:grid-cols-2">
-                      {seriesName ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Series:</span> {seriesName}
-                        </p>
-                      ) : null}
-                      {number ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Issue:</span> {number}
-                        </p>
-                      ) : null}
-                      {volume ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Volume:</span> {volume}
-                        </p>
-                      ) : null}
-                      {publicationDate ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Publication:</span> {publicationDate}
-                        </p>
-                      ) : null}
-                      {price ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Price:</span> {price}
-                        </p>
-                      ) : null}
-                      {pageCount ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Pages:</span> {pageCount}
-                        </p>
-                      ) : null}
-                      {editing ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Editing:</span> {editing}
-                        </p>
-                      ) : null}
-                      {rating ? (
-                        <p>
-                          <span className="font-semibold text-slate-700">Rating:</span> {rating}
-                        </p>
-                      ) : null}
-                        </div>
-                        {entry.source_url ? (
-                          <a
-                            href={entry.source_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 body-xs font-semibold text-indigo-700 underline"
-                          >
-                            View on comics.org
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
-                  </article>
-                    </li>
-                  )
-                })}
+                ))}
               </ol>
             </div>
           </div>
@@ -413,6 +367,10 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 }
 
 export default HeroTimeline
+
+
+
+
 
 
 
