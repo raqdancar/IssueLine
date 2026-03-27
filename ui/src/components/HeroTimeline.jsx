@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import TimelineIssueCard from './TimelineIssueCard'
 import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket } from '../utils/timeline'
+import { backendBaseUrl } from '@/utils/backend.js'
+import { useSessionContext } from '@/lib/sessionContext.jsx'
+import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 
 const severityVariants = {
   info: {
@@ -36,28 +39,51 @@ const indexModeOptions = [
   { label: 'Issues', value: 'issue' },
 ]
 
-const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
+const hasSpecialIssueCode = (entry) => {
+  const code =
+    entry?.issue_code ??
+    entry?.metadata?.issue_code ??
+    entry?.metadata?.issueCode ??
+    ''
+  return typeof code === 'string' && code.toLowerCase().includes('special')
+}
+
 function HeroTimeline({ slug, heroName, fallbackImage }) {
-  const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
+  const apiBaseUrl = backendBaseUrl
   const [sortDirection, setSortDirection] = useState('desc')
   const [indexMode, setIndexMode] = useState('month')
   const [activeAnchor, setActiveAnchor] = useState(null)
   const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
   const [{ status, entries, error }, setState] = useState({
-    status: backendBaseUrl ? 'idle' : 'disabled',
+    status: apiBaseUrl ? 'idle' : 'disabled',
     entries: [],
     error: null,
   })
+  const { isAuthenticated } = useSessionContext()
+  const issueStatesQuery = useIssueStatesQuery(slug, {
+    enabled: status === 'success' && Boolean(apiBaseUrl) && isAuthenticated,
+  })
+  const issueStateMutation = useIssueStateMutation(slug)
+  const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
+  const canUseIssueStateActions = Boolean(apiBaseUrl)
+  const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId : null
+  const issueStateDisabledReason = !isAuthenticated
+    ? 'Sign in to track your collection.'
+    : issueStatesQuery.isFetching
+      ? 'Syncing your issue states...'
+      : issueStatesQuery.isError
+        ? 'Issue state sync is unavailable right now.'
+        : undefined
 
   useEffect(() => {
-    if (!backendBaseUrl || !slug) return undefined
+    if (!apiBaseUrl || !slug) return undefined
 
     const controller = new AbortController()
     setState((previous) => ({ ...previous, status: 'loading', error: null }))
 
     const loadTimeline = async () => {
       try {
-        const response = await fetch(`${backendBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
+        const response = await fetch(`${apiBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
           signal: controller.signal,
         })
 
@@ -81,7 +107,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     void loadTimeline()
 
     return () => controller.abort()
-  }, [backendBaseUrl, slug])
+  }, [apiBaseUrl, slug])
 
   const severityLookup = useMemo(() => severityVariants, [])
   const orderedEntries = useMemo(() => {
@@ -195,6 +221,14 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     }
   }
 
+  const handleIssueStateToggle = useCallback(
+    (issueId, field, nextValue) => {
+      if (!issueId || !isAuthenticated || !apiBaseUrl) return
+      issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
+    },
+    [apiBaseUrl, isAuthenticated, issueStateMutation],
+  )
+
   const navigatorHasContent =
     monthAnchors.length > 0 || stageAnchors.length > 0 || issueAnchors.length > 0
   const canShowNavigator = navigatorHasContent
@@ -207,7 +241,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     )
   }
 
-  if (!backendBaseUrl) {
+  if (!apiBaseUrl) {
     return (
       <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 body-xs text-amber-800">
         Set <code>VITE_BACKEND_URL</code> in your environment to enable hero timelines.
@@ -221,6 +255,12 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
         <div>
           <p className="title-xs">{heroName} timeline</p>
           <p className="body-xs text-slate-500">Events sync from the IssueLine backend.</p>
+          {!isAuthenticated ? (
+            <p className="body-xs text-slate-400">Sign in to track which issues you own or have read.</p>
+          ) : null}
+          {issueStatesQuery.isError ? (
+            <p className="body-xs text-rose-500">Unable to sync your issue states. Please try again.</p>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="body-xs text-slate-500">Sort by date:</span>
@@ -347,16 +387,27 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                 </div>
               ) : null}
               <ol className="space-y-4">
-                {orderedEntries.map((entry, index) => (
-                  <TimelineIssueCard
-                    key={entry.id ?? `${entry.issue_code ?? 'issue'}-${index}`}
-                    entry={entry}
-                    index={index}
-                    totalEntries={orderedEntries.length}
-                    severityLookup={severityLookup}
-                    fallbackImage={fallbackImage}
+                {orderedEntries.map((entry, index) => {
+                  const hideIssueStateActions = hasSpecialIssueCode(entry)
+                  return (
+                    <TimelineIssueCard
+                      key={entry.id ?? `${entry.issue_code ?? 'issue'}-${index}`}
+                      entry={entry}
+                      index={index}
+                      totalEntries={orderedEntries.length}
+                      severityLookup={severityLookup}
+                      fallbackImage={fallbackImage}
+                      issueState={entry.id ? issueStatesById[entry.id] : undefined}
+                      showIssueStateActions={Boolean(entry.id && canUseIssueStateActions && !hideIssueStateActions)}
+                      issueStateDisabled={!isAuthenticated || issueStatesQuery.isFetching || issueStatesQuery.isError}
+                      issueStateDisabledReason={issueStateDisabledReason}
+                      issueStatePending={pendingIssueId === entry.id}
+                      onIssueStateToggle={(field, nextValue) =>
+                        entry.id ? handleIssueStateToggle(entry.id, field, nextValue) : undefined
+                    }
                   />
-                ))}
+                  )
+                })}
               </ol>
             </div>
           </div>
@@ -367,6 +418,11 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 }
 
 export default HeroTimeline
+
+
+
+
+
 
 
 

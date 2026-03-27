@@ -1,4 +1,4 @@
-import { CalendarDays } from 'lucide-react'
+﻿import { BookOpen, CalendarDays, CheckCircle2 } from 'lucide-react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { getEntryDomId } from '../utils/timeline'
 
@@ -10,8 +10,55 @@ const formatDate = (value) => {
   }
 }
 
-function TimelineIssueCard({ entry, index, totalEntries, severityLookup, fallbackImage }) {
-  const variant = severityLookup[entry.severity] ?? severityLookup.info
+function TimelineIssueCard({
+  entry,
+  index,
+  totalEntries,
+  severityLookup,
+  fallbackImage,
+  issueState,
+  showIssueStateActions = false,
+  issueStateDisabled = false,
+  issueStateDisabledReason,
+  issueStatePending = false,
+  onIssueStateToggle,
+}) {
+  const baseVariant = severityLookup[entry.severity] ?? severityLookup.info
+  const hasHaveIt = Boolean(issueState?.haveIt)
+  const hasReadIt = Boolean(issueState?.readIt)
+  const gradientStyle =
+    hasHaveIt && hasReadIt
+      ? {
+          backgroundImage:
+            'linear-gradient(90deg, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.18) 50%, rgba(14,165,233,0.18) 50%, rgba(14,165,233,0.18) 100%)',
+        }
+      : undefined
+
+  const haveItVariant = {
+    dot: 'border-emerald-300 bg-emerald-100',
+    panel: 'border-emerald-200 bg-emerald-50/70',
+    title: 'text-emerald-900',
+  }
+
+  const readItVariant = {
+    dot: 'border-sky-300 bg-sky-100',
+    panel: 'border-sky-200 bg-sky-50/70',
+    title: 'text-sky-900',
+  }
+
+  const dualStateVariant = {
+    dot: 'border-transparent bg-[linear-gradient(180deg,rgba(16,185,129,0.9),rgba(14,165,233,0.9))]',
+    panel: 'border-slate-200 bg-white',
+    title: 'text-slate-900',
+  }
+
+  const variant = hasHaveIt && hasReadIt
+    ? dualStateVariant
+    : hasHaveIt
+      ? { ...baseVariant, ...haveItVariant }
+      : hasReadIt
+        ? { ...baseVariant, ...readItVariant }
+        : baseVariant
   const isLast = index === totalEntries - 1
   const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? 'Issue'
   const meta = entry.metadata ?? {}
@@ -35,7 +82,10 @@ function TimelineIssueCard({ entry, index, totalEntries, severityLookup, fallbac
       {!isLast && (
         <span className="absolute left-1.5 top-6 block h-full w-px bg-gradient-to-b from-slate-200 to-transparent" />
       )}
-      <article className={`rounded-xl border ${variant.panel} p-3 shadow-sm transition hover:-translate-y-0.5`}>
+      <article
+        className={`rounded-xl border ${variant.panel} p-3 shadow-sm transition hover:-translate-y-0.5`}
+        style={gradientStyle}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
@@ -132,6 +182,15 @@ function TimelineIssueCard({ entry, index, totalEntries, severityLookup, fallbac
                 View on comics.org
               </a>
             ) : null}
+            {showIssueStateActions ? (
+              <IssueStateActions
+                issueState={issueState}
+                disabled={issueStateDisabled}
+                disabledReason={issueStateDisabledReason}
+                pending={issueStatePending}
+                onToggle={onIssueStateToggle}
+              />
+            ) : null}
           </div>
         </div>
       </article>
@@ -140,3 +199,40 @@ function TimelineIssueCard({ entry, index, totalEntries, severityLookup, fallbac
 }
 
 export default TimelineIssueCard
+
+const ISSUE_STATE_TOGGLES = [
+  { key: 'haveIt', label: 'Have it', Icon: CheckCircle2 },
+  { key: 'readIt', label: 'Read it', Icon: BookOpen },
+]
+
+function IssueStateActions({ issueState, disabled, disabledReason, pending, onToggle }) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {ISSUE_STATE_TOGGLES.map(({ key, label, Icon }) => {
+        const active = Boolean(issueState?.[key])
+        const isDisabled = disabled || pending
+        return (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={active}
+            disabled={isDisabled}
+            onClick={() => onToggle?.(key, !active)}
+            title={isDisabled ? disabledReason ?? 'Issue states unavailable' : undefined}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+              active
+                ? 'border-slate-900 bg-slate-900 text-white shadow'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/40 hover:text-slate-900'
+            } ${isDisabled ? 'cursor-not-allowed opacity-60' : ''}`}
+          >
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+
+

@@ -11,6 +11,7 @@ import {
 import HeroTab from '@/components/HeroTab'
 import HeroDetail from '@/pages/HeroDetail'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
+import { SessionProvider } from '@/lib/sessionContext.jsx'
 
 const initialFormValues = {
   email: '',
@@ -200,9 +201,18 @@ function App() {
     }
   }, [session])
 
+  const sessionContextValue = useMemo(
+    () => ({
+      session,
+      isAuthenticated: Boolean(session),
+    }),
+    [session],
+  )
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-900/95 px-4 py-3 text-slate-50 shadow-md backdrop-blur">
+    <SessionProvider value={sessionContextValue}>
+      <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-900/95 px-4 py-3 text-slate-50 shadow-md backdrop-blur">
         <h1 className="m-0 text-lg font-semibold tracking-wide">IssueLine</h1>
         <div className="flex items-center gap-3 text-sm">
           {session ? (
@@ -359,8 +369,9 @@ function App() {
             </div>
           </article>
         </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </SessionProvider>
   )
 }
 
