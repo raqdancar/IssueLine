@@ -1,0 +1,57 @@
+import { CalendarDays } from 'lucide-react'
+
+function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, isFlashing = false, onEntryHighlight }) {
+  const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
+  const { seriesName, number, publicationDate } = meta
+  const haveIt = Boolean(issueState?.haveIt)
+  const readIt = Boolean(issueState?.readIt)
+  const handleHighlight = () => onEntryHighlight?.(entryDomId)
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleHighlight()
+    }
+  }
+  const highlightClasses = isHighlighted ? 'ring-2 ring-indigo-400/60 shadow-lg shadow-indigo-200/40' : 'shadow-sm'
+  const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/60' : ''
+  const borderGlow = `${highlightClasses} ${flashClasses}`.trim()
+
+  return (
+    <li id={entryDomId} className="relative pl-6">
+      <span className={`absolute left-0 top-1 h-2.5 w-2.5 rounded-full border ${severityVariant.dot}`} aria-hidden="true" />
+      {!isLast ? (
+        <span className="absolute left-[0.4rem] top-4 block h-full w-px bg-gradient-to-b from-slate-200 to-transparent" />
+      ) : null}
+      <article
+        role="button"
+        tabIndex={0}
+        onClick={handleHighlight}
+        onKeyDown={handleKeyDown}
+        className={`rounded-lg border border-slate-200 bg-white px-2.5 py-2 ${borderGlow}`}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays className="h-3 w-3 text-slate-500" aria-hidden="true" />
+            {issueDateLabel}
+          </span>
+          {number ? <span className="text-slate-500">#{number}</span> : null}
+        </div>
+        <p className="mt-1 text-sm font-semibold text-slate-800 leading-snug">{entry.headline}</p>
+        {entry.summary ? <p className="mt-1 text-[11px] text-slate-500">{entry.summary}</p> : null}
+        <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+          {seriesName ? <span>{seriesName}</span> : null}
+          {stageName ? <span>{stageName}</span> : null}
+          {publicationDate ? <span>{publicationDate}</span> : null}
+        </div>
+        {(haveIt || readIt) && (
+          <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
+            {haveIt ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Have</span> : null}
+            {readIt ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-700">Read</span> : null}
+          </div>
+        )}
+      </article>
+    </li>
+  )
+}
+
+export default TimelineIssueCardMicro

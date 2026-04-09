@@ -146,4 +146,13 @@
   .body-xs {
     @apply text-xs text-slate-500 leading-snug;
   }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

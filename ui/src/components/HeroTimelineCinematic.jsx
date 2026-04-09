@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
+import { normalizeIntegerText } from '@/utils/numberFormatters'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
@@ -189,6 +190,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                     meta.stage_name ?? meta.stageName ?? meta.stage?.name ?? meta.stage?.label ?? null
                   const stageSummary =
                     meta.stage_summary ?? meta.stageSummary ?? meta.stage?.short_summary ?? meta.stage?.summary ?? null
+                  const pageCount = normalizeIntegerText(meta.page_count ?? meta.pageCount ?? null)
                   return (
                     <article
                       key={entry.id ?? `${issueLabel}-${entry.issue_date}`}
@@ -245,10 +247,10 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                               <dd>{meta.price}</dd>
                             </div>
                           ) : null}
-                          {meta.page_count ? (
+                          {pageCount ? (
                             <div>
                               <dt className="font-semibold text-slate-100">Pages</dt>
-                              <dd>{meta.page_count}</dd>
+                              <dd>{pageCount}</dd>
                             </div>
                           ) : null}
                           {meta.rating ? (
