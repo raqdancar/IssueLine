@@ -67,13 +67,12 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
   const canUseIssueStateActions = Boolean(apiBaseUrl)
   const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId : null
+  const isSyncingIssueStates = issueStatesQuery.isFetching
   const issueStateDisabledReason = !isAuthenticated
     ? 'Sign in to track your collection.'
-    : issueStatesQuery.isFetching
-      ? 'Syncing your issue states...'
-      : issueStatesQuery.isError
-        ? 'Issue state sync is unavailable right now.'
-        : undefined
+    : issueStatesQuery.isError
+      ? 'Issue state sync is unavailable right now.'
+      : undefined
 
   useEffect(() => {
     if (!apiBaseUrl || !slug) return undefined
@@ -258,6 +257,9 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
           {!isAuthenticated ? (
             <p className="body-xs text-slate-400">Sign in to track which issues you own or have read.</p>
           ) : null}
+          {isAuthenticated && isSyncingIssueStates ? (
+            <p className="body-xs text-slate-400">Syncing your issue states...</p>
+          ) : null}
           {issueStatesQuery.isError ? (
             <p className="body-xs text-rose-500">Unable to sync your issue states. Please try again.</p>
           ) : null}
@@ -399,7 +401,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                       fallbackImage={fallbackImage}
                       issueState={entry.id ? issueStatesById[entry.id] : undefined}
                       showIssueStateActions={Boolean(entry.id && canUseIssueStateActions && !hideIssueStateActions)}
-                      issueStateDisabled={!isAuthenticated || issueStatesQuery.isFetching || issueStatesQuery.isError}
+                      issueStateDisabled={!isAuthenticated || issueStatesQuery.isError}
                       issueStateDisabledReason={issueStateDisabledReason}
                       issueStatePending={pendingIssueId === entry.id}
                       onIssueStateToggle={(field, nextValue) =>

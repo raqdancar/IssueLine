@@ -1,7 +1,21 @@
-import { gcdGet } from './gcdClient.js'
-import { upsertHeroIssues } from './heroIssuesService.js'
-import { getExistingGcdIssueIds, insertHeroTimelineEntries } from './heroTimelineService.js'
-import { mapIssueToTimelineEntry } from './gcdIssueMapper.js'
+﻿const BRITISH_REGEX = /\\[british]/i
+const DIRECT_REGEX = /direct/i
+const NEWSSTAND_REGEX = /(newsstand|newstand)/i
+
+const descriptorAllowed = (descriptor, { directOnly, skipNewsstand }) => {
+  const label = descriptor ?? ''
+  if (BRITISH_REGEX.test(label)) return false
+  if (skipNewsstand && NEWSSTAND_REGEX.test(label)) return false
+  if (directOnly) {
+    return DIRECT_REGEX.test(label)
+  }
+  return true
+}
+
+import { gcdGet } from './client.js'
+import { upsertHeroIssues } from '../hero/issuesService.js'
+import { getExistingGcdIssueIds, insertHeroTimelineEntries } from '../hero/timelineService.js'
+import { mapIssueToTimelineEntry, extractIssueIdFromUrl } from './issueMapper.js'
 
 const parseSeriesId = (value) => {
   const numeric = Number(value)
@@ -19,12 +33,19 @@ const fetchIssue = async (issueUrl) => {
   return gcdGet(issueUrl)
 }
 
+const resolveIssueIdentifier = (issue) => {
+  const identifier = issue?.id ?? extractIssueIdFromUrl(issue?.api_url)
+  return identifier === undefined || identifier === null ? null : String(identifier)
+}
+
 export const syncSeriesIssuesForHero = async ({
   hero,
   seriesId,
   limit = 50,
   offset = 0,
   issueUrlsOverride = null,
+  directOnly = false,
+  skipNewsstand = true,
 }) => {
   if (!hero?.api_id) {
     throw new Error('Hero information is required.')
@@ -52,7 +73,17 @@ export const syncSeriesIssuesForHero = async ({
 
     const filteredPairs = allIssueUrls
       .map((url, index) => ({ url, descriptor: descriptors[index] }))
-      .filter((pair) => !/\[british]/i.test(pair.descriptor ?? ''))
+      .filter((pair) => descriptorAllowed(pair.descriptor, { directOnly, skipNewsstand }))
+    if (!filteredPairs.length) {
+      return {
+        hero,
+        seriesId: normalizedSeriesId,
+        fetchedIssues: 0,
+        upsertedIssues: 0,
+        timelineInserted: 0,
+        nextOffset: null,
+      }
+    }
 
     const boundedOffset = Math.max(0, Math.min(offset, filteredPairs.length - 1))
     const slice = filteredPairs.slice(boundedOffset, boundedOffset + limit)
@@ -78,11 +109,15 @@ export const syncSeriesIssuesForHero = async ({
   for (const issueUrl of issueUrls) {
     const issue = await fetchIssue(issueUrl)
     issuesBuffer.push(issue)
-    if (!existingIds.has(issue.id)) {
+    const identifier = resolveIssueIdentifier(issue)
+    const alreadyExists = identifier ? existingIds.has(identifier) : false
+    if (!alreadyExists) {
       const timelineEntry = mapIssueToTimelineEntry(issue)
       if (timelineEntry) {
         newTimelineEntries.push(timelineEntry)
-        existingIds.add(issue.id)
+        if (identifier) {
+          existingIds.add(identifier)
+        }
       }
     }
   }
@@ -101,3 +136,10 @@ export const syncSeriesIssuesForHero = async ({
     nextOffset,
   }
 }
+
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 import { Agent, fetch, Headers, Request, Response } from 'undici'
-import { environment } from '../config/environment.js'
-import { registerGcdRequest } from './gcdRequestTracker.js'
+import { environment } from '../../config/environment.js'
+import { registerGcdRequest } from './requestTracker.js'
 
 if (!globalThis.fetch) {
   globalThis.fetch = fetch

@@ -1,4 +1,4 @@
-import { gcdGet } from './gcdClient.js'
+import { gcdGet } from './client.js'
 
 const normalizeIssueUrls = (seriesResults) => {
   const urls = []

@@ -2,8 +2,8 @@ import crypto from 'node:crypto'
 import path from 'node:path'
 import { promisify } from 'node:util'
 import sizeOf from 'image-size'
-import { environment } from '../config/environment.js'
-import { supabaseServiceClient } from './supabaseClient.js'
+import { environment } from '../../config/environment.js'
+import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 const randomBytesAsync = promisify(crypto.randomBytes)
 

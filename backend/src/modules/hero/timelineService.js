@@ -1,5 +1,5 @@
-import { supabaseServiceClient } from './supabaseClient.js'
-import { getHeroIssueCoverPathMap } from './heroIssuesService.js'
+﻿import { supabaseServiceClient } from '../../lib/supabaseClient.js'
+import { getHeroIssueCoverPathMap } from './issuesService.js'
 
 const normalizeIssueDate = (value) => {
   if (!value) {
@@ -127,7 +127,7 @@ export const getExistingGcdIssueIds = async (heroApiId) => {
   for (const row of data ?? []) {
     const gcdIssueId = row?.metadata?.gcdIssueId || row?.metadata?.metronIssueId
     if (gcdIssueId) {
-      identifiers.add(gcdIssueId)
+      identifiers.add(String(gcdIssueId))
     }
   }
   return identifiers
@@ -157,3 +157,4 @@ export const insertHeroTimelineEntries = async (heroApiId, entries) => {
 
   return data ?? []
 }
+

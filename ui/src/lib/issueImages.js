@@ -1,3 +1,4 @@
+﻿// Timeline covers live in the hero-images bucket
 export const ISSUE_IMAGE_BUCKET = 'issue-images'
 
 const trimTrailingSlash = (value) => {
@@ -38,3 +39,4 @@ export const resolveIssueCoverImage = (metadata = {}, fallbackImage = null) => {
   const uploadedCover = buildIssueImageUrl(storagePath)
   return uploadedCover || metadata.cover || metadata.coverUrl || metadata.cover_url || fallbackImage || null
 }
+

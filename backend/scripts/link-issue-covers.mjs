@@ -1,5 +1,6 @@
 import process from 'node:process'
-import { supabaseServiceClient } from '../src/services/supabaseClient.js'
+import { supabaseServiceClient } from '../src/lib/supabaseClient.js'
+import { coerceSeriesSlugSource } from '../src/utils/seriesNameUtils.js'
 
 const DEFAULT_BUCKET = process.env.ISSUE_IMAGE_BUCKET ?? 'issue-images'
 const DEFAULT_PREFIX = process.env.ISSUE_IMAGE_PREFIX ?? 'covers'
@@ -37,8 +38,9 @@ const parseArgs = () => {
 const sanitizeSegment = (value) => value?.replace(/^\/+|\/+$/g, '') ?? ''
 
 const slugifySeriesName = (value) => {
-  if (!value) return null
-  const withoutParens = value.replace(/\([^)]*\)/g, ' ')
+  const source = coerceSeriesSlugSource(value)
+  if (!source) return null
+  const withoutParens = source.replace(/\([^)]*\)/g, ' ')
   return withoutParens
     .toLowerCase()
     .replace(/&/g, 'and')
@@ -46,6 +48,37 @@ const slugifySeriesName = (value) => {
     .replace(/^_+|_+$/g, '')
 }
 
+
+const buildFolderCandidates = (slug) => {
+  const candidates = new Set()
+  if (!slug) return candidates
+
+  const enqueue = (value) => {
+    const normalized = value.replace(/^_+|_+$/g, '')
+    if (normalized) {
+      candidates.add(normalized)
+    }
+  }
+
+  enqueue(slug)
+
+  const transforms = [
+    (value) => value.replace(/_series$/, ''),
+    (value) => value.replace(/_volume_\d+$/, ''),
+    (value) => value.replace(/_vol_\d+$/, ''),
+    (value) => value.replace(/_volume$/, ''),
+    (value) => value.replace(/_\d{4}$/, ''),
+  ]
+
+  for (const transform of transforms) {
+    const next = transform(slug)
+    if (next !== slug) {
+      enqueue(next)
+    }
+  }
+
+  return candidates
+}
 const normalizeIssueKey = (value) => {
   if (value === null || value === undefined) return null
   const trimmed = String(value).trim()
@@ -248,7 +281,16 @@ const main = async () => {
       continue
     }
 
-    const folderMap = coverIndex.get(folder)
+    const folderCandidates = buildFolderCandidates(folder)
+    let folderMap = null
+    for (const candidate of folderCandidates) {
+      const candidateMap = coverIndex.get(candidate)
+      if (candidateMap) {
+        folderMap = candidateMap
+        break
+      }
+    }
+
     if (!folderMap) {
       stats.missingSeriesFolder += 1
       continue
@@ -306,3 +348,7 @@ await main().catch((error) => {
   console.error(error)
   process.exit(1)
 })
+
+
+
+

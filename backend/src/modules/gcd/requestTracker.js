@@ -1,4 +1,4 @@
-import { environment } from '../config/environment.js'
+import { environment } from '../../config/environment.js'
 
 const minuteWindowMs = 60 * 1000
 const perMinuteTimestamps = []

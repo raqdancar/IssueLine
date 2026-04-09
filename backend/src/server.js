@@ -5,6 +5,7 @@ import { environment } from './config/environment.js'
 import { heroImagesRouter } from './routes/heroImagesRoutes.js'
 import { heroTimelineRouter } from './routes/heroTimelineRoutes.js'
 import { gcdRouter } from './routes/gcdRoutes.js'
+import { issueStatesRouter } from './routes/issueStateRoutes.js'
 import { errorHandler } from './middlewares/errorHandler.js'
 
 const app = express()
@@ -24,6 +25,7 @@ app.get('/health', (_req, res) => {
 app.use('/hero-images', heroImagesRouter)
 app.use('/hero-timelines', heroTimelineRouter)
 app.use('/gcd', gcdRouter)
+app.use('/issue-states', issueStatesRouter)
 app.use(errorHandler)
 
 app.listen(environment.serverPort, () => {

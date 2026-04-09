@@ -1,5 +1,5 @@
-import { environment } from '../config/environment.js'
-import { gcdGet } from './gcdClient.js'
+import { environment } from '../../config/environment.js'
+import { gcdGet } from './client.js'
 
 const seriesCache = new Map()
 

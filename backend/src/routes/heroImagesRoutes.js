@@ -8,7 +8,7 @@ import {
   updateHeroImage,
   uploadHeroImage,
   verifyHeroExists,
-} from '../services/heroImagesService.js'
+} from '../modules/hero/imagesService.js'
 
 const upload = multer({
   storage: multer.memoryStorage(),

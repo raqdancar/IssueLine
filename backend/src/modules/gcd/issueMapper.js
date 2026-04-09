@@ -1,4 +1,6 @@
-import { normalizeCoverUrl } from './gcdCoverUtils.js'
+import { normalizeCoverUrl } from './coverUtils.js'
+import { normalizeSeriesName } from '../../utils/seriesNameUtils.js'
+import { buildIssueHeadline } from '../../utils/issueHeadlineUtils.js'
 
 export const coerceIsoDate = (raw) => {
   if (!raw) return null
@@ -27,8 +29,9 @@ const normalizeIssueLabel = (issue) => {
   const descriptor = issue.descriptor?.trim()
   const number = issue.number?.trim()
   const parts = []
-  if (issue.series_name) {
-    parts.push(issue.series_name.trim())
+  const normalizedSeriesName = normalizeSeriesName(issue.series_name)
+  if (normalizedSeriesName) {
+    parts.push(normalizedSeriesName)
   }
   if (descriptor) {
     parts.push(descriptor)
@@ -38,7 +41,7 @@ const normalizeIssueLabel = (issue) => {
   return parts.length ? parts.join(' ') : 'Issue'
 }
 
-const extractIssueIdFromUrl = (url) => {
+export const extractIssueIdFromUrl = (url) => {
   if (!url) return null
   const match = /\/issue\/(\d+)\//.exec(url)
   return match ? Number(match[1]) : null
@@ -54,10 +57,17 @@ export const mapIssueToTimelineEntry = (issue) => {
   const gcdIssueId = issue.id ?? extractIssueIdFromUrl(issue.api_url)
   const coverSmall = normalizeCoverUrl(issue.cover)
   const coverImagePath = issue.cover_image_path ?? issue.coverImagePath ?? null
+  const normalizedSeriesName = normalizeSeriesName(issue.series_name) ?? issue.series_name ?? null
+  const timelineHeadline = buildIssueHeadline({
+    seriesName: normalizedSeriesName,
+    number: issue.number,
+    issueCode: issue.issue_code ?? issue.descriptor ?? issueLabel,
+    fallback: issueLabel,
+  })
 
   return {
     issueDate: isoDate,
-    headline: issue.title?.trim() || issueLabel,
+    headline: timelineHeadline,
     summary: issue.notes?.trim() || issue.publication_date || null,
     issueCode: issue.descriptor || issue.number || issueLabel,
     severity: 'info',
@@ -75,8 +85,10 @@ export const mapIssueToTimelineEntry = (issue) => {
       apiUrl: issue.api_url,
       cover: coverSmall,
       cover_original: issue.cover,
-      seriesName: issue.series_name,
-      series_name: issue.series_name,
+      seriesName: normalizedSeriesName,
+      series_name: normalizedSeriesName,
+      seriesNameRaw: issue.series_name ?? null,
+      series_name_raw: issue.series_name ?? null,
       price: issue.price,
       pageCount: issue.page_count,
       page_count: issue.page_count,
@@ -88,3 +100,4 @@ export const mapIssueToTimelineEntry = (issue) => {
     sourceUrl: issue.api_url?.replace('?format=json', '') ?? null,
   }
 }
+

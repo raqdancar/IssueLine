@@ -1,13 +1,13 @@
 import express from 'express'
 import { z } from 'zod'
 import { environment } from '../config/environment.js'
-import { getHeroBySlug, getExistingGcdIssueIds, insertHeroTimelineEntries } from '../services/heroTimelineService.js'
-import { getSeriesMatchesForHero, searchSeriesByName } from '../services/gcdSeriesService.js'
-import { fetchSeriesIssues, getIssueById } from '../services/gcdIssueService.js'
-import { refreshHeroTimelineCovers } from '../services/gcdTimelineMaintenanceService.js'
-import { mapIssueToTimelineEntry } from '../services/gcdIssueMapper.js'
-import { syncSeriesIssuesForHero } from '../services/gcdIssueSyncService.js'
-import { getHeroIssuesByNumberRange, mapHeroIssueRowToTimelineEntry } from '../services/heroIssuesService.js'
+import { getHeroBySlug, getExistingGcdIssueIds, insertHeroTimelineEntries } from '../modules/hero/timelineService.js'
+import { getSeriesMatchesForHero, searchSeriesByName } from '../modules/gcd/seriesService.js'
+import { fetchSeriesIssues, getIssueById } from '../modules/gcd/issueService.js'
+import { refreshHeroTimelineCovers } from '../modules/gcd/timelineMaintenanceService.js'
+import { mapIssueToTimelineEntry } from '../modules/gcd/issueMapper.js'
+import { syncSeriesIssuesForHero } from '../modules/gcd/issueSyncService.js'
+import { getHeroIssuesByNumberRange, mapHeroIssueRowToTimelineEntry } from '../modules/hero/issuesService.js'
 
 const searchSchema = z.object({
   name: z.string().min(1).max(200),

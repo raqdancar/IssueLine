@@ -88,7 +88,7 @@ function HeroTab({ hero }) {
             <dd className="title-xs text-slate-800">
               {Number.isFinite(Number(stats[label]))
                 ? Number(stats[label])
-                : (stats[label] ?? '—')}
+                : (stats[label] ?? 'ï¿½')}
             </dd>
           </div>
         ))}

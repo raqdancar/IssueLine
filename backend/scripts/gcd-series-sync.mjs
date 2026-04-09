@@ -1,12 +1,12 @@
-import { setTimeout as delay } from 'node:timers/promises'
+﻿import { setTimeout as delay } from 'node:timers/promises'
 import { environment } from '../src/config/environment.js'
-import { getHeroBySlug } from '../src/services/heroTimelineService.js'
-import { syncSeriesIssuesForHero } from '../src/services/gcdIssueSyncService.js'
-import { gcdGet } from '../src/services/gcdClient.js'
+import { getHeroBySlug } from '../src/modules/hero/timelineService.js'
+import { syncSeriesIssuesForHero } from '../src/modules/gcd/issueSyncService.js'
+import { gcdGet } from '../src/modules/gcd/client.js'
 
 const printUsage = () => {
   console.log(
-    'Usage: node ./scripts/gcd-series-sync.mjs <hero-slug> <series-id> [--batch=12] [--delay=65000] [--offset=0] [--issue-start=131] [--issue-end=168]'
+    'Usage: node ./scripts/gcd-series-sync.mjs <hero-slug> <series-id> [--batch=12] [--delay=65000] [--offset=0] [--issue-start=131] [--issue-end=168] [--direct-only] [--include-newsstand]'
   )
 }
 
@@ -18,6 +18,8 @@ const parseArgs = () => {
     offset: 0,
     issueStart: null,
     issueEnd: null,
+    directOnly: false,
+    skipNewsstand: true,
   }
 
   for (const token of rest) {
@@ -34,12 +36,31 @@ const parseArgs = () => {
       options.issueStart = value
     } else if ((key === 'issue-end' || key === 'end') && value) {
       options.issueEnd = value
+    } else if (key === 'direct-only') {
+      options.directOnly = true
+    } else if (key === 'include-newsstand') {
+      options.skipNewsstand = false
+    } else if (key === 'skip-newsstand') {
+      options.skipNewsstand = true
     }
   }
 
   return { slug, seriesId, options }
 }
 
+const BRITISH_REGEX = /\[british]/i
+const DIRECT_REGEX = /direct/i
+const NEWSSTAND_REGEX = /(newsstand|newstand)/i
+
+const shouldIncludeDescriptor = (descriptor, { directOnly, skipNewsstand }) => {
+  const label = descriptor ?? ''
+  if (BRITISH_REGEX.test(label)) return false
+  if (skipNewsstand && NEWSSTAND_REGEX.test(label)) return false
+  if (directOnly) {
+    return DIRECT_REGEX.test(label)
+  }
+  return true
+}
 const findOffsetForIssue = async (seriesId, descriptor) => {
   const series = await gcdGet(`series/${seriesId}/`)
   const descriptors = series?.issue_descriptors ?? []
@@ -60,7 +81,7 @@ const normalizeDescriptorNumber = (descriptor) => {
   return Number.isNaN(numeric) ? null : numeric
 }
 
-const buildIssueQueue = async (seriesId, startDescriptor, endDescriptor) => {
+const buildIssueQueue = async (seriesId, startDescriptor, endDescriptor, filters) => {
   const series = await gcdGet(`series/${seriesId}/`)
   const descriptors = series?.issue_descriptors ?? []
   const issues = series?.active_issues ?? []
@@ -80,7 +101,7 @@ const buildIssueQueue = async (seriesId, startDescriptor, endDescriptor) => {
     }))
     .filter((entry) => {
       if (!entry.url || entry.number === null) return false
-      if (/\[british]/i.test(entry.descriptor)) return false
+      if (!shouldIncludeDescriptor(entry.descriptor, filters)) return false
       if (normalizedStart !== null && entry.number < normalizedStart) return false
       if (normalizedEnd !== null && entry.number > normalizedEnd) return false
       return true
@@ -107,7 +128,7 @@ const main = async () => {
   const descriptorRangeSpecified = options.issueStart || options.issueEnd
 
   if (descriptorRangeSpecified) {
-    const queue = await buildIssueQueue(seriesId, options.issueStart, options.issueEnd)
+    const queue = await buildIssueQueue(seriesId, options.issueStart, options.issueEnd, options)
     if (!queue.length) {
       throw new Error('No issues found for the requested descriptor range.')
     }
@@ -123,11 +144,13 @@ const main = async () => {
     while (processed < queue.length) {
       const chunk = queue.slice(processed, processed + options.batch)
       const chunkUrls = chunk.map((entry) => entry.url)
-      const chunkLabels = `${chunk[0].descriptor}–${chunk.at(-1).descriptor}`
+      const chunkLabels = `${chunk[0].descriptor}â€“${chunk.at(-1).descriptor}`
       const result = await syncSeriesIssuesForHero({
         hero,
         seriesId,
         issueUrlsOverride: chunkUrls,
+        directOnly: options.directOnly,
+        skipNewsstand: options.skipNewsstand,
       })
 
       console.log(
@@ -166,6 +189,8 @@ const main = async () => {
       seriesId,
       limit: options.batch,
       offset: nextOffset,
+      directOnly: options.directOnly,
+      skipNewsstand: options.skipNewsstand,
     })
 
     console.log(
@@ -188,3 +213,12 @@ main().catch((error) => {
   console.error('GCD series sync failed:', error)
   process.exit(1)
 })
+
+
+
+
+
+
+
+
+

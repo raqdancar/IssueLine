@@ -1,6 +1,6 @@
 import express from 'express'
 import { z } from 'zod'
-import { createHeroTimelineEntry, getHeroBySlug, getHeroTimelineEntries } from '../services/heroTimelineService.js'
+import { createHeroTimelineEntry, getHeroBySlug, getHeroTimelineEntries } from '../modules/hero/timelineService.js'
 
 const paramsSchema = z.object({
   slug: z.string().min(1).max(120),

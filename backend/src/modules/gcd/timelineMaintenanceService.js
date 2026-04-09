@@ -1,6 +1,6 @@
-import { gcdGet } from './gcdClient.js'
-import { supabaseServiceClient } from './supabaseClient.js'
-import { normalizeCoverUrl } from './gcdCoverUtils.js'
+﻿import { gcdGet } from './client.js'
+import { supabaseServiceClient } from '../../lib/supabaseClient.js'
+import { normalizeCoverUrl } from './coverUtils.js'
 
 const extractGcdIssueId = (metadata = {}) => {
   if (metadata.gcdIssueId) return Number(metadata.gcdIssueId)
@@ -79,3 +79,4 @@ export const refreshHeroTimelineCovers = async ({ heroApiId, limit = 25 }) => {
     results: refreshed,
   }
 }
+
