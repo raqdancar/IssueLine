@@ -1,21 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import HeroTab from '@/components/HeroTab'
 import HeroDetail from '@/pages/HeroDetail'
+import AuthDialog from '@/components/AuthDialog'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
 
 const initialFormValues = {
   email: '',
   password: '',
+  confirmPassword: '',
 }
 
 const statusClasses = {
@@ -38,7 +33,8 @@ function App() {
   const [status, setStatus] = useState({ state: 'idle', message: '' })
   const [saving, setSaving] = useState(false)
   const [session, setSession] = useState(null)
-  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('sign-in')
+  const [isAuthDialogOpen, setAuthDialogOpen] = useState(false)
   const [heroes, setHeroes] = useState([])
   const [heroesStatus, setHeroesStatus] = useState({ state: 'idle', message: '' })
 
@@ -145,8 +141,7 @@ function App() {
     }
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const handleSignIn = async () => {
     if (!supabase) return
 
     if (!formValues.email.trim() || !formValues.password.trim()) {
@@ -155,7 +150,7 @@ function App() {
     }
 
     setSaving(true)
-    setStatus({ state: 'loading', message: 'Validando credenciales�' })
+    setStatus({ state: 'loading', message: 'Validating credentials…' })
 
     const credentials = {
       email: formValues.email.trim().toLowerCase(),
@@ -177,7 +172,49 @@ function App() {
       })
       setFormValues(initialFormValues)
       await recordLoginAudit(data.user)
-      setIsLoginOpen(false)
+      setAuthDialogOpen(false)
+      setAuthMode('sign-in')
+    }
+
+    setSaving(false)
+  }
+
+  const handleSignUp = async () => {
+    if (!supabase) return
+
+    if (!formValues.email.trim() || !formValues.password.trim()) {
+      setStatus({ state: 'error', message: 'Email and password are required.' })
+      return
+    }
+
+    if (formValues.password !== formValues.confirmPassword) {
+      setStatus({ state: 'error', message: 'Passwords do not match.' })
+      return
+    }
+
+    setSaving(true)
+    setStatus({ state: 'loading', message: 'Creating account…' })
+
+    const credentials = {
+      email: formValues.email.trim().toLowerCase(),
+      password: formValues.password,
+    }
+
+    const { data, error } = await supabase.auth.signUp(credentials)
+
+    if (error) {
+      setStatus({ state: 'error', message: error.message })
+      setSaving(false)
+      return
+    }
+
+    if (data?.user) {
+      setStatus({
+        state: 'success',
+        message: 'Account created. Check your inbox to confirm your email.',
+      })
+      setFormValues(initialFormValues)
+      setAuthMode('sign-in')
     }
 
     setSaving(false)
@@ -227,68 +264,17 @@ function App() {
               No active session
             </span>
           )}
-          <Popover open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-              >
-                Login
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-80 space-y-4"
-              align="end"
-              side="bottom"
-              sideOffset={12}
-            >
-              {!isSupabaseConfigured ? (
-                <div className="space-y-2 text-sm">
-                  <p className="font-semibold text-slate-800">Configure Supabase</p>
-                  <p className="text-slate-600">
-                    Fill out <code>.env</code> with <code>VITE_SUPABASE_URL</code> and{' '}
-                    <code>VITE_SUPABASE_ANON_KEY</code> to enable sign in.
-                  </p>
-                </div>
-              ) : (
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="ada@example.com"
-                      value={formValues.email}
-                      onChange={handleChange}
-                      autoComplete="email"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="********"
-                      value={formValues.password}
-                      onChange={handleChange}
-                      autoComplete="current-password"
-                    />
-                  </div>
-                  <Button className="w-full" type="submit" disabled={saving}>
-                    {saving ? 'Validando�' : 'Sign in'}
-                  </Button>
-                  {status.message ? (
-                    <p className={`text-sm ${statusClasses[status.state]}`} role="status">
-                      {status.message}
-                    </p>
-                  ) : null}
-                </form>
-              )}
-            </PopoverContent>
-          </Popover>
+          <Button
+            type="button"
+            variant="outline"
+            className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+            onClick={() => {
+              setAuthMode('sign-in')
+              setAuthDialogOpen(true)
+            }}
+          >
+            Sign in / Sign up
+          </Button>
         </div>
       </header>
 
@@ -368,9 +354,22 @@ function App() {
               </div>
             </div>
           </article>
-        </div>
+      </div>
         </footer>
       </div>
+      <AuthDialog
+        open={isAuthDialogOpen}
+        mode={authMode}
+        onModeChange={setAuthMode}
+        onClose={() => setAuthDialogOpen(false)}
+        onSignIn={handleSignIn}
+        onSignUp={handleSignUp}
+        formValues={formValues}
+        onChange={handleChange}
+        status={status}
+        saving={saving}
+        isConfigured={isSupabaseConfigured}
+      />
     </SessionProvider>
   )
 }
