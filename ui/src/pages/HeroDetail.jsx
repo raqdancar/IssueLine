@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'
 import HeroTimelineCinematic from '@/components/HeroTimelineCinematic'
+import HeroTimelineInsights from '@/components/HeroTimelineInsights'
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 
@@ -96,7 +97,7 @@ function HeroDetail() {
 
   if (!isSupabaseConfigured || !supabase) {
     return (
-      <section className="w-full rounded-[32px] border border-slate-100 bg-white/80 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 lg:p-8">
+      <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
         {detailHeader}
         <p className="mt-4 body-sm">
           Configure <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to view hero details.
@@ -106,7 +107,7 @@ function HeroDetail() {
   }
 
   return (
-    <section className="w-full rounded-[32px] border border-slate-100 bg-white/80 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
+    <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
       {detailHeader}
       <div className="mt-6">
         {status === 'loading' ? (
@@ -173,13 +174,14 @@ function HeroDetail() {
                     <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 shadow-inner">
                       <dt className="eyebrow text-slate-400">{label}</dt>
                       <dd className="title-xs text-slate-800">
-                        {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? '—'}
+                        {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? '--'}
                       </dd>
                     </div>
                   ))}
                 </dl>
               </aside>
               <div className="space-y-5">
+                <HeroTimelineInsights heroSlug={hero.slug} heroName={hero.name} />
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-600 shadow-inner">
                   <div>
                     <p className="eyebrow text-slate-500">Timeline style</p>
@@ -215,8 +217,6 @@ function HeroDetail() {
               </div>
             </div>
           </div>
-
-
         ) : (
           <p className="body-sm text-slate-500">Select a hero from the roster to view their timeline.</p>
         )}

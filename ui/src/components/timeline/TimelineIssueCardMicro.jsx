@@ -2,7 +2,7 @@ import { CalendarDays } from 'lucide-react'
 
 function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, isFlashing = false, onEntryHighlight }) {
   const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
-  const { seriesName, number, publicationDate } = meta
+  const { seriesName, number, publicationDate, legacyNumber } = meta
   const haveIt = Boolean(issueState?.haveIt)
   const readIt = Boolean(issueState?.readIt)
   const handleHighlight = () => onEntryHighlight?.(entryDomId)
@@ -27,28 +27,39 @@ function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, 
         tabIndex={0}
         onClick={handleHighlight}
         onKeyDown={handleKeyDown}
-        className={`rounded-lg border border-slate-200 bg-white px-2.5 py-2 ${borderGlow}`}
+        className={`rounded-lg border border-slate-200 bg-white p-2.5 ${borderGlow}`}
       >
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-          <span className="inline-flex items-center gap-1">
-            <CalendarDays className="h-3 w-3 text-slate-500" aria-hidden="true" />
-            {issueDateLabel}
-          </span>
-          {number ? <span className="text-slate-500">#{number}</span> : null}
-        </div>
-        <p className="mt-1 text-sm font-semibold text-slate-800 leading-snug">{entry.headline}</p>
-        {entry.summary ? <p className="mt-1 text-[11px] text-slate-500">{entry.summary}</p> : null}
-        <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
-          {seriesName ? <span>{seriesName}</span> : null}
-          {stageName ? <span>{stageName}</span> : null}
-          {publicationDate ? <span>{publicationDate}</span> : null}
-        </div>
-        {(haveIt || readIt) && (
-          <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
-            {haveIt ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Have</span> : null}
-            {readIt ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-700">Read</span> : null}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="h-3 w-3 text-slate-500" aria-hidden="true" />
+              {issueDateLabel}
+            </span>
+            {number || legacyNumber ? (
+              <span className="inline-flex items-center gap-2 text-slate-500">
+                {number ? <span>#{number}</span> : null}
+                {legacyNumber ? <span className="text-indigo-600">Legacy #{legacyNumber}</span> : null}
+              </span>
+            ) : null}
           </div>
-        )}
+          <p className="mt-1 text-sm font-semibold leading-snug text-slate-800">{entry.headline}</p>
+          {entry.summary ? <p className="mt-1 text-[11px] text-slate-500">{entry.summary}</p> : null}
+          <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+            {seriesName ? <span>{seriesName}</span> : null}
+            {publicationDate ? <span>{publicationDate}</span> : null}
+          </div>
+          {(haveIt || readIt) && (
+            <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
+              {haveIt ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Have</span> : null}
+              {readIt ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-700">Read</span> : null}
+            </div>
+          )}
+          {stageName ? (
+            <div className="text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-indigo-500">
+              {stageName}
+            </div>
+          ) : null}
+        </div>
       </article>
     </li>
   )

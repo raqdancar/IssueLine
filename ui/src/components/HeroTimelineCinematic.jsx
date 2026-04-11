@@ -1,6 +1,7 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
+import TimelineStageTab from './timeline/TimelineStageTab'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
@@ -196,7 +197,9 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                       key={entry.id ?? `${issueLabel}-${entry.issue_date}`}
                       className="group relative flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:border-white/30 hover:bg-white/10 md:flex-row"
                     >
-                      <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 md:w-40">
+                      {stageName ? <TimelineStageTab label={stageName} variant="dark" /> : null}
+                      <div className="flex flex-1 flex-col gap-4 md:flex-row">
+                        <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 md:w-40">
                         <div className="aspect-[2/3] w-full">
                           {coverImage ? (
                             <img
@@ -224,12 +227,6 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                           </span>
                           {meta.number ? <span>No. {meta.number}</span> : null}
                           {meta.volume ? <span>Vol. {meta.volume}</span> : null}
-                          {stageName ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/40 bg-emerald-300/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-100">
-                              Stage
-                              <span className="text-white">{stageName}</span>
-                            </span>
-                          ) : null}
                         </div>
                         <h4 className="title-sm text-white">{entry.headline}</h4>
                         {entry.summary ? <p className="body-sm text-slate-200/80">{entry.summary}</p> : null}
@@ -271,6 +268,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                           </a>
                         ) : null}
                       </div>
+                    </div>
                     </article>
                   )
                 })}
@@ -284,6 +282,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
 }
 
 export default HeroTimelineCinematic
+
 
 
 

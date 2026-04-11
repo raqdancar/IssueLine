@@ -14,7 +14,7 @@ function TimelineIssueCardCompact({
   onEntryHighlight,
 }) {
   const { entry, entryDomId, isLast, severityVariant, gradientStyle, issueDateLabel, stageName, meta } = viewModel
-  const { seriesName, number, publicationDate } = meta
+  const { seriesName, number, publicationDate, legacyNumber } = meta
   const handleHighlight = () => onEntryHighlight?.(entryDomId)
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -40,36 +40,51 @@ function TimelineIssueCardCompact({
         className={`rounded-xl border ${severityVariant.panel} p-2.5 transition hover:-translate-y-0.5 ${articleEmphasis}`}
         style={gradientStyle}
       >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
-            <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-            {issueDateLabel}
-          </span>
-          {seriesName || number ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-              <span>{seriesName ?? 'Issue'}</span>
-              {number ? <span className="text-slate-500">#{number}</span> : null}
+        {stageName ? (
+          <div className="mb-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-indigo-600">
+            {stageName}
+          </div>
+        ) : null}
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+              <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+              {issueDateLabel}
             </span>
+            {seriesName || number || legacyNumber ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {seriesName || number ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
+                    <span>{seriesName ?? 'Issue'}</span>
+                    {number ? <span className="text-slate-500">#{number}</span> : null}
+                  </span>
+                ) : null}
+                {legacyNumber ? (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold text-indigo-700 shadow-sm">
+                    Legacy <span className="text-sm font-black text-indigo-900">#{legacyNumber}</span>
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+          <div className="space-y-1.5">
+            <h4 className="text-sm font-semibold leading-snug text-slate-700">{entry.headline}</h4>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
+              {seriesName ? <span className="text-slate-600">{seriesName}</span> : null}
+              {number ? <span className="text-slate-500">#{number}</span> : null}
+              {publicationDate ? <span>{publicationDate}</span> : null}
+            </div>
+          </div>
+          {showIssueStateActions ? (
+            <IssueStateActions
+              issueState={issueState}
+              disabled={issueStateDisabled}
+              disabledReason={issueStateDisabledReason}
+              pending={issueStatePending}
+              onToggle={onIssueStateToggle}
+            />
           ) : null}
         </div>
-        <div className="mt-3 space-y-1.5">
-          <h4 className="text-sm font-semibold text-slate-700 leading-snug">{entry.headline}</h4>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
-            {seriesName ? <span className="text-slate-600">{seriesName}</span> : null}
-            {number ? <span className="text-slate-500">#{number}</span> : null}
-            {stageName ? <span className="uppercase tracking-wide text-slate-400">{stageName}</span> : null}
-            {publicationDate ? <span>{publicationDate}</span> : null}
-          </div>
-        </div>
-        {showIssueStateActions ? (
-          <IssueStateActions
-            issueState={issueState}
-            disabled={issueStateDisabled}
-            disabledReason={issueStateDisabledReason}
-            pending={issueStatePending}
-            onToggle={onIssueStateToggle}
-          />
-        ) : null}
       </article>
     </li>
   )
