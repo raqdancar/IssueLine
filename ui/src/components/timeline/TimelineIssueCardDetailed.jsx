@@ -5,7 +5,6 @@ import TimelineStageTab from './TimelineStageTab'
 function TimelineIssueCardDetailed({
   viewModel,
   issueState,
-  stageIsComplete = false,
   showIssueStateActions = false,
   issueStateDisabled = false,
   issueStateDisabledReason,
@@ -54,7 +53,7 @@ function TimelineIssueCardDetailed({
         className={`flex overflow-hidden rounded-xl border ${severityVariant.panel} transition hover:-translate-y-0.5 ${articleEmphasis}`}
         style={gradientStyle}
       >
-        {stageName ? <TimelineStageTab label={stageName} isComplete={stageIsComplete} /> : null}
+        {stageName ? <TimelineStageTab label={stageName} /> : null}
         <div className="flex-1 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
@@ -90,9 +89,17 @@ function TimelineIssueCardDetailed({
           </div>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <div className="shrink-0">
-              <div className="flex h-32 w-24 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:h-36 sm:w-28">
+              <div
+                className="flex w-28 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:w-32"
+                style={{ aspectRatio: '2 / 3' }}
+              >
                 {coverImage ? (
-                  <img src={coverImage} alt={entry.metadata?.issueLabel ?? 'Issue cover'} className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={coverImage}
+                    alt={entry.metadata?.issueLabel ?? 'Issue cover'}
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                  />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-slate-50 text-center">
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">No cover</span>

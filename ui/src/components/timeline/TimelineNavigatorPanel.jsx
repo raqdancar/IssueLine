@@ -60,7 +60,7 @@ function TimelineNavigatorPanel({
               const isActive = activeAnchor === anchor.key
               const baseClasses = isPillMode
                 ? 'flex flex-col items-center justify-center text-center'
-                : 'flex w-full items-center justify-between text-left'
+                : 'flex w-full flex-col text-left'
               const activeClasses = isActive
                 ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/30'
                 : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/40 hover:text-slate-900'
@@ -72,17 +72,21 @@ function TimelineNavigatorPanel({
                   type="button"
                   aria-current={isActive ? 'true' : undefined}
                   onClick={() => onAnchorClick(anchor)}
-                  className={`group relative overflow-hidden rounded-2xl border px-3 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${baseClasses} ${activeClasses}`}
+                  className={`group relative overflow-hidden rounded-2xl border px-3 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${baseClasses} ${activeClasses}`}
                 >
-                  <div className={isPillMode ? 'space-y-1' : 'flex-1 pr-2'}>
-                    <span className={isPillMode ? 'text-sm font-semibold' : undefined}>{anchor.label}</span>
+                  <div className={isPillMode ? 'space-y-1' : 'w-full space-y-1 pr-8'}>
+                    <span className={isPillMode ? 'text-sm font-semibold' : 'font-semibold text-slate-800'}>
+                      {anchor.label}
+                    </span>
                     {!isPillMode && indexMode === 'stage' && anchor.summary ? (
-                      <p className="mt-1 text-[10px] font-normal uppercase tracking-[0.2em] text-slate-400">{anchor.summary}</p>
+                      <p className="text-[11px] font-normal leading-snug text-slate-500">
+                        {anchor.summary}
+                      </p>
                     ) : null}
                   </div>
                   <span
                     className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] ${countBadgeClasses} ${
-                      isPillMode ? '' : ''
+                      isPillMode ? '' : 'absolute right-3 top-2'
                     }`}
                   >
                     {anchor.count}

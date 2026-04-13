@@ -1,16 +1,14 @@
 const variantClasses = {
   light: 'bg-indigo-50/90 text-indigo-800 ring-indigo-100',
   dark: 'bg-emerald-400/20 text-emerald-50 ring-emerald-300/30',
-  complete: 'bg-emerald-200 text-slate-900 ring-emerald-400/80',
 }
 
-function TimelineStageTab({ label, variant = 'light', isComplete = false }) {
+function TimelineStageTab({ label, variant = 'light' }) {
   if (!label) {
     return null
   }
 
-  const resolvedVariant = isComplete ? 'complete' : variant
-  const variantClass = variantClasses[resolvedVariant] ?? variantClasses.light
+  const variantClass = variantClasses[variant] ?? variantClasses.light
 
   return (
     <div
