@@ -4,6 +4,7 @@ import IssueStateActions from './IssueStateActions'
 function TimelineIssueCardCompact({
   viewModel,
   issueState,
+  stageIsComplete = false,
   showIssueStateActions = false,
   issueStateDisabled = false,
   issueStateDisabledReason,
@@ -25,6 +26,9 @@ function TimelineIssueCardCompact({
   const highlightClasses = isHighlighted ? 'ring-2 ring-indigo-400/70 shadow-lg shadow-indigo-200/50' : 'shadow-sm'
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/50' : ''
   const articleEmphasis = `${highlightClasses} ${flashClasses}`.trim()
+  const stageLabelClasses = stageIsComplete
+    ? 'mb-2 rounded-full bg-emerald-200/90 px-3 py-1 text-center text-[10px] font-black uppercase tracking-[0.35em] text-slate-900 shadow-inner shadow-emerald-200/60'
+    : 'mb-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-indigo-600'
 
   return (
     <li id={entryDomId} className="relative pl-7">
@@ -41,7 +45,7 @@ function TimelineIssueCardCompact({
         style={gradientStyle}
       >
         {stageName ? (
-          <div className="mb-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-indigo-600">
+          <div className={stageLabelClasses}>
             {stageName}
           </div>
         ) : null}
@@ -91,3 +95,6 @@ function TimelineIssueCardCompact({
 }
 
 export default TimelineIssueCardCompact
+
+
+

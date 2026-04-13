@@ -199,8 +199,22 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
   const progressLabel =
     stage.issueCount > 0 ? `${stage.readCount} / ${stage.issueCount} read` : 'Read progress unavailable'
 
+  const containerClasses = isComplete
+    ? 'rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 shadow-sm ring-1 ring-emerald-100'
+    : 'rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm'
+
+  const badgeClasses = isComplete
+    ? 'inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700'
+    : `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${resolveStageColor(stage.name)}`
+
+  const progressPanelClasses = isComplete
+    ? 'flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-100/60 px-3 py-2 text-xs text-emerald-700'
+    : 'flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-2 text-xs text-slate-600'
+
+  const progressTextClasses = isComplete ? 'font-semibold text-emerald-800' : 'font-semibold text-slate-700'
+
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm">
+    <div className={containerClasses}>
       <button
         type="button"
         onClick={onToggle}
@@ -208,15 +222,13 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
         aria-expanded={isOpen}
       >
         <div>
-          <p className="text-sm font-semibold text-slate-900">{stage.name}</p>
-          <p className="text-xs text-slate-500">
+          <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-slate-900'}`}>{stage.name}</p>
+          <p className={`text-xs ${isComplete ? 'text-emerald-700' : 'text-slate-500'}`}>
             {stage.yearLabel} ? {stage.issueCount} issues ? {progressLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${resolveStageColor(stage.name)}`}>
-            Stage
-          </span>
+          <span className={badgeClasses}>{isComplete ? 'Stage ? Complete' : 'Stage'}</span>
           <ChevronDown
             className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             aria-hidden="true"
@@ -226,7 +238,9 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
       {isOpen ? (
         <div className="mt-3 space-y-3 text-sm text-slate-600">
           {stage.summary ? (
-            <p>{stage.summary}</p>
+            <p className={isComplete ? 'rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3 text-emerald-800 shadow-sm' : undefined}>
+              {stage.summary}
+            </p>
           ) : (
             <p className="italic text-slate-400">No summary has been added for this stage yet.</p>
           )}
@@ -235,8 +249,8 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
             <span className="font-semibold text-slate-600">Issues tracked:</span> {stage.issueCount}
           </div>
           {canManageStates ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-2 text-xs text-slate-600">
-              <div className="font-semibold text-slate-700">
+            <div className={progressPanelClasses}>
+              <div className={progressTextClasses}>
                 {progressLabel}
                 {stage.issueCount > 0 ? ` (${Math.round((stage.readCount / stage.issueCount) * 100)}%)` : ''}
               </div>
@@ -427,3 +441,6 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 }
 
 export default HeroTimelineInsights
+
+
+

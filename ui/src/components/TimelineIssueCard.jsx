@@ -18,6 +18,7 @@ function TimelineIssueCard(props) {
     severityLookup,
     fallbackImage,
     issueState,
+    stageCompletionByKey = null,
     density = 'detailed',
     highlightedEntryDomId = null,
     flashEntryDomId = null,
@@ -42,6 +43,9 @@ function TimelineIssueCard(props) {
 
   const isHighlighted = viewModel.entryDomId === highlightedEntryDomId
   const isFlashing = flashEntryDomId === viewModel.entryDomId
+  const stageKey = viewModel.stageKey ?? null
+  const stageCompletion = stageKey && stageCompletionByKey ? stageCompletionByKey[stageKey] : null
+  const stageIsComplete = Boolean(stageCompletion?.isComplete)
 
   return (
     <SelectedComponent
@@ -50,9 +54,14 @@ function TimelineIssueCard(props) {
       viewModel={viewModel}
       isHighlighted={isHighlighted}
       isFlashing={isFlashing}
+      stageIsComplete={stageIsComplete}
       onEntryHighlight={onEntryHighlight}
     />
   )
 }
 
 export default TimelineIssueCard
+
+
+
+

@@ -3,6 +3,7 @@ import TimelineHeader from './timeline/TimelineHeader'
 import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './timeline/TimelineNavigatorToggle'
 import TimelineList from './timeline/TimelineList'
+import { isAnnualIssueEntry } from './timeline/utils'
 import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket, resolveYearBucket } from '../utils/timeline'
 import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
@@ -15,6 +16,7 @@ import {
   ZOOM_STEP,
   indexModeOptions,
   severityVariants,
+  timelineIssueFilterOptions,
   timelineSortOptions,
 } from './timeline/constants'
 
@@ -22,6 +24,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   const apiBaseUrl = backendBaseUrl
   const [sortDirection, setSortDirection] = useState('desc')
   const [indexMode, setIndexMode] = useState('month')
+  const [issueFilter, setIssueFilter] = useState('all')
   const [activeAnchor, setActiveAnchor] = useState(null)
   const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
   const [zoomLevel, setZoomLevel] = useState(1)
@@ -83,6 +86,10 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     return () => controller.abort()
   }, [apiBaseUrl, slug])
 
+  useEffect(() => {
+    setIssueFilter('all')
+  }, [slug])
+
   const severityLookup = useMemo(() => severityVariants, [])
   const orderedEntries = useMemo(() => {
     const direction = sortDirection === 'asc' ? 1 : -1
@@ -95,12 +102,18 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
       return direction * (safeADate - safeBDate)
     })
   }, [entries, sortDirection])
+  const filteredEntries = useMemo(() => {
+    if (issueFilter === 'annuals') {
+      return orderedEntries.filter((entry) => isAnnualIssueEntry(entry))
+    }
+    return orderedEntries
+  }, [issueFilter, orderedEntries])
 
   const monthAnchors = useMemo(() => {
     const orderedKeys = []
     const groups = new Map()
 
-    orderedEntries.forEach((entry, index) => {
+    filteredEntries.forEach((entry, index) => {
       const bucket = resolveMonthBucket(entry)
       if (!groups.has(bucket.key)) {
         orderedKeys.push(bucket.key)
@@ -115,12 +128,12 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     })
 
     return orderedKeys.map((key) => groups.get(key))
-  }, [orderedEntries])
+  }, [filteredEntries])
 
   const stageAnchors = useMemo(() => {
     const orderedKeys = []
     const groups = new Map()
-    orderedEntries.forEach((entry, index) => {
+    filteredEntries.forEach((entry, index) => {
       const stage = getStageKey(entry)
       if (!stage) return
       if (!groups.has(stage.key)) {
@@ -141,12 +154,12 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
       groups.get(stage.key).count += 1
     })
     return orderedKeys.map((key) => groups.get(key))
-  }, [orderedEntries])
+  }, [filteredEntries])
 
   const yearAnchors = useMemo(() => {
     const orderedKeys = []
     const groups = new Map()
-    orderedEntries.forEach((entry, index) => {
+    filteredEntries.forEach((entry, index) => {
       const bucket = resolveYearBucket(entry)
       if (!groups.has(bucket.key)) {
         orderedKeys.push(bucket.key)
@@ -160,12 +173,12 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
       group.count += 1
     })
     return orderedKeys.map((key) => groups.get(key))
-  }, [orderedEntries])
+  }, [filteredEntries])
 
   const issueAnchors = useMemo(() => {
     const orderedKeys = []
     const groups = new Map()
-    orderedEntries.forEach((entry, index) => {
+    filteredEntries.forEach((entry, index) => {
       const issue = getIssueKey(entry)
       if (!issue) return
       if (!groups.has(issue.key)) {
@@ -180,7 +193,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
       groups.get(issue.key).count += 1
     })
     return orderedKeys.map((key) => groups.get(key))
-  }, [orderedEntries])
+  }, [filteredEntries])
 
   const anchorLookup = useMemo(() => {
     return {
@@ -312,6 +325,9 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
         onZoomOut={() => adjustZoomLevel(-ZOOM_STEP)}
         isZoomedIn={isZoomedIn}
         isZoomedOut={isZoomedOut}
+        issueFilter={issueFilter}
+        issueFilterOptions={timelineIssueFilterOptions}
+        onIssueFilterChange={setIssueFilter}
       />
       <div className="mt-6 space-y-4">
         {status === 'loading' ? (
@@ -320,6 +336,10 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
           <p className="body-sm text-rose-600">{error}</p>
         ) : orderedEntries.length === 0 ? (
           <p className="body-sm text-slate-500">No issues have been logged for this hero yet.</p>
+        ) : filteredEntries.length === 0 ? (
+          <p className="body-sm text-slate-500">
+            No annual issues are available for this hero. Switch back to 'All issues' to view the complete timeline.
+          </p>
         ) : (
           <div className="flex flex-col gap-4 lg:flex-row">
             {canShowNavigator && isNavigatorVisible ? (
@@ -338,7 +358,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                 <TimelineNavigatorToggle onClick={() => setIsNavigatorVisible(true)} />
               ) : null}
               <TimelineList
-                entries={orderedEntries}
+                entries={filteredEntries}
                 zoomLevel={zoomLevel}
                 listSpacingClass={timelineListSpacing}
                 timelineDensity={timelineDensity}

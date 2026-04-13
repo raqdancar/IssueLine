@@ -5,6 +5,7 @@ import TimelineStageTab from './TimelineStageTab'
 function TimelineIssueCardDetailed({
   viewModel,
   issueState,
+  stageIsComplete = false,
   showIssueStateActions = false,
   issueStateDisabled = false,
   issueStateDisabledReason,
@@ -53,7 +54,7 @@ function TimelineIssueCardDetailed({
         className={`flex overflow-hidden rounded-xl border ${severityVariant.panel} transition hover:-translate-y-0.5 ${articleEmphasis}`}
         style={gradientStyle}
       >
-        {stageName ? <TimelineStageTab label={stageName} /> : null}
+        {stageName ? <TimelineStageTab label={stageName} isComplete={stageIsComplete} /> : null}
         <div className="flex-1 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
@@ -174,3 +175,5 @@ function TimelineIssueCardDetailed({
 }
 
 export default TimelineIssueCardDetailed
+
+

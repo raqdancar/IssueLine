@@ -1,6 +1,6 @@
 import { CalendarDays } from 'lucide-react'
 
-function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, isFlashing = false, onEntryHighlight }) {
+function TimelineIssueCardMicro({ viewModel, issueState, stageIsComplete = false, isHighlighted = false, isFlashing = false, onEntryHighlight }) {
   const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
   const { seriesName, number, publicationDate, legacyNumber } = meta
   const haveIt = Boolean(issueState?.haveIt)
@@ -15,6 +15,9 @@ function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, 
   const highlightClasses = isHighlighted ? 'ring-2 ring-indigo-400/60 shadow-lg shadow-indigo-200/40' : 'shadow-sm'
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/60' : ''
   const borderGlow = `${highlightClasses} ${flashClasses}`.trim()
+  const stageLabelClasses = stageIsComplete
+    ? 'rounded-full bg-emerald-200/80 px-2 py-0.5 text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-slate-900'
+    : 'text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-indigo-500'
 
   return (
     <li id={entryDomId} className="relative pl-6">
@@ -55,7 +58,7 @@ function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, 
             </div>
           )}
           {stageName ? (
-            <div className="text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-indigo-500">
+            <div className={stageLabelClasses}>
               {stageName}
             </div>
           ) : null}
@@ -66,3 +69,6 @@ function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, 
 }
 
 export default TimelineIssueCardMicro
+
+
+

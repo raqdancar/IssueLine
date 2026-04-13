@@ -13,6 +13,9 @@ function TimelineHeader({
   onZoomOut,
   isZoomedIn,
   isZoomedOut,
+  issueFilter = 'all',
+  issueFilterOptions = [],
+  onIssueFilterChange,
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -83,6 +86,31 @@ function TimelineHeader({
             </button>
           </div>
         </div>
+        {issueFilterOptions.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="body-xs text-slate-500">Filter issues:</span>
+            <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+              {issueFilterOptions.map((option) => {
+                const isActive = issueFilter === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => onIssueFilterChange?.(option.value)}
+                    className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                      isActive
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   )
