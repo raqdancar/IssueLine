@@ -9,6 +9,45 @@ const mapStateRow = (row) => ({
   updatedAt: row.updated_at ?? null,
 })
 
+const resolveStageKey = (metadata = {}) => {
+  const rawStage =
+    metadata.stage_name ??
+    metadata.stageName ??
+    metadata.stage?.name ??
+    metadata.stage?.label ??
+    null
+
+  if (!rawStage || typeof rawStage !== 'string') {
+    return null
+  }
+
+  const normalized = rawStage.trim().toLowerCase()
+  return normalized || null
+}
+
+const fetchHeroTimelineStageMap = async (heroApiId) => {
+  const { data, error } = await supabaseServiceClient
+    .from('hero_timelines')
+    .select('id, metadata')
+    .eq('hero_api_id', heroApiId)
+
+  if (error) {
+    throw new Error(`Failed to load hero timeline entries: ${error.message}`)
+  }
+
+  const stageIndex = new Map()
+  for (const entry of data ?? []) {
+    const stageKey = resolveStageKey(entry.metadata)
+    if (!stageKey) continue
+    if (!stageIndex.has(stageKey)) {
+      stageIndex.set(stageKey, [])
+    }
+    stageIndex.get(stageKey).push(entry.id)
+  }
+
+  return stageIndex
+}
+
 export const getHeroTimelineIssueIds = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
@@ -114,4 +153,56 @@ export const applyIssueStatePatch = async ({ userId, issueId, patch }) => {
   }
 
   return mapStateRow(data)
+}
+
+export const markStageIssuesAsRead = async ({ userId, heroApiId, stageKey }) => {
+  if (!userId) {
+    throw new Error('User is required to update issue states.')
+  }
+  if (!heroApiId) {
+    throw new Error('heroApiId is required to mark stage issues.')
+  }
+  const normalizedStageKey = typeof stageKey === 'string' ? stageKey.trim().toLowerCase() : null
+  if (!normalizedStageKey) {
+    throw new Error('stageKey is required to mark stage issues.')
+  }
+
+  const stageMap = await fetchHeroTimelineStageMap(heroApiId)
+  const issueIds = stageMap.get(normalizedStageKey) ?? []
+
+  if (!issueIds.length) {
+    const error = new Error(`Stage "${stageKey}" has no tracked issues.`)
+    error.statusCode = 404
+    throw error
+  }
+
+  const existingStates = await getUserIssueStatesByIssueIds({ userId, issueIds })
+  const existingIndex = new Map(existingStates.map((state) => [state.issueId, state]))
+  const timestamp = new Date().toISOString()
+
+  const payload = issueIds.map((issueId) => {
+    const existing = existingIndex.get(issueId)
+    return {
+      user_id: userId,
+      issue_id: issueId,
+      have_it: existing?.haveIt ?? false,
+      read_it: true,
+      updated_at: timestamp,
+    }
+  })
+
+  const { data, error } = await supabaseServiceClient
+    .from(ISSUE_STATES_TABLE)
+    .upsert(payload, { onConflict: 'user_id,issue_id' })
+    .select('issue_id, have_it, read_it, updated_at')
+
+  if (error) {
+    throw new Error(`Failed to mark stage issues as read: ${error.message}`)
+  }
+
+  return {
+    stageKey: normalizedStageKey,
+    issueIds,
+    states: (data ?? []).map(mapStateRow),
+  }
 }

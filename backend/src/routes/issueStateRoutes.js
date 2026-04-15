@@ -6,6 +6,7 @@ import {
   applyIssueStatePatch,
   getHeroTimelineIssueIds,
   getUserIssueStatesByIssueIds,
+  markStageIssuesAsRead,
 } from '../modules/issue-state/service.js'
 
 const parseIssueIds = (value) => {
@@ -45,6 +46,17 @@ const patchSchema = z
 const paramsSchema = z.object({
   issueId: z.string().uuid(),
 })
+
+const stageActionSchema = z
+  .object({
+    heroSlug: z.string().min(1).max(120).optional(),
+    heroApiId: z.coerce.number().int().positive().optional(),
+    stageKey: z.string().min(1).max(200),
+  })
+  .refine((value) => value.heroSlug || value.heroApiId, {
+    message: 'Provide heroSlug or heroApiId.',
+    path: ['heroSlug'],
+  })
 
 export const issueStatesRouter = express.Router()
 
@@ -103,6 +115,34 @@ issueStatesRouter.patch('/:issueId', async (req, res, next) => {
 
     return res.json(state)
   } catch (error) {
+    return next(error)
+  }
+})
+
+issueStatesRouter.post('/stages/read', async (req, res, next) => {
+  try {
+    const payload = stageActionSchema.parse(req.body ?? {})
+    let heroApiId = payload.heroApiId
+
+    if (!heroApiId && payload.heroSlug) {
+      const hero = await getHeroBySlug(payload.heroSlug)
+      if (!hero) {
+        return res.status(404).json({ error: `Hero with slug \"${payload.heroSlug}\" was not found.` })
+      }
+      heroApiId = hero.api_id
+    }
+
+    const result = await markStageIssuesAsRead({
+      userId: req.user.id,
+      heroApiId,
+      stageKey: payload.stageKey,
+    })
+
+    return res.json(result)
+  } catch (error) {
+    if (error?.statusCode === 404) {
+      return res.status(404).json({ error: error.message })
+    }
     return next(error)
   }
 })

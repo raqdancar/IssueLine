@@ -37,6 +37,14 @@ const gcdHardLimitPerMinute = Number(process.env.GCD_HARD_LIMIT_PER_MIN ?? '20')
 const gcdSoftLimitPerDay = Number(process.env.GCD_SOFT_LIMIT_PER_DAY ?? '9500')
 const gcdHardLimitPerDay = Number(process.env.GCD_HARD_LIMIT_PER_DAY ?? '10000')
 const gcdSeriesCacheTtlMs = Number(process.env.GCD_SERIES_CACHE_TTL_MS ?? String(6 * 60 * 60 * 1000))
+const allowedOrigins = (process.env.BACKEND_ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+const allowedOriginPatterns = (process.env.BACKEND_ALLOWED_ORIGIN_PATTERNS ?? '')
+  .split(',')
+  .map((pattern) => pattern.trim())
+  .filter(Boolean)
 
 // GCD is mostly public, but allow optional credentials/session when rate limits require it.
 
@@ -45,8 +53,10 @@ export const environment = {
   supabaseServiceKey: throwIfMissing(process.env.SUPABASE_SERVICE_ROLE_KEY, 'SUPABASE_SERVICE_ROLE_KEY'),
   bucketName: process.env.HERO_IMAGE_BUCKET ?? 'hero-images',
   maxImagesPerHero: Number(process.env.HERO_IMAGE_MAX_PER_HERO ?? '3'),
-  serverPort: Number(process.env.BACKEND_PORT ?? '4600'),
-  allowedOrigins: (process.env.BACKEND_ALLOWED_ORIGINS ?? '').split(',').map((origin) => origin.trim()).filter(Boolean),
+  serverHost: process.env.BACKEND_HOST ?? '0.0.0.0',
+  serverPort: Number(process.env.PORT ?? process.env.BACKEND_PORT ?? '4600'),
+  allowedOrigins,
+  allowedOriginPatterns,
   gcd: {
     baseUrl: new URL('/api/', gcdBaseUrl).toString(),
     username: gcdUsername,

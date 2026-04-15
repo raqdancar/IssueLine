@@ -52,3 +52,35 @@ export const patchIssueState = async ({ issueId, patch, accessToken }) => {
 
   return handleResponse(response)
 }
+
+export const markStageIssuesRead = async ({ heroSlug, heroApiId, stageKey, accessToken }) => {
+  if (!backendBaseUrl || !accessToken) {
+    throw new Error('Missing backend configuration or authentication.')
+  }
+  if (!stageKey) {
+    throw new Error('Stage key is required.')
+  }
+  if (!heroSlug && !heroApiId) {
+    throw new Error('Provide a hero slug or identifier.')
+  }
+
+  const body = {
+    stageKey,
+  }
+  if (heroSlug) {
+    body.heroSlug = heroSlug
+  } else if (heroApiId) {
+    body.heroApiId = heroApiId
+  }
+
+  const response = await fetch(`${backendBaseUrl}/issue-states/stages/read`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  return handleResponse(response)
+}

@@ -36,7 +36,7 @@ export const getHeroBySlug = async (slug) => {
 export const getHeroTimelineEntries = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, created_at')
+    .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, special_issue, created_at')
     .eq('hero_api_id', heroApiId)
     .order('issue_date', { ascending: true })
 

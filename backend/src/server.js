@@ -9,10 +9,34 @@ import { issueStatesRouter } from './routes/issueStateRoutes.js'
 import { errorHandler } from './middlewares/errorHandler.js'
 
 const app = express()
+app.set('trust proxy', 1)
+
+const wildcardToRegExp = (pattern) => {
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`^${escaped.replaceAll('*', '.*')}$`, 'i')
+}
+
+const originPatternRegexes = environment.allowedOriginPatterns.map((pattern) => wildcardToRegExp(pattern))
+
+const isOriginAllowed = (origin) => {
+  if (!origin) return true
+  if (environment.allowedOrigins.includes(origin)) return true
+  return originPatternRegexes.some((regex) => regex.test(origin))
+}
 
 app.use(
   cors({
-    origin: environment.allowedOrigins.length ? environment.allowedOrigins : undefined,
+    origin: (origin, callback) => {
+      if (!environment.allowedOrigins.length && !originPatternRegexes.length) {
+        callback(null, true)
+        return
+      }
+      if (isOriginAllowed(origin)) {
+        callback(null, true)
+        return
+      }
+      callback(new Error('CORS origin not allowed'))
+    },
   })
 )
 app.use(express.json())
@@ -28,6 +52,6 @@ app.use('/gcd', gcdRouter)
 app.use('/issue-states', issueStatesRouter)
 app.use(errorHandler)
 
-app.listen(environment.serverPort, () => {
-  console.log(`Hero image backend running on http://localhost:${environment.serverPort}`)
+app.listen(environment.serverPort, environment.serverHost, () => {
+  console.log(`IssueLine backend running on http://${environment.serverHost}:${environment.serverPort}`)
 })

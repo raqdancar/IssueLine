@@ -3,6 +3,7 @@ import { normalizeCoverUrl } from '../gcd/coverUtils.js'
 import { coerceIsoDate, pickBestDate, mapIssueToTimelineEntry } from '../gcd/issueMapper.js'
 import { normalizeSeriesName } from '../../utils/seriesNameUtils.js'
 import { buildIssueHeadline } from '../../utils/issueHeadlineUtils.js'
+import { resolveLegacyNumber } from './legacyNumbering.js'
 
 const parseSeriesId = (issue) => {
   if (issue.series_id) return Number(issue.series_id)
@@ -174,7 +175,7 @@ const buildIssuePayloadFromRow = (row) => {
       ...row.raw,
       id: row.raw.id ?? row.gcd_issue_id,
       series_name: normalizeSeriesName(row.raw.series_name ?? row.series_name) ?? row.series_name ?? null,
-      number: row.raw.number ?? row.number,
+      number: row.number ?? row.raw.number ?? null,
       title: row.raw.title ?? row.title,
       cover: row.raw.cover ?? row.cover_original ?? row.cover,
     }
@@ -208,9 +209,30 @@ const buildIssuePayloadFromRow = (row) => {
 
 export const mapHeroIssueRowToTimelineEntry = (row) => {
   const payload = buildIssuePayloadFromRow(row)
+  const legacyNumber = resolveLegacyNumber(row)
+
+  const attachLegacyMetadata = (inputEntry) => {
+    if (!legacyNumber) {
+      return inputEntry
+    }
+    const cleanedSummary =
+      typeof inputEntry.summary === 'string' && /^legacy/i.test(inputEntry.summary.trim())
+        ? null
+        : inputEntry.summary
+    return {
+      ...inputEntry,
+      summary: cleanedSummary,
+      metadata: {
+        ...(inputEntry.metadata ?? {}),
+        legacyNumber,
+        legacy_number: legacyNumber,
+      },
+    }
+  }
+
   const entry = mapIssueToTimelineEntry(payload)
   if (entry) {
-    return entry
+    return attachLegacyMetadata(entry)
   }
 
   const fallbackIssueDate = row.issue_date ?? row.on_sale_date ?? row.key_date ?? row.publication_date
@@ -221,7 +243,7 @@ export const mapHeroIssueRowToTimelineEntry = (row) => {
     issueCode: row.issue_code ?? row.number,
     fallback: row.title ?? `Issue ${row.number}`,
   })
-  return {
+  return attachLegacyMetadata({
     issueDate: fallbackIssueDate,
     headline: timelineHeadline,
     summary: row.publication_date ?? null,
@@ -252,7 +274,7 @@ export const mapHeroIssueRowToTimelineEntry = (row) => {
       cover_image_path: row.cover_image_path ?? null,
     },
     sourceUrl: `https://www.comics.org/issue/${row.gcd_issue_id}/`,
-  }
+  })
 }
 
 

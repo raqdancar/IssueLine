@@ -26,6 +26,11 @@ export const timelineSortOptions = [
   { label: 'Oldest first', value: 'asc' },
 ]
 
+export const timelineIssueFilterOptions = [
+  { label: 'All issues', value: 'all' },
+  { label: 'Annuals only', value: 'annuals' },
+]
+
 export const indexModeOptions = [
   { label: 'Months', value: 'month' },
   { label: 'Years', value: 'year' },

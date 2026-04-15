@@ -1,8 +1,45 @@
-export const hasSpecialIssueCode = (entry) => {
-  const code =
-    entry?.issue_code ??
-    entry?.metadata?.issue_code ??
-    entry?.metadata?.issueCode ??
-    ''
-  return typeof code === 'string' && code.toLowerCase().includes('special')
+const textIncludes = (value, keyword) => {
+  if (typeof value !== 'string') return false
+  return value.toLowerCase().includes(keyword)
 }
+
+const isAnnualLike = (value) => textIncludes(value, 'annual')
+
+const isSpecialLike = (value) => textIncludes(value, 'special')
+
+const extractIssueTextCandidates = (entry) => {
+  const metadata = entry?.metadata ?? {}
+  return [
+    entry?.issue_code,
+    metadata.issue_code,
+    metadata.issueCode,
+    metadata.issueLabel,
+    metadata.issue_label,
+    metadata.series_name,
+    metadata.seriesName,
+    entry?.headline,
+  ]
+}
+
+export const isAnnualIssueEntry = (entry) => {
+  if (!entry) return false
+  const metadata = entry.metadata ?? {}
+  if (metadata.issue_category === 'annual' || metadata.issueCategory === 'annual') return true
+  if (metadata.special_issue_type === 'annual' || metadata.specialIssueType === 'annual') return true
+  if (metadata.special_issue && metadata.issueLabel && isAnnualLike(metadata.issueLabel)) return true
+
+  return extractIssueTextCandidates(entry).some((value) => isAnnualLike(value))
+}
+
+export const isSpecialIssueEntry = (entry) => {
+  if (!entry) return false
+  if (entry.special_issue || entry.specialIssue) return true
+
+  const metadata = entry.metadata ?? {}
+  if (metadata.special_issue || metadata.specialIssue) return true
+  if (metadata.issue_category === 'annual' || metadata.issueCategory === 'annual') return true
+
+  return extractIssueTextCandidates(entry).some((value) => isAnnualLike(value) || isSpecialLike(value))
+}
+
+export const hasSpecialIssueCode = (entry) => isSpecialIssueEntry(entry)

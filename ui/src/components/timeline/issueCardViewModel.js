@@ -1,6 +1,6 @@
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
-import { getEntryDomId } from '../../utils/timeline'
+import { getEntryDomId, getStageKey } from '../../utils/timeline'
 
 const formatDate = (value) => {
   try {
@@ -70,7 +70,10 @@ export function createIssueCardViewModel({
   const pageCount = normalizeIntegerText(meta.page_count ?? meta.pageCount ?? null)
   const editing = meta.editing ?? null
   const rating = meta.rating ?? null
-  const stageName = meta.stage_name ?? meta.stageName ?? meta.stage?.name ?? meta.stage?.label ?? null
+  const legacyNumber = meta.legacy_number ?? meta.legacyNumber ?? null
+  const stageIdentity = getStageKey(entry)
+  const stageName = stageIdentity?.label ?? null
+  const stageKey = stageIdentity?.key ?? null
   const stageSummary =
     meta.stage_summary ?? meta.stageSummary ?? meta.stage?.short_summary ?? meta.stage?.summary ?? null
 
@@ -84,6 +87,7 @@ export function createIssueCardViewModel({
     issueDateLabel: formatDate(entry.issue_date),
     severityVariant,
     gradientStyle,
+    stageKey,
     stageName,
     stageSummary,
     coverImage,
@@ -96,6 +100,8 @@ export function createIssueCardViewModel({
       pageCount,
       editing,
       rating,
+      legacyNumber,
     },
   }
 }
+
