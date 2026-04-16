@@ -174,6 +174,45 @@ npm --prefix backend run sync:gcd -- doctor-strange 824 --batch=12 --delay=65000
 
 Adjust `--batch` (issues per request), `--delay` (ms between requests), and the descriptor bounds (`--issue-start`, `--issue-end`) to control which parts of the series to import. Without descriptor flags, you can still fall back to `--offset`.
 
+## Production monitoring and alerts
+
+### Quick smoke check after each deploy
+
+Use the built-in production verifier right after a Render or Vercel deploy:
+
+```bash
+PROD_FRONTEND_URL=https://<your-vercel-domain> \
+PROD_BACKEND_URL=https://<your-render-domain> \
+npm run verify:prod
+```
+
+The script checks:
+- `GET <backend>/health` returns `{"status":"ok"}`.
+- Backend CORS allows the frontend origin.
+- Frontend root returns HTML and contains the SPA root element.
+
+### Minimum alerts to configure
+
+1. Render service alerts:
+- Enable notifications for `unhealthy`, `deploy failed`, and `service suspended`.
+2. Vercel project alerts:
+- Enable notifications for `deployment failed` and `function errors`.
+3. External uptime monitor (recommended):
+- Track `https://<your-vercel-domain>` and `https://<your-render-domain>/health`.
+- Alert by email (or Slack) if 2+ consecutive checks fail.
+
+### Release checklist (Render + Vercel)
+
+1. Deploy backend (Render) and confirm `/health` is green.
+2. Deploy frontend (Vercel) and confirm production URL responds.
+3. Update `BACKEND_ALLOWED_ORIGINS` in Render with the final Vercel URL if it changed.
+4. Run `npm run verify:prod`.
+5. Validate one real user flow in browser (login and open one hero detail page).
+6. Check logs:
+- Render logs: no repeated `5xx`, CORS errors, or Supabase auth errors.
+- Vercel runtime/build logs: no failed requests for main page load.
+7. Mark release complete only when all checks pass.
+
 ## Login flow
 
 - `ui/src/lib/supabaseClient.js` initializes the SDK client with the environment variables.
@@ -187,4 +226,5 @@ Adjust `--batch` (issues per request), `--delay` (ms between requests), and the 
 - `npm run dev`: start the Vite frontend.
 - `npm run build`: create a production build.
 - `npm run preview`: preview the production build locally.
+- `npm run verify:prod`: smoke-check deployed frontend + backend URLs.
 - `npm --prefix ui run lint`: run ESLint on the frontend.

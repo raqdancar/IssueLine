@@ -7,6 +7,7 @@
     "dev": "npm --prefix ui run dev",
     "build": "npm --prefix ui install --include=optional --no-package-lock && npm --prefix ui run build",
     "preview": "npm --prefix ui run preview",
+    "verify:prod": "node ./scripts/verify-production.mjs",
     "seed:superheroes": "npm --prefix ui run seed:superheroes --",
     "backend:dev": "npm --prefix backend run dev",
     "backend:start": "npm --prefix backend run start"
