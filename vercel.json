@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm --prefix ui ci",
+  "installCommand": "npm --prefix ui install --include=optional",
   "buildCommand": "npm run build",
   "outputDirectory": "ui/dist",
   "rewrites": [
