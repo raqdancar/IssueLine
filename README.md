@@ -58,36 +58,38 @@ The Vite application lives in `ui/`, so every npm/yarn/pnpm command related to t
 ```bash
 VITE_SUPABASE_URL=https://<your-project>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
+VITE_SUPABASE_AVATAR_BUCKET=avatars
 ```
 
-3. (Optional) Store `SUPABASE_SERVICE_ROLE_KEY` in the same `.env` if you will interact with Supabase from a backend or scripts.
-4. Create at least one user under **Supabase Auth → Users** with email and password to test the flow.
+3. (Optional) Store `SUPABASE_SERVICE_ROLE_KEY` in the same `.env` for backend/scripts usage.
+4. Ensure there is at least one user under **Supabase Auth -> Users** for authentication testing.
 
 ### `login_audit` table
 
-Every successful login is recorded in an auxiliary table. Run this SQL from the Supabase SQL editor:
+Every successful login is recorded in `public.login_audit`.
+Schema and RLS should be provisioned through the project migration workflow.
 
-```sql
-create extension if not exists "pgcrypto";
+### Private user avatars (account page)
 
-create table if not exists public.login_audit (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete set null,
-  email text not null,
-  source text not null default 'web_app',
-  metadata jsonb,
-  created_at timestamptz not null default timezone('utc', now())
-);
+The account page stores avatars in a private bucket on Supabase Storage.
 
-alter table public.login_audit enable row level security;
+Required migration:
+- `supabase/sql/20260416_user_avatars.sql`
 
-create policy "Allow authenticated inserts" on public.login_audit
-  for insert
-  to authenticated
-  with check (auth.uid() = user_id);
-```
+Required frontend env var:
+- `VITE_SUPABASE_AVATAR_BUCKET=avatars`
 
-Those policies let any authenticated user insert their own records. If you need to read the table from the UI, add an additional `for select` policy.
+The bucket remains private (`public = false`), and previews use signed URLs.
+
+Account capabilities currently available at `/account`:
+- Update display name.
+- Upload avatar from local device to private Supabase Storage.
+- Delete the current avatar.
+- Update password.
+
+Navbar behavior:
+- If user has an avatar, the navbar shows the signed avatar image.
+- If there is no avatar, the navbar falls back to the default logo.
 
 ## Cache data from the SuperHero API
 
@@ -97,7 +99,7 @@ Those policies let any authenticated user insert their own records. If you need 
    - `SUPABASE_SERVICE_ROLE_KEY` (write-capable key).
    - `VITE_SUPABASE_URL` (reused by both the UI and scripts now that envs load from the root).
    - `VITE_BACKEND_URL` (e.g. `http://localhost:4600`) so the UI can reach the IssueLine backend.
-3. Run `supabase/sql/20260305_superheroes.sql` in your Supabase project to create `public.superheroes`.
+3. Ensure migration `supabase/sql/20260305_superheroes.sql` is applied (`public.superheroes`).
 4. Execute the local ingestor:
 
 ```bash
@@ -119,7 +121,7 @@ Use the Express service in `backend/` to upload and manage hero-specific images 
    - `VITE_SUPABASE_URL`
    - Optional knobs: `HERO_IMAGE_BUCKET=hero-images`, `HERO_IMAGE_MAX_PER_HERO=3`, `HERO_IMAGE_MAX_FILE_SIZE=5242880`, `BACKEND_PORT=4600`, `BACKEND_ALLOWED_ORIGINS=http://localhost:5173`.
 2. Create a public Supabase Storage bucket matching `HERO_IMAGE_BUCKET`.
-3. Apply `supabase/sql/20260306_hero_images.sql` to create the `hero_images` table, trigger, and RLS policies.
+3. Ensure migration `supabase/sql/20260306_hero_images.sql` is applied (`hero_images`, trigger, and RLS policies).
 4. Install backend dependencies: `npm --prefix backend install`.
 5. Start the API: `npm --prefix backend run dev` (or `run start` for production).
 6. Endpoints (default base URL `http://localhost:4600`):
@@ -134,7 +136,7 @@ The backend verifies the hero exists, enforces per-hero quotas, uploads binaries
 
 Visual hero timelines reuse the [Aceternity UI timeline](https://ui.aceternity.com/components/timeline) styles and expect data from the backend:
 
-1. Apply `supabase/sql/20260307_hero_timelines.sql` to create the `hero_timelines` table plus policies.
+1. Ensure migration `supabase/sql/20260307_hero_timelines.sql` is applied (`hero_timelines` and policies).
 2. Seed sample entries manually (or wait until the ingest script is ready). Each row links to `superheroes.api_id`.
 3. Ensure the backend is running (`npm --prefix backend run dev`). The UI reads `VITE_BACKEND_URL` to call it.
 4. Use `GET /hero-timelines/:slug` (e.g. `/hero-timelines/batman`) to retrieve entries for a hero slug.
@@ -152,7 +154,7 @@ Click any hero portrait in the dashboard to open `/heroes/:slug`, where the deta
 
 To ingest every Doctor Strange (or any hero) issue from the [Grand Comics Database](https://www.comics.org/):
 
-1. Run `supabase/sql/20260310_hero_issues.sql` to create the `hero_issues` cache table.
+1. Ensure migration `supabase/sql/20260310_hero_issues.sql` is applied (`hero_issues` cache table).
 2. Ensure your backend `.env` includes working GCD credentials (`GCD_USERNAME`/`GCD_PASSWORD` or `GCD_SESSION_ID`) plus `GCD_ALLOW_MANUAL_SYNC=true` while testing.
 3. Start the backend (`npm --prefix backend run dev`).
 4. Use the new endpoints:
@@ -216,10 +218,19 @@ The script checks:
 ## Login flow
 
 - `ui/src/lib/supabaseClient.js` initializes the SDK client with the environment variables.
-- `ui/src/App.jsx` renders the login form.
+- `ui/src/App.jsx` handles auth session lifecycle and opens the auth dialog.
+- `ui/src/components/AuthDialog.jsx` handles sign-in/sign-up forms.
   - Uses `supabase.auth.signInWithPassword` for authentication.
   - Logs every successful access into `login_audit`.
-  - Displays key session details (email, timestamps, MFA factors).
+
+## Footer
+
+- Global footer is rendered from `ui/src/components/Footer.jsx` and wired in `ui/src/App.jsx`.
+- Footer copy/links are centralized in `ui/src/lib/footerConfig.js` to keep content reusable and easy to extract for i18n later.
+- Footer is intentionally lightweight and responsive, with:
+  - Brand + short product value text.
+  - Utility links (`About`, `Feedback`, `Privacy`, `GitHub`).
+  - Copyright + data/artwork disclaimer.
 
 ## Useful commands
 
@@ -228,3 +239,4 @@ The script checks:
 - `npm run preview`: preview the production build locally.
 - `npm run verify:prod`: smoke-check deployed frontend + backend URLs.
 - `npm --prefix ui run lint`: run ESLint on the frontend.
+
