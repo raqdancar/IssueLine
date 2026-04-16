@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes, useMatch } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import HeroTab from '@/components/HeroTab'
 import Footer from '@/components/Footer'
@@ -8,6 +8,7 @@ import AccountSettings from '@/pages/AccountSettings'
 import AuthDialog from '@/components/AuthDialog'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
+import { resolveHeroThemeStyle } from '@/lib/heroThemes'
 
 const initialFormValues = {
   email: '',
@@ -32,6 +33,7 @@ function App() {
   const [heroes, setHeroes] = useState([])
   const [heroesStatus, setHeroesStatus] = useState({ state: 'idle', message: '' })
   const [navAvatarUrl, setNavAvatarUrl] = useState(null)
+  const heroRouteMatch = useMatch('/heroes/:slug')
 
   const loadHeroes = useCallback(async () => {
     if (!supabase) {
@@ -262,10 +264,17 @@ function App() {
     }),
     [session],
   )
+  const shellThemeStyle = useMemo(
+    () => resolveHeroThemeStyle(heroRouteMatch?.params?.slug),
+    [heroRouteMatch?.params?.slug],
+  )
 
   return (
     <SessionProvider value={sessionContextValue}>
-      <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
+      <div
+        style={shellThemeStyle}
+        className="theme-shell flex min-h-screen flex-col bg-slate-100 text-slate-900"
+      >
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-900/95 px-4 py-3 text-slate-50 shadow-md backdrop-blur">
         <h1 className="m-0 text-lg font-semibold tracking-wide">IssueLine</h1>
         <div className="flex items-center gap-3 text-sm">

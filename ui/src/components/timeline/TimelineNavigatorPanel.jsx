@@ -19,7 +19,7 @@ function TimelineNavigatorPanel({
   } no-scrollbar`
 
   return (
-    <aside className="flex w-full flex-col overflow-hidden rounded-3xl border border-slate-100/80 bg-gradient-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur lg:sticky lg:top-6 lg:max-h-[80vh] lg:max-w-sm">
+    <aside className="flex w-full flex-col overflow-hidden rounded-3xl border border-slate-100/80 bg-linear-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur lg:sticky lg:top-6 lg:max-h-[80vh] lg:max-w-sm">
       <div className="flex items-center justify-between gap-2">
         <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">Jump to</p>
         <button
@@ -61,19 +61,38 @@ function TimelineNavigatorPanel({
               const isActive = activeAnchor === anchor.key
               const baseClasses = isPillMode
                 ? 'flex flex-col items-center justify-center text-center'
-                : 'flex w-full items-center justify-between gap-2 text-left'
+                : isStageMode
+                  ? 'flex w-full items-start justify-between gap-3 text-left'
+                  : 'flex w-full items-center justify-between gap-2 text-left'
               const activeClasses = isActive
                 ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/30'
                 : 'border-slate-200 bg-white text-slate-700 hover:border-slate-900/40 hover:bg-slate-50 hover:text-slate-900'
-              const countBadgeClasses = isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
+              const countBadgeClasses = isActive
+                ? 'bg-white/30 text-white ring-1 ring-white/40'
+                : 'bg-slate-200 text-slate-900 ring-1 ring-slate-300'
+              const countBadgeSizeClasses = isStageMode
+                ? 'px-3 py-1 text-xs font-extrabold tracking-[0.12em]'
+                : 'px-2 py-0.5 text-[10px] font-bold tracking-[0.2em]'
               const labelClasses = isPillMode
                 ? isActive
                   ? 'text-sm font-semibold text-white'
                   : 'text-sm font-semibold text-slate-700'
-                : isActive
-                  ? 'text-sm font-semibold text-white'
-                  : 'text-sm font-semibold text-slate-800'
+                : isStageMode
+                  ? isActive
+                    ? 'text-base font-semibold leading-snug text-white'
+                    : 'text-base font-semibold leading-snug text-slate-800'
+                  : isActive
+                    ? 'text-sm font-semibold text-white'
+                    : 'text-sm font-semibold text-slate-800'
               const summaryClasses = isActive ? 'text-white/80' : 'text-slate-500'
+              const buttonSizeClasses = isStageMode ? 'min-h-24 py-3' : isPillMode ? 'min-h-10 py-2' : 'min-h-9 py-2'
+              const labelContainerClasses = isPillMode
+                ? 'space-y-1'
+                : isStageMode
+                  ? 'min-w-0 flex-1 space-y-1.5'
+                  : 'min-w-0 flex-1'
+              const labelTextClasses = isStageMode ? `${labelClasses} block whitespace-normal break-words` : `${labelClasses} block truncate`
+              const countAlignClasses = isStageMode ? 'mt-0.5' : ''
 
               return (
                 <button
@@ -81,12 +100,10 @@ function TimelineNavigatorPanel({
                   type="button"
                   aria-current={isActive ? 'true' : undefined}
                   onClick={() => onAnchorClick(anchor)}
-                  className={`group relative rounded-2xl border px-3 py-2 text-xs font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${baseClasses} ${activeClasses} ${
-                    isPillMode ? 'min-h-10' : 'min-h-9'
-                  }`}
+                  className={`group relative rounded-2xl border px-3 text-xs font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${baseClasses} ${activeClasses} ${buttonSizeClasses}`}
                 >
-                  <div className={isPillMode ? 'space-y-1' : 'min-w-0 flex-1'}>
-                    <span className={`${labelClasses} block truncate`}>
+                  <div className={labelContainerClasses}>
+                    <span className={labelTextClasses}>
                       {anchor.label}
                     </span>
                     {!isPillMode && isStageMode && anchor.summary ? (
@@ -96,7 +113,7 @@ function TimelineNavigatorPanel({
                     ) : null}
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] ${countBadgeClasses}`}
+                    className={`shrink-0 rounded-full uppercase ${countBadgeSizeClasses} ${countBadgeClasses} ${countAlignClasses}`}
                   >
                     {anchor.count}
                   </span>
@@ -113,4 +130,3 @@ function TimelineNavigatorPanel({
 }
 
 export default TimelineNavigatorPanel
-

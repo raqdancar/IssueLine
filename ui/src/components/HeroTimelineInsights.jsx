@@ -224,11 +224,11 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
         <div>
           <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-slate-900'}`}>{stage.name}</p>
           <p className={`text-xs ${isComplete ? 'text-emerald-700' : 'text-slate-500'}`}>
-            {stage.yearLabel} ? {stage.issueCount} issues ? {progressLabel}
+            {stage.yearLabel} • {stage.issueCount} issues • {progressLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-2">
-          <span className={badgeClasses}>{isComplete ? 'Stage ? Complete' : 'Stage'}</span>
+          <span className={badgeClasses}>{isComplete ? 'Stage • Complete' : 'Stage'}</span>
           <ChevronDown
             className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             aria-hidden="true"

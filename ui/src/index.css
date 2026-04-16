@@ -123,6 +123,20 @@
 }
 
 @layer utilities {
+  .theme-shell,
+  .theme-shell * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 700ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-shell,
+    .theme-shell * {
+      transition-duration: 0ms;
+    }
+  }
+
   .eyebrow {
     @apply text-xs font-semibold uppercase tracking-[0.2em] text-slate-400;
   }

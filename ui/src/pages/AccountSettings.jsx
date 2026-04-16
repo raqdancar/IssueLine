@@ -285,7 +285,7 @@ function AccountSettings({ onRequireSignIn }) {
 
   if (!isSupabaseConfigured || !supabase) {
     return (
-      <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
+      <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="eyebrow">Account</p>
@@ -304,7 +304,7 @@ function AccountSettings({ onRequireSignIn }) {
 
   if (!isAuthenticated || !user) {
     return (
-      <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
+      <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="eyebrow">Account</p>
@@ -325,7 +325,7 @@ function AccountSettings({ onRequireSignIn }) {
   }
 
   return (
-    <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:p-8">
+    <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="eyebrow">Account</p>
