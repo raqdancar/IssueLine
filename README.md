@@ -12,6 +12,42 @@ npm install
 npm run dev
 ```
 
+## Deploy: Render (backend) + Vercel (frontend)
+
+This repo now includes:
+- `render.yaml` for the backend service (`backend/Dockerfile`, health check `/health`)
+- `vercel.json` for the frontend build (`ui/dist`) with SPA rewrites
+
+### 1) Deploy backend on Render
+
+1. Push this repo to GitHub.
+2. In Render, create a **Blueprint** from the repository (it will detect `render.yaml`).
+3. In the created `issueline-backend` service, set secret env vars:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+4. Optional but recommended:
+   - `BACKEND_ALLOWED_ORIGINS=https://<your-vercel-domain>`
+   - keep `BACKEND_ALLOWED_ORIGIN_PATTERNS=https://*.vercel.app`
+5. Deploy and copy the backend URL, for example:
+   - `https://issueline-backend.onrender.com`
+
+### 2) Deploy frontend on Vercel
+
+1. Import the same repository in Vercel.
+2. Keep root directory as repo root (the included `vercel.json` builds `ui/`).
+3. Add frontend env vars in Vercel:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_BACKEND_URL=https://<your-render-domain>`
+4. Deploy.
+
+### 3) Final CORS check
+
+After Vercel gives you your final URL, update Render:
+- `BACKEND_ALLOWED_ORIGINS=https://<your-final-vercel-domain>`
+
+Redeploy backend once. Your public app should now be fully connected.
+
 The Vite application lives in `ui/`, so every npm/yarn/pnpm command related to the frontend should be executed with `npm --prefix ui <command>`.
 
 ## Configure Supabase

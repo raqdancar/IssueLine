@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": "20.17.0"
+    "node": "20"
   },
   "scripts": {
     "start": "npm run dev",
