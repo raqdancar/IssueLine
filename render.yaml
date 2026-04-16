@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: issueline-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GCD_BASE_URL
+        value: https://www.comics.org
+      - key: BACKEND_ALLOWED_ORIGIN_PATTERNS
+        value: https://*.vercel.app
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
