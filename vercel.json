@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm --prefix ui install --include=optional",
+  "installCommand": "npm --prefix ui install --include=optional --no-package-lock",
   "buildCommand": "npm run build",
   "outputDirectory": "ui/dist",
   "rewrites": [
