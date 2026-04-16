@@ -35,7 +35,9 @@ app.use(
         callback(null, true)
         return
       }
-      callback(new Error('CORS origin not allowed'))
+      const corsError = new Error(`CORS origin not allowed: ${origin}`)
+      corsError.status = 403
+      callback(corsError)
     },
   })
 )

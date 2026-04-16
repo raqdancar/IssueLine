@@ -54,7 +54,18 @@ export const getHeroTimelineEntries = async (heroApiId) => {
     })
     .filter((value) => Number.isFinite(value))
 
-  const coverLookup = gcdIssueIds.length ? await getHeroIssueCoverPathMap(heroApiId, gcdIssueIds) : new Map()
+  let coverLookup = new Map()
+  if (gcdIssueIds.length) {
+    try {
+      coverLookup = await getHeroIssueCoverPathMap(heroApiId, gcdIssueIds)
+    } catch (coverLookupError) {
+      // Timeline data should still render even when cover enrichment fails in a partial deploy/migration state.
+      console.warn(
+        `[heroTimeline] cover enrichment skipped for hero ${heroApiId}: ${coverLookupError.message}`
+      )
+      return entries
+    }
+  }
 
   if (!coverLookup.size) {
     return entries
