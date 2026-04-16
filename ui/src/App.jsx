@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import HeroTab from '@/components/HeroTab'
+import Footer from '@/components/Footer'
 import HeroDetail from '@/pages/HeroDetail'
+import AccountSettings from '@/pages/AccountSettings'
 import AuthDialog from '@/components/AuthDialog'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
@@ -20,14 +22,6 @@ const statusClasses = {
   success: 'text-emerald-600',
 }
 
-const formatDateTime = (value) =>
-  value
-    ? new Date(value).toLocaleString('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      })
-    : 'Not available'
-
 function App() {
   const [formValues, setFormValues] = useState(initialFormValues)
   const [status, setStatus] = useState({ state: 'idle', message: '' })
@@ -37,6 +31,7 @@ function App() {
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false)
   const [heroes, setHeroes] = useState([])
   const [heroesStatus, setHeroesStatus] = useState({ state: 'idle', message: '' })
+  const [navAvatarUrl, setNavAvatarUrl] = useState(null)
 
   const loadHeroes = useCallback(async () => {
     if (!supabase) {
@@ -120,6 +115,40 @@ function App() {
       authListener?.subscription.unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    if (!supabase || !session?.user) {
+      setNavAvatarUrl(null)
+      return
+    }
+
+    const avatarPath = session.user.user_metadata?.avatar_path
+    const avatarBucket =
+      session.user.user_metadata?.avatar_bucket || import.meta.env.VITE_SUPABASE_AVATAR_BUCKET || 'avatars'
+
+    if (!avatarPath) {
+      setNavAvatarUrl(null)
+      return
+    }
+
+    let active = true
+
+    const loadAvatar = async () => {
+      const { data, error } = await supabase.storage.from(avatarBucket).createSignedUrl(avatarPath, 60 * 60 * 24)
+      if (!active) return
+      if (error) {
+        setNavAvatarUrl(null)
+        return
+      }
+      setNavAvatarUrl(data?.signedUrl ?? null)
+    }
+
+    void loadAvatar()
+
+    return () => {
+      active = false
+    }
+  }, [session])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -226,18 +255,6 @@ function App() {
     setStatus({ state: 'idle', message: 'Signed out.' })
   }
 
-  const sessionDetails = useMemo(() => {
-    if (!session) return null
-
-    const { user } = session
-    return {
-      email: user.email,
-      confirmedAt: user.email_confirmed_at,
-      lastSignIn: user.last_sign_in_at,
-      factors: user.factors ?? [],
-    }
-  }, [session])
-
   const sessionContextValue = useMemo(
     () => ({
       session,
@@ -254,7 +271,16 @@ function App() {
         <div className="flex items-center gap-3 text-sm">
           {session ? (
             <>
+              <img
+                src={navAvatarUrl || '/vite.svg'}
+                alt="User avatar"
+                className="h-8 w-8 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
+                loading="lazy"
+              />
               <span className="hidden text-slate-200 sm:inline">{session.user.email}</span>
+              <Button asChild type="button" variant="outline" className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white">
+                <Link to="/account">Account</Link>
+              </Button>
               <Button type="button" variant="secondary" onClick={handleSignOut}>
                 Sign out
               </Button>
@@ -292,70 +318,23 @@ function App() {
             }
           />
           <Route path="/heroes/:slug" element={<HeroDetail />} />
+          <Route
+            path="/account"
+            element={
+              <AccountSettings
+                onRequireSignIn={() => {
+                  setAuthMode('sign-in')
+                  setAuthDialogOpen(true)
+                }}
+              />
+            }
+          />
         </Routes>
 
         {!isSupabaseConfigured && <EnvironmentNotice />}
       </main>
 
-      <footer className="mt-auto border-t border-slate-200 bg-slate-900/5">
-        <div className="flex w-full flex-col gap-4 px-4 py-6 lg:flex-row lg:px-10 xl:px-16 2xl:px-24">
-          <article className="rounded-2xl bg-white p-6 shadow-lg lg:w-96">
-            <h2 className="text-lg font-semibold">Session &amp; audit</h2>
-            {sessionDetails ? (
-              <div className="mt-4 space-y-3 text-sm">
-                <div>
-                  <p className="text-slate-500">Email</p>
-                  <p className="font-medium">{sessionDetails.email}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">Confirmed on</p>
-                  <p className="font-medium">{formatDateTime(sessionDetails.confirmedAt)}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">Last sign in</p>
-                  <p className="font-medium">{formatDateTime(sessionDetails.lastSignIn)}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">Configured factors</p>
-                  <p className="font-medium">
-                    {sessionDetails.factors.length > 0
-                      ? sessionDetails.factors
-                          .map((factor) => factor.friendly_name || factor.id)
-                          .join(', ')
-                      : 'No MFA'}
-                  </p>
-                </div>
-                <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-emerald-700">
-                  Every successful login is stored in <code>login_audit</code>.
-                </p>
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-slate-500">
-                There is no active session yet. Create users under Supabase Auth &gt; Users and use the Login button.
-              </p>
-            )}
-          </article>
-          <article className="flex flex-1 flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600 shadow-inner">
-            <div>
-              <p className="font-medium text-slate-800">Real-time audit</p>
-              <p className="mt-2">
-                Review the history in the <code>login_audit</code> table and enrich it with extra metadata if you need
-                more traceability.
-              </p>
-            </div>
-            <div className="mt-4 grid gap-3 text-xs text-slate-500 sm:grid-cols-2">
-              <div className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="font-semibold text-slate-700">RLS enabled</p>
-                <p>Remember to adjust policies for each role.</p>
-              </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-3">
-                <p className="font-semibold text-slate-700">Service role</p>
-                <p>Use the service role key only on servers.</p>
-              </div>
-            </div>
-          </article>
-      </div>
-        </footer>
+      <Footer />
       </div>
       <AuthDialog
         open={isAuthDialogOpen}
