@@ -10,6 +10,7 @@ function TimelineIssueCardDetailed({
   issueStateDisabledReason,
   issueStatePending = false,
   onIssueStateToggle,
+  onCoverPreview,
   isHighlighted = false,
   isFlashing = false,
   onEntryHighlight,
@@ -94,12 +95,22 @@ function TimelineIssueCardDetailed({
                 style={{ aspectRatio: '2 / 3' }}
               >
                 {coverImage ? (
-                  <img
-                    src={coverImage}
-                    alt={entry.metadata?.issueLabel ?? 'Issue cover'}
-                    className="h-full w-full object-contain"
-                    loading="lazy"
-                  />
+                  <button
+                    type="button"
+                    className="h-full w-full cursor-zoom-in"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onCoverPreview?.(coverImage, entry.metadata?.issueLabel ?? 'Issue cover')
+                    }}
+                    aria-label="Open cover in fullscreen on mobile"
+                  >
+                    <img
+                      src={coverImage}
+                      alt={entry.metadata?.issueLabel ?? 'Issue cover'}
+                      className="h-full w-full object-contain"
+                      loading="lazy"
+                    />
+                  </button>
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-slate-50 text-center">
                     <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">No cover</span>

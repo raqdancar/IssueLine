@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import TimelineStageTab from './timeline/TimelineStageTab'
+import CoverFullscreenViewer from './CoverFullscreenViewer'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
@@ -74,6 +75,7 @@ const groupEntriesByYear = (entries, direction = 'desc') => {
 function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [sortDirection, setSortDirection] = useState('desc')
+  const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
     entries: [],
@@ -109,6 +111,12 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
 
     return () => controller.abort()
   }, [backendBaseUrl, slug])
+
+  const openCoverViewer = (src, alt) => {
+    if (!src || typeof window === 'undefined') return
+    if (!window.matchMedia('(max-width: 767px)').matches) return
+    setCoverViewer({ open: true, src, alt: alt ?? 'Issue cover' })
+  }
 
   const groupedEntries = useMemo(() => groupEntriesByYear(entries, sortDirection), [entries, sortDirection])
 
@@ -202,12 +210,19 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                         <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 md:w-40">
                         <div className="aspect-[2/3] w-full">
                           {coverImage ? (
-                            <img
-                              src={coverImage}
-                              alt={issueLabel ?? 'Issue cover'}
-                              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                              loading="lazy"
-                            />
+                            <button
+                              type="button"
+                              className="h-full w-full cursor-zoom-in"
+                              onClick={() => openCoverViewer(coverImage, issueLabel ?? 'Issue cover')}
+                              aria-label="Open cover in fullscreen on mobile"
+                            >
+                              <img
+                                src={coverImage}
+                                alt={issueLabel ?? 'Issue cover'}
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                loading="lazy"
+                              />
+                            </button>
                           ) : (
                             <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-slate-800/70 to-slate-900 text-center text-slate-400">
                               <span className="text-[12px] font-semibold uppercase tracking-[0.2em]">
@@ -277,6 +292,12 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
           ))
         )}
       </div>
+      <CoverFullscreenViewer
+        open={coverViewer.open}
+        src={coverViewer.src}
+        alt={coverViewer.alt}
+        onClose={() => setCoverViewer({ open: false, src: null, alt: '' })}
+      />
     </section>
   )
 }

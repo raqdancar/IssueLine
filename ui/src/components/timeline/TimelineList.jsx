@@ -17,6 +17,7 @@ function TimelineList({
   highlightedEntryDomId,
   flashEntryDomId,
   onEntryHighlight,
+  onCoverPreview,
 }) {
   return (
     <div className="timeline-zoom-container overflow-x-auto">
@@ -45,6 +46,7 @@ function TimelineList({
                 highlightedEntryDomId={highlightedEntryDomId}
                 flashEntryDomId={flashEntryDomId}
                 onEntryHighlight={onEntryHighlight}
+                onCoverPreview={onCoverPreview}
                 onIssueStateToggle={(field, nextValue) =>
                   entry.id ? onIssueStateToggle(entry.id, field, nextValue) : undefined
                 }

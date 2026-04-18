@@ -3,6 +3,7 @@ import TimelineHeader from './timeline/TimelineHeader'
 import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './timeline/TimelineNavigatorToggle'
 import TimelineList from './timeline/TimelineList'
+import CoverFullscreenViewer from './CoverFullscreenViewer'
 import { isAnnualIssueEntry } from './timeline/utils'
 import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket, resolveYearBucket } from '../utils/timeline'
 import { backendBaseUrl } from '@/utils/backend.js'
@@ -29,6 +30,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
   const [zoomLevel, setZoomLevel] = useState(1)
   const [highlightedEntryDomId, setHighlightedEntryDomId] = useState(null)
+  const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
   const [{ status, entries, error }, setState] = useState({
     status: apiBaseUrl ? 'idle' : 'disabled',
     entries: [],
@@ -289,6 +291,11 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     zoomLevel <= MICRO_DENSITY_THRESHOLD ? 'micro' : zoomLevel <= COMPACT_DENSITY_THRESHOLD ? 'compact' : 'detailed'
   const timelineListSpacing =
     timelineDensity === 'micro' ? 'space-y-1.5' : timelineDensity === 'compact' ? 'space-y-2' : 'space-y-4'
+  const openCoverViewer = (src, alt) => {
+    if (!src || typeof window === 'undefined') return
+    if (!window.matchMedia('(max-width: 767px)').matches) return
+    setCoverViewer({ open: true, src, alt: alt ?? 'Issue cover' })
+  }
 
   const navigatorHasContent =
     monthAnchors.length > 0 || stageAnchors.length > 0 || issueAnchors.length > 0
@@ -311,7 +318,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   }
 
   return (
-    <section className="mt-8 w-full rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-4">
+    <section className="mt-8 w-full rounded-2xl border border-slate-100 bg-linear-to-br from-white to-slate-50 p-4">
       <TimelineHeader
         heroName={heroName}
         isAuthenticated={isAuthenticated}
@@ -375,12 +382,19 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                   setHighlightedEntryDomId(entryDomId)
                   triggerFlash(entryDomId)
                 }}
+                onCoverPreview={openCoverViewer}
                 onIssueStateToggle={handleIssueStateToggle}
               />
             </div>
           </div>
         )}
       </div>
+      <CoverFullscreenViewer
+        open={coverViewer.open}
+        src={coverViewer.src}
+        alt={coverViewer.alt}
+        onClose={() => setCoverViewer({ open: false, src: null, alt: '' })}
+      />
     </section>
   )
 }
