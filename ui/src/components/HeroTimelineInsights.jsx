@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Info } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
-import { useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
+import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
 import { Button } from '@/components/ui/button'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 
@@ -65,6 +65,22 @@ const resolveEntryTimestamp = (entry) => {
   return null
 }
 
+const formatIssueDate = (value) => {
+  if (!value) return 'Date TBA'
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return parsed.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+}
+
+const resolveIssueQuickLabel = (entry) => {
+  const meta = entry?.metadata ?? {}
+  const issueLabel = meta.issueLabel ?? entry.issue_code ?? null
+  if (issueLabel) return issueLabel
+  const number = meta.number
+  if (number) return `Issue #${number}`
+  return entry?.headline ?? 'Issue'
+}
+
 const buildStageGroups = (entries, stateIndex = {}) => {
   const groups = new Map()
   entries.forEach((entry) => {
@@ -82,6 +98,7 @@ const buildStageGroups = (entries, stateIndex = {}) => {
         summary: summary ?? null,
         issueCount: 0,
         issueIds: [],
+        issueItems: [],
         readCount: 0,
         startTimestamp: Number.POSITIVE_INFINITY,
         endTimestamp: Number.NEGATIVE_INFINITY,
@@ -94,6 +111,14 @@ const buildStageGroups = (entries, stateIndex = {}) => {
       group.summary = summary
     }
     const issueId = entry.id ?? entry.metadata?.issue_id ?? entry.metadata?.issueId ?? null
+    const issueTimestamp = typeof timestamp === 'number' ? timestamp : Number.POSITIVE_INFINITY
+    group.issueItems.push({
+      key: `${issueId ?? 'unknown'}-${entry.issue_code ?? entry.headline ?? group.issueCount}`,
+      issueId,
+      label: resolveIssueQuickLabel(entry),
+      dateLabel: formatIssueDate(entry.issue_date),
+      timestamp: issueTimestamp,
+    })
     if (issueId) {
       group.issueIds.push(issueId)
       if (stateIndex[issueId]?.readIt) {
@@ -123,6 +148,7 @@ const buildStageGroups = (entries, stateIndex = {}) => {
 
       return {
         ...group,
+        issueItems: [...group.issueItems].sort((a, b) => a.timestamp - b.timestamp),
         startYear,
         endYear,
         yearLabel,
@@ -185,7 +211,48 @@ const GaugeCard = ({ label, count, total, accentClass }) => {
   )
 }
 
-function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRead, actionState }) {
+const StageMiniProgress = ({ readCount, issueCount, isComplete }) => {
+  const percent = issueCount > 0 ? Math.round((readCount / issueCount) * 100) : 0
+  const normalized = Math.min(Math.max(percent, 0), 100)
+  const radius = 11
+  const circumference = 2 * Math.PI * radius
+  const dashOffset = circumference * (1 - normalized / 100)
+  const trackColor = isComplete ? 'rgba(16, 185, 129, 0.25)' : 'rgba(148, 163, 184, 0.28)'
+  const arcClass = isComplete ? 'text-emerald-500' : 'text-indigo-500'
+
+  return (
+    <div className="flex h-8 w-8 items-center justify-center" title={`${normalized}% read`} aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 28 28">
+        <circle cx="14" cy="14" r={radius} strokeWidth="3" stroke={trackColor} fill="none" />
+        <circle
+          cx="14"
+          cy="14"
+          r={radius}
+          strokeWidth="3"
+          strokeLinecap="round"
+          stroke="currentColor"
+          className={`transition-all duration-500 ${arcClass}`}
+          fill="none"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={dashOffset}
+        />
+      </svg>
+    </div>
+  )
+}
+
+function StageAccordionItem({
+  stage,
+  isOpen,
+  onToggle,
+  canManageStates,
+  onBulkRead,
+  actionState,
+  issueStatesByIssueId,
+  pendingIssueId,
+  onIssueToggle,
+  issueActionError,
+}) {
   const isComplete = stage.issueCount > 0 && stage.readCount >= stage.issueCount
   const hasIssues = stage.issueIds.length > 0
   const buttonDisabled =
@@ -222,13 +289,14 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
         className="flex w-full items-center justify-between gap-3 text-left"
         aria-expanded={isOpen}
       >
-        <div>
+        <div className="min-w-0">
           <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-slate-900'}`}>{stage.name}</p>
           <p className={`text-xs ${isComplete ? 'text-emerald-700' : 'text-slate-500'}`}>
             {stage.yearLabel} • {stage.issueCount} issues • {progressLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-2">
+          <StageMiniProgress readCount={stage.readCount} issueCount={stage.issueCount} isComplete={isComplete} />
           <span className={badgeClasses}>{isComplete ? 'Stage • Complete' : 'Stage'}</span>
           <ChevronDown
             className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -249,6 +317,65 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
             <span className="font-semibold text-slate-600">Years:</span> {stage.yearLabel}
             <span className="font-semibold text-slate-600">Issues tracked:</span> {stage.issueCount}
           </div>
+          <div className="rounded-2xl border border-slate-100 bg-white/80 p-2">
+            <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Stage issues
+            </p>
+            {stage.issueItems.length ? (
+              <div className="space-y-1">
+                {stage.issueItems.map((issue) => {
+                  const issueState = issue.issueId ? issueStatesByIssueId[issue.issueId] : null
+                  const hasIt = Boolean(issueState?.haveIt)
+                  const readIt = Boolean(issueState?.readIt)
+                  const isPending = pendingIssueId != null && issue.issueId === pendingIssueId
+                  const disableButtons = !canManageStates || !issue.issueId || (pendingIssueId != null && !isPending)
+
+                  return (
+                    <div
+                      key={issue.key}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2 py-1.5"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-semibold text-slate-800">{issue.label}</p>
+                        <p className="text-[11px] text-slate-500">{issue.dateLabel}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          disabled={disableButtons}
+                          onClick={() => onIssueToggle?.(issue.issueId, 'haveIt', !hasIt)}
+                          className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                            hasIt
+                              ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800'
+                          } ${disableButtons ? 'cursor-not-allowed opacity-50' : ''}`}
+                        >
+                          Have it
+                        </button>
+                        <button
+                          type="button"
+                          disabled={disableButtons}
+                          onClick={() => onIssueToggle?.(issue.issueId, 'readIt', !readIt)}
+                          className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                            readIt
+                              ? 'border-sky-300 bg-sky-100 text-sky-700'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800'
+                          } ${disableButtons ? 'cursor-not-allowed opacity-50' : ''}`}
+                        >
+                          Read it
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="px-2 pb-1 text-xs italic text-slate-400">No issue items available for quick actions.</p>
+            )}
+            {!canManageStates ? (
+              <p className="px-2 pt-2 text-xs text-slate-500">Sign in to enable quick issue actions.</p>
+            ) : null}
+          </div>
           {canManageStates ? (
             <div className={progressPanelClasses}>
               <div className={progressTextClasses}>
@@ -267,6 +394,9 @@ function StageAccordionItem({ stage, isOpen, onToggle, canManageStates, onBulkRe
                 {isComplete ? 'All read' : actionState?.loading ? 'Marking...' : 'Mark stage as read'}
               </Button>
             </div>
+          ) : null}
+          {issueActionError ? (
+            <p className="text-xs font-semibold text-rose-600">{issueActionError}</p>
           ) : null}
           {actionState?.errorMessage ? (
             <p className="text-xs font-semibold text-rose-600">{actionState.errorMessage}</p>
@@ -289,6 +419,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const { statesByIssueId, canFetchStates, isFetching: issueStatesLoading } = useIssueStatesQuery(heroSlug, {
     enabled: Boolean(heroSlug),
   })
+  const issueStateMutation = useIssueStateMutation(heroSlug)
   const stageReadMutation = useStageReadMutation(heroSlug)
 
   useEffect(() => {
@@ -358,6 +489,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   }
 
   const stageActionKey = stageReadMutation.variables?.stageKey ?? null
+  const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId ?? null : null
   const buildActionState = (stageKey) => ({
     loading: stageReadMutation.isPending && stageActionKey === stageKey,
     disabled: stageReadMutation.isPending && stageActionKey !== null && stageActionKey !== stageKey,
@@ -366,6 +498,9 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
         ? stageReadMutation.error?.message ?? 'Unable to mark this stage as read.'
         : null,
   })
+  const issueActionError = issueStateMutation.isError
+    ? issueStateMutation.error?.message ?? 'Unable to update issue state.'
+    : null
 
   const handleStageBulkRead = (stage) => {
     if (!stage?.key || !stage.issueIds?.length) {
@@ -374,8 +509,13 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     stageReadMutation.mutate({ stageKey: stage.key, issueIds: stage.issueIds })
   }
 
+  const handleIssueToggle = (issueId, field, nextValue) => {
+    if (!issueId || !canFetchStates) return
+    issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
+  }
+
   return (
-    <section className="rounded-[32px] border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-white p-6 shadow-sm">
+    <section className="rounded-[32px] border border-slate-100 bg-linear-to-br from-white via-slate-50 to-white p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <p className="eyebrow text-indigo-500">Publishing resume</p>
@@ -399,26 +539,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
         ) : null}
       </div>
       {state.status === 'success' ? (
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.6fr,0.9fr]">
-          <div className="space-y-3">
-            {stageGroups.length === 0 ? (
-              <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-500">
-                Stage metadata has not been added yet. Entries will appear here once stages are tagged.
-              </div>
-            ) : (
-              stageGroups.map((stage) => (
-                <StageAccordionItem
-                  key={stage.key}
-                  stage={stage}
-                  isOpen={openStage === stage.key}
-                  onToggle={() => setOpenStage((current) => (current === stage.key ? null : stage.key))}
-                  canManageStates={canFetchStates}
-                  onBulkRead={() => handleStageBulkRead(stage)}
-                  actionState={buildActionState(stage.key)}
-                />
-              ))
-            )}
-          </div>
+        <div className="mt-6 space-y-6">
           <div className="space-y-4 rounded-3xl border border-slate-100 bg-white/60 p-4 shadow-inner">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Collection progress</p>
             {isAuthenticated ? (
@@ -437,6 +558,30 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
             ) : issueStatesLoading ? (
               <p className="text-xs text-slate-500">Syncing your collection...</p>
             ) : null}
+          </div>
+
+          <div className="space-y-3">
+            {stageGroups.length === 0 ? (
+              <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-500">
+                Stage metadata has not been added yet. Entries will appear here once stages are tagged.
+              </div>
+            ) : (
+              stageGroups.map((stage) => (
+                <StageAccordionItem
+                  key={stage.key}
+                  stage={stage}
+                  isOpen={openStage === stage.key}
+                  onToggle={() => setOpenStage((current) => (current === stage.key ? null : stage.key))}
+                  canManageStates={canFetchStates}
+                  onBulkRead={() => handleStageBulkRead(stage)}
+                  actionState={buildActionState(stage.key)}
+                  issueStatesByIssueId={statesByIssueId}
+                  pendingIssueId={pendingIssueId}
+                  onIssueToggle={handleIssueToggle}
+                  issueActionError={issueActionError}
+                />
+              ))
+            )}
           </div>
         </div>
       ) : state.status === 'loading' ? (

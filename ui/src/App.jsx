@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, Route, Routes, useMatch } from 'react-router-dom'
+import { Route, Routes, useMatch } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import AppHeader from '@/components/AppHeader'
 import HeroTab from '@/components/HeroTab'
 import Footer from '@/components/Footer'
 import HeroDetail from '@/pages/HeroDetail'
@@ -257,6 +258,15 @@ function App() {
     setStatus({ state: 'idle', message: 'Signed out.' })
   }
 
+  const openAuthDialog = useCallback(() => {
+    setAuthMode('sign-in')
+    setAuthDialogOpen(true)
+  }, [])
+
+  const openLanguageMenu = useCallback(() => {
+    // Placeholder for future i18n language selector (ES/CA)
+  }, [])
+
   const sessionContextValue = useMemo(
     () => ({
       session,
@@ -275,43 +285,13 @@ function App() {
         style={shellThemeStyle}
         className="theme-shell flex min-h-screen flex-col bg-slate-100 text-slate-900"
       >
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-slate-900/95 px-4 py-3 text-slate-50 shadow-md backdrop-blur">
-        <h1 className="m-0 text-lg font-semibold tracking-wide">IssueLine</h1>
-        <div className="flex items-center gap-3 text-sm">
-          {session ? (
-            <>
-              <img
-                src={navAvatarUrl || '/vite.svg'}
-                alt="User avatar"
-                className="h-8 w-8 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
-                loading="lazy"
-              />
-              <span className="hidden text-slate-200 sm:inline">{session.user.email}</span>
-              <Button asChild type="button" variant="outline" className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white">
-                <Link to="/account">Account</Link>
-              </Button>
-              <Button type="button" variant="secondary" onClick={handleSignOut}>
-                Sign out
-              </Button>
-            </>
-          ) : (
-            <span className="text-xs uppercase tracking-widest text-slate-400">
-              No active session
-            </span>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-            onClick={() => {
-              setAuthMode('sign-in')
-              setAuthDialogOpen(true)
-            }}
-          >
-            Sign in / Sign up
-          </Button>
-        </div>
-      </header>
+        <AppHeader
+          session={session}
+          navAvatarUrl={navAvatarUrl}
+          onOpenAuthDialog={openAuthDialog}
+          onSignOut={handleSignOut}
+          onOpenLanguageMenu={openLanguageMenu}
+        />
 
       <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
         <Routes>
@@ -330,12 +310,7 @@ function App() {
           <Route
             path="/account"
             element={
-              <AccountSettings
-                onRequireSignIn={() => {
-                  setAuthMode('sign-in')
-                  setAuthDialogOpen(true)
-                }}
-              />
+              <AccountSettings onRequireSignIn={openAuthDialog} />
             }
           />
         </Routes>
