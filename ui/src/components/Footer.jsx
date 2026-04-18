@@ -6,7 +6,7 @@ const linkBaseClasses =
 function Footer() {
   return (
     <footer className="mt-auto border-t border-slate-200/80 bg-white/70" aria-label="Site footer">
-      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-6 lg:px-10 xl:px-16 2xl:px-24">
+      <div className="mx-auto flex w-full max-w-400 flex-col gap-4 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1.4fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-6 lg:px-10 xl:px-16 2xl:px-24">
         <div className="space-y-1">
           <p className="text-sm font-semibold text-slate-800">{footerConfig.brand}</p>
           <p>{footerConfig.tagline}</p>

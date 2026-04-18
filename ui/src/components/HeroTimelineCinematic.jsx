@@ -3,6 +3,9 @@ import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import TimelineStageTab from './timeline/TimelineStageTab'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
+import TimelineIssueToolbar from './timeline/TimelineIssueToolbar'
+import { useSessionContext } from '@/lib/sessionContext.jsx'
+import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
@@ -76,11 +79,18 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [sortDirection, setSortDirection] = useState('desc')
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
+  const { isAuthenticated } = useSessionContext()
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
     entries: [],
     error: null,
   })
+  const issueStatesQuery = useIssueStatesQuery(slug, {
+    enabled: status === 'success' && Boolean(backendBaseUrl) && isAuthenticated,
+  })
+  const issueStateMutation = useIssueStateMutation(slug)
+  const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
+  const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId ?? null : null
 
   useEffect(() => {
     if (!backendBaseUrl || !slug) return undefined
@@ -118,6 +128,11 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
     setCoverViewer({ open: true, src, alt: alt ?? 'Issue cover' })
   }
 
+  const handleIssueStateToggle = (issueId, field, nextValue) => {
+    if (!issueId || !isAuthenticated || !backendBaseUrl) return
+    issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
+  }
+
   const groupedEntries = useMemo(() => groupEntriesByYear(entries, sortDirection), [entries, sortDirection])
 
   if (!slug) {
@@ -139,8 +154,8 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
   return (
     <section className="relative mt-4 overflow-hidden rounded-3xl border border-slate-900/10 bg-slate-900 p-6 text-slate-100 shadow-2xl">
       <div className="pointer-events-none absolute inset-0 opacity-30" aria-hidden>
-        <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-indigo-500 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(79,70,229,0.35),_transparent_55%)]" />
+        <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-linear-to-b from-transparent via-indigo-500 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.35),transparent_55%)]" />
       </div>
       <div className="relative flex flex-wrap items-baseline justify-between gap-3">
         <div>
@@ -194,6 +209,9 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                 {yearEntries.map((entry) => {
                   const meta = entry.metadata ?? {}
                   const issueLabel = meta.issueLabel ?? entry.issue_code ?? entry.headline
+                  const issueId = entry.id ?? null
+                  const issueState = issueId ? issueStatesById[issueId] : undefined
+                  const showIssueToolbar = isAuthenticated && Boolean(issueId)
                   const coverImage = resolveIssueCoverImage(meta, fallbackImage)
                   const stageName =
                     meta.stage_name ?? meta.stageName ?? meta.stage?.name ?? meta.stage?.label ?? null
@@ -203,87 +221,100 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                   return (
                     <article
                       key={entry.id ?? `${issueLabel}-${entry.issue_date}`}
-                      className="group relative flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:border-white/30 hover:bg-white/10 md:flex-row"
+                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:border-white/30 hover:bg-white/10"
                     >
-                      {stageName ? <TimelineStageTab label={stageName} variant="dark" /> : null}
-                      <div className="flex flex-1 flex-col gap-4 md:flex-row">
-                        <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 md:w-40">
-                        <div className="aspect-[2/3] w-full">
-                          {coverImage ? (
-                            <button
-                              type="button"
-                              className="h-full w-full cursor-zoom-in"
-                              onClick={() => openCoverViewer(coverImage, issueLabel ?? 'Issue cover')}
-                              aria-label="Open cover in fullscreen on mobile"
-                            >
-                              <img
-                                src={coverImage}
-                                alt={issueLabel ?? 'Issue cover'}
-                                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                loading="lazy"
-                              />
-                            </button>
-                          ) : (
-                            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-b from-slate-800/70 to-slate-900 text-center text-slate-400">
-                              <span className="text-[12px] font-semibold uppercase tracking-[0.2em]">
-                                Cover TBD
-                              </span>
-                              <span className="text-[11px] text-slate-500">Add one in Supabase</span>
+                      <div className="flex">
+                        {stageName ? <TimelineStageTab label={stageName} variant="dark" /> : null}
+                        <div className="flex-1 p-4">
+                          <div className="flex flex-1 flex-col gap-4 md:flex-row">
+                            <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 md:w-40">
+                              <div className="aspect-2/3 w-full">
+                                {coverImage ? (
+                                  <button
+                                    type="button"
+                                    className="h-full w-full cursor-zoom-in md:cursor-default"
+                                    onClick={() => openCoverViewer(coverImage, issueLabel ?? 'Issue cover')}
+                                    aria-label="Open cover in fullscreen on mobile"
+                                  >
+                                    <img
+                                      src={coverImage}
+                                      alt={issueLabel ?? 'Issue cover'}
+                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                      loading="lazy"
+                                    />
+                                  </button>
+                                ) : (
+                                  <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-b from-slate-800/70 to-slate-900 text-center text-slate-400">
+                                    <span className="text-[12px] font-semibold uppercase tracking-[0.2em]">
+                                      Cover TBD
+                                    </span>
+                                    <span className="text-[11px] text-slate-500">Add one in Supabase</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-transparent" />
+                              <p className="absolute bottom-2 left-2 text-xs font-semibold text-slate-100">{issueLabel}</p>
                             </div>
-                          )}
-                        </div>
-                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent" />
-                        <p className="absolute bottom-2 left-2 text-xs font-semibold text-slate-100">{issueLabel}</p>
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-indigo-200">
-                          <span className="rounded-full border border-indigo-400/40 px-2 py-0.5">
-                            {meta.series_name ?? meta.seriesName ?? 'Strange Tales'}
-                          </span>
-                          {meta.number ? <span>No. {meta.number}</span> : null}
-                          {meta.volume ? <span>Vol. {meta.volume}</span> : null}
-                        </div>
-                        <h4 className="title-sm text-white">{entry.headline}</h4>
-                        {entry.summary ? <p className="body-sm text-slate-200/80">{entry.summary}</p> : null}
-                        {stageSummary ? (
-                          <p className="text-xs text-emerald-100/80">{stageSummary}</p>
-                        ) : null}
-                        <dl className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
-                          <div>
-                            <dt className="font-semibold text-slate-100">Release</dt>
-                            <dd>{formatDate(entry.issue_date)}</dd>
+                            <div className="flex-1 space-y-2">
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-indigo-200">
+                                <span className="rounded-full border border-indigo-400/40 px-2 py-0.5">
+                                  {meta.series_name ?? meta.seriesName ?? 'Strange Tales'}
+                                </span>
+                                {meta.number ? <span>No. {meta.number}</span> : null}
+                                {meta.volume ? <span>Vol. {meta.volume}</span> : null}
+                              </div>
+                              <h4 className="title-sm text-white">{entry.headline}</h4>
+                              {entry.summary ? <p className="body-sm text-slate-200/80">{entry.summary}</p> : null}
+                              {stageSummary ? (
+                                <p className="text-xs text-emerald-100/80">{stageSummary}</p>
+                              ) : null}
+                              <dl className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
+                                <div>
+                                  <dt className="font-semibold text-slate-100">Release</dt>
+                                  <dd>{formatDate(entry.issue_date)}</dd>
+                                </div>
+                                {meta.price ? (
+                                  <div>
+                                    <dt className="font-semibold text-slate-100">Price</dt>
+                                    <dd>{meta.price}</dd>
+                                  </div>
+                                ) : null}
+                                {pageCount ? (
+                                  <div>
+                                    <dt className="font-semibold text-slate-100">Pages</dt>
+                                    <dd>{pageCount}</dd>
+                                  </div>
+                                ) : null}
+                                {meta.rating ? (
+                                  <div>
+                                    <dt className="font-semibold text-slate-100">Rating</dt>
+                                    <dd>{meta.rating}</dd>
+                                  </div>
+                                ) : null}
+                              </dl>
+                              {entry.source_url ? (
+                                <a
+                                  href={entry.source_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-200 hover:text-white"
+                                >
+                                  View issue
+                                </a>
+                              ) : null}
+                            </div>
                           </div>
-                          {meta.price ? (
-                            <div>
-                              <dt className="font-semibold text-slate-100">Price</dt>
-                              <dd>{meta.price}</dd>
-                            </div>
-                          ) : null}
-                          {pageCount ? (
-                            <div>
-                              <dt className="font-semibold text-slate-100">Pages</dt>
-                              <dd>{pageCount}</dd>
-                            </div>
-                          ) : null}
-                          {meta.rating ? (
-                            <div>
-                              <dt className="font-semibold text-slate-100">Rating</dt>
-                              <dd>{meta.rating}</dd>
-                            </div>
-                          ) : null}
-                        </dl>
-                        {entry.source_url ? (
-                          <a
-                            href={entry.source_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-200 hover:text-white"
-                          >
-                            View issue
-                          </a>
-                        ) : null}
+                        </div>
                       </div>
-                    </div>
+                      {showIssueToolbar ? (
+                        <TimelineIssueToolbar
+                          issueState={issueState}
+                          pending={pendingIssueId === issueId}
+                          onToggle={(field, nextValue) => handleIssueStateToggle(issueId, field, nextValue)}
+                          variant="dark"
+                          className="rounded-none border-x-0 border-b-0"
+                        />
+                      ) : null}
                     </article>
                   )
                 })}
