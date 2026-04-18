@@ -3,6 +3,7 @@ import { ChevronDown, Info } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
 import { useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
 import { Button } from '@/components/ui/button'
+import { useSessionContext } from '@/lib/sessionContext.jsx'
 
 const resolveStageName = (entry) => {
   const meta = entry?.metadata ?? {}
@@ -284,6 +285,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     error: null,
   }))
   const [openStage, setOpenStage] = useState(null)
+  const { isAuthenticated } = useSessionContext()
   const { statesByIssueId, canFetchStates, isFetching: issueStatesLoading } = useIssueStatesQuery(heroSlug, {
     enabled: Boolean(heroSlug),
   })
@@ -419,11 +421,15 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           </div>
           <div className="space-y-4 rounded-3xl border border-slate-100 bg-white/60 p-4 shadow-inner">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Collection progress</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <GaugeCard label="Have it" count={haveItCount} total={totalIssues} accentClass="text-emerald-500" />
-              <GaugeCard label="Read it" count={readItCount} total={totalIssues} accentClass="text-indigo-500" />
-            </div>
-            {!canFetchStates ? (
+            {isAuthenticated ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <GaugeCard label="Have it" count={haveItCount} total={totalIssues} accentClass="text-emerald-500" />
+                <GaugeCard label="Read it" count={readItCount} total={totalIssues} accentClass="text-indigo-500" />
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">Sign in to view collection progress charts.</p>
+            )}
+            {!canFetchStates && isAuthenticated ? (
               <p className="flex items-center gap-2 text-xs text-slate-500">
                 <Info className="h-4 w-4 text-slate-400" aria-hidden="true" />
                 Sign in to track what you own and have finished reading.

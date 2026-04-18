@@ -40,7 +40,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   })
   const issueStateMutation = useIssueStateMutation(slug)
   const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
-  const canUseIssueStateActions = Boolean(apiBaseUrl)
+  const canUseIssueStateActions = Boolean(apiBaseUrl) && isAuthenticated
   const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId : null
   const isSyncingIssueStates = issueStatesQuery.isFetching
   const issueStateDisabledReason = !isAuthenticated
