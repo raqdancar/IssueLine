@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Languages, Menu, X } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function AppHeader({
   session,
@@ -9,8 +10,9 @@ function AppHeader({
   onOpenAuthDialog,
   onSignOut,
   onOpenLanguageMenu,
-  languageLabel = 'EN',
+  languageLabel = 'ES',
 }) {
+  const { t } = useI18n()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -22,76 +24,76 @@ function AppHeader({
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-slate-900/95 px-4 py-3 text-slate-50 shadow-md backdrop-blur">
       <div className="flex items-center justify-between gap-2">
-      <h1 className="m-0 shrink-0 text-lg font-semibold tracking-wide">
-        <Link
-          to="/"
-          onClick={closeMobileMenu}
-          className="rounded-sm text-slate-50 transition hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-        >
-          IssueLine
-        </Link>
-      </h1>
+        <h1 className="m-0 shrink-0 text-lg font-semibold tracking-wide">
+          <Link
+            to="/"
+            onClick={closeMobileMenu}
+            className="rounded-sm text-slate-50 transition hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          >
+            {t('common.appName')}
+          </Link>
+        </h1>
 
-      <button
-        type="button"
-        className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 p-2 text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 md:hidden"
-        aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-        aria-expanded={isMobileMenuOpen}
-        aria-controls="mobile-app-menu"
-        onClick={() => setIsMobileMenuOpen((current) => !current)}
-      >
-        {isMobileMenuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
-      </button>
-
-      <div className="hidden items-center justify-end gap-2 text-sm md:flex">
-        <Button
+        <button
           type="button"
-          size="sm"
-          variant="outline"
-          className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-          aria-label="Choose language"
-          onClick={onOpenLanguageMenu}
+          className="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/5 p-2 text-white transition hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 md:hidden"
+          aria-label={isMobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-app-menu"
+          onClick={() => setIsMobileMenuOpen((current) => !current)}
         >
-          <Languages className="h-4 w-4" aria-hidden="true" />
-          {languageLabel}
-        </Button>
-        {session ? (
-          <>
-            <img
-              src={navAvatarUrl || '/vite.svg'}
-              alt="User avatar"
-              className="h-8 w-8 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
-              loading="lazy"
-            />
-            <span className="hidden text-slate-200 sm:inline">{session.user.email}</span>
-            <Button
-              asChild
-              type="button"
-              size="sm"
-              variant="outline"
-              className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-            >
-              <Link to="/account" onClick={closeMobileMenu}>Account</Link>
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={onSignOut}>
-              Sign out
-            </Button>
-          </>
-        ) : (
-          <>
-            <span className="text-xs uppercase tracking-widest text-slate-400">No active session</span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-              onClick={onOpenAuthDialog}
-            >
-              Sign in / Sign up
-            </Button>
-          </>
-        )}
-      </div>
+          {isMobileMenuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
+        </button>
+
+        <div className="hidden items-center justify-end gap-2 text-sm md:flex">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+            aria-label={t('header.chooseLanguage')}
+            onClick={onOpenLanguageMenu}
+          >
+            <Languages className="h-4 w-4" aria-hidden="true" />
+            {languageLabel}
+          </Button>
+          {session ? (
+            <>
+              <img
+                src={navAvatarUrl || '/vite.svg'}
+                alt="User avatar"
+                className="h-8 w-8 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
+                loading="lazy"
+              />
+              <span className="hidden text-slate-200 sm:inline">{session.user.email}</span>
+              <Button
+                asChild
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+              >
+                <Link to="/account" onClick={closeMobileMenu}>{t('common.account')}</Link>
+              </Button>
+              <Button type="button" size="sm" variant="secondary" onClick={onSignOut}>
+                {t('common.signOut')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="text-xs uppercase tracking-widest text-slate-400">{t('header.noActiveSession')}</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+                onClick={onOpenAuthDialog}
+              >
+                {t('header.signInSignUp')}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {isMobileMenuOpen ? (
@@ -115,7 +117,7 @@ function AppHeader({
                 size="sm"
                 variant="outline"
                 className="w-full justify-start border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-                aria-label="Choose language"
+                aria-label={t('header.chooseLanguage')}
                 onClick={() => {
                   onOpenLanguageMenu?.()
                   closeMobileMenu()
@@ -131,7 +133,7 @@ function AppHeader({
                 variant="outline"
                 className="w-full justify-start border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
               >
-                <Link to="/account" onClick={closeMobileMenu}>Account</Link>
+                <Link to="/account" onClick={closeMobileMenu}>{t('common.account')}</Link>
               </Button>
               <Button
                 type="button"
@@ -143,7 +145,7 @@ function AppHeader({
                   closeMobileMenu()
                 }}
               >
-                Sign out
+                {t('common.signOut')}
               </Button>
             </>
           ) : (
@@ -153,7 +155,7 @@ function AppHeader({
                 size="sm"
                 variant="outline"
                 className="w-full justify-start border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-                aria-label="Choose language"
+                aria-label={t('header.chooseLanguage')}
                 onClick={() => {
                   onOpenLanguageMenu?.()
                   closeMobileMenu()
@@ -162,7 +164,7 @@ function AppHeader({
                 <Languages className="h-4 w-4" aria-hidden="true" />
                 {languageLabel}
               </Button>
-              <p className="text-xs uppercase tracking-widest text-slate-400">No active session</p>
+              <p className="text-xs uppercase tracking-widest text-slate-400">{t('header.noActiveSession')}</p>
               <Button
                 type="button"
                 size="sm"
@@ -173,7 +175,7 @@ function AppHeader({
                   closeMobileMenu()
                 }}
               >
-                Sign in / Sign up
+                {t('header.signInSignUp')}
               </Button>
             </>
           )}

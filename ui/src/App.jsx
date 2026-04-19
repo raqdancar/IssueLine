@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes, useMatch } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import AppHeader from '@/components/AppHeader'
@@ -10,6 +10,7 @@ import AuthDialog from '@/components/AuthDialog'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
 import { resolveHeroThemeStyle } from '@/lib/heroThemes'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const initialFormValues = {
   email: '',
@@ -25,6 +26,7 @@ const statusClasses = {
 }
 
 function App() {
+  const { t, locale, setLocale } = useI18n()
   const [formValues, setFormValues] = useState(initialFormValues)
   const [status, setStatus] = useState({ state: 'idle', message: '' })
   const [saving, setSaving] = useState(false)
@@ -41,12 +43,12 @@ function App() {
       setHeroes([])
       setHeroesStatus({
         state: 'idle',
-        message: 'Configure Supabase to load heroes.',
+        message: t('app.configureSupabaseToLoadHeroes'),
       })
       return
     }
 
-    setHeroesStatus({ state: 'loading', message: 'Loading heroes...' })
+    setHeroesStatus({ state: 'loading', message: t('app.loadingHeroes') })
 
     const [heroesResult, imagesResult] = await Promise.all([
       supabase.from('superheroes').select('*').order('name', { ascending: true }),
@@ -83,9 +85,11 @@ function App() {
     setHeroes(enrichedHeroes)
     setHeroesStatus({
       state: 'success',
-      message: enrichedHeroes.length ? `Loaded ${enrichedHeroes.length} heroes.` : 'No heroes found.',
+      message: enrichedHeroes.length
+        ? t('app.loadedHeroes', { count: enrichedHeroes.length })
+        : t('app.noHeroesFound'),
     })
-  }, [supabase])
+  }, [t])
 
   useEffect(() => {
     void loadHeroes()
@@ -105,13 +109,11 @@ function App() {
 
     void syncSession()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        if (isMounted) {
-          setSession(nextSession)
-        }
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (isMounted) {
+        setSession(nextSession)
       }
-    )
+    })
 
     return () => {
       isMounted = false
@@ -177,12 +179,12 @@ function App() {
     if (!supabase) return
 
     if (!formValues.email.trim() || !formValues.password.trim()) {
-      setStatus({ state: 'error', message: 'Email and password are required.' })
+      setStatus({ state: 'error', message: t('app.emailPasswordRequired') })
       return
     }
 
     setSaving(true)
-    setStatus({ state: 'loading', message: 'Validating credentials…' })
+    setStatus({ state: 'loading', message: t('app.validatingCredentials') })
 
     const credentials = {
       email: formValues.email.trim().toLowerCase(),
@@ -200,7 +202,7 @@ function App() {
     if (data.user) {
       setStatus({
         state: 'success',
-        message: `Signed in as ${data.user.email}`,
+        message: t('app.signedInAs', { email: data.user.email }),
       })
       setFormValues(initialFormValues)
       await recordLoginAudit(data.user)
@@ -215,17 +217,17 @@ function App() {
     if (!supabase) return
 
     if (!formValues.email.trim() || !formValues.password.trim()) {
-      setStatus({ state: 'error', message: 'Email and password are required.' })
+      setStatus({ state: 'error', message: t('app.emailPasswordRequired') })
       return
     }
 
     if (formValues.password !== formValues.confirmPassword) {
-      setStatus({ state: 'error', message: 'Passwords do not match.' })
+      setStatus({ state: 'error', message: t('app.passwordsDoNotMatch') })
       return
     }
 
     setSaving(true)
-    setStatus({ state: 'loading', message: 'Creating account…' })
+    setStatus({ state: 'loading', message: t('app.creatingAccount') })
 
     const credentials = {
       email: formValues.email.trim().toLowerCase(),
@@ -243,7 +245,7 @@ function App() {
     if (data?.user) {
       setStatus({
         state: 'success',
-        message: 'Account created. Check your inbox to confirm your email.',
+        message: t('app.accountCreatedCheckInbox'),
       })
       setFormValues(initialFormValues)
       setAuthMode('sign-in')
@@ -255,7 +257,7 @@ function App() {
   const handleSignOut = async () => {
     if (!supabase) return
     await supabase.auth.signOut()
-    setStatus({ state: 'idle', message: 'Signed out.' })
+    setStatus({ state: 'idle', message: t('app.signedOut') })
   }
 
   const openAuthDialog = useCallback(() => {
@@ -263,9 +265,12 @@ function App() {
     setAuthDialogOpen(true)
   }, [])
 
-  const openLanguageMenu = useCallback(() => {
-    // Placeholder for future i18n language selector (ES/CA)
-  }, [])
+  const handleLanguageSelect = useCallback(
+    (nextLocale) => {
+      setLocale(nextLocale)
+    },
+    [setLocale],
+  )
 
   const sessionContextValue = useMemo(
     () => ({
@@ -290,35 +295,37 @@ function App() {
           navAvatarUrl={navAvatarUrl}
           onOpenAuthDialog={openAuthDialog}
           onSignOut={handleSignOut}
-          onOpenLanguageMenu={openLanguageMenu}
+          onSelectLanguage={handleLanguageSelect}
+          currentLocale={locale}
+          languageLabel={locale.toUpperCase()}
         />
 
-      <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <HeroDashboard
-                heroes={heroes}
-                heroesStatus={heroesStatus}
-                loadHeroes={loadHeroes}
-                status={status}
-              />
-            }
-          />
-          <Route path="/heroes/:slug" element={<HeroDetail />} />
-          <Route
-            path="/account"
-            element={
-              <AccountSettings onRequireSignIn={openAuthDialog} />
-            }
-          />
-        </Routes>
+        <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <HeroDashboard
+                  heroes={heroes}
+                  heroesStatus={heroesStatus}
+                  loadHeroes={loadHeroes}
+                  status={status}
+                />
+              }
+            />
+            <Route path="/heroes/:slug" element={<HeroDetail />} />
+            <Route
+              path="/account"
+              element={
+                <AccountSettings onRequireSignIn={openAuthDialog} />
+              }
+            />
+          </Routes>
 
-        {!isSupabaseConfigured && <EnvironmentNotice />}
-      </main>
+          {!isSupabaseConfigured && <EnvironmentNotice />}
+        </main>
 
-      <Footer />
+        <Footer />
       </div>
       <AuthDialog
         open={isAuthDialogOpen}
@@ -338,15 +345,17 @@ function App() {
 }
 
 function HeroDashboard({ heroes, heroesStatus, loadHeroes, status }) {
+  const { t } = useI18n()
+
   return (
     <section className="rounded-2xl bg-white p-6 shadow">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Hero visualizer</h2>
+          <h2 className="text-lg font-semibold">{t('app.heroVisualizer')}</h2>
           <p className="mt-2 text-sm text-slate-600">
             {heroesStatus.state === 'success'
-              ? `Showing ${heroes.length} curated heroes stored in Supabase.`
-              : 'Connect to Supabase and seed your roster to visualize it here.'}
+              ? t('app.showingCuratedHeroes', { count: heroes.length })
+              : t('app.connectSupabaseAndSeed')}
           </p>
         </div>
         <Button
@@ -355,7 +364,7 @@ function HeroDashboard({ heroes, heroesStatus, loadHeroes, status }) {
           onClick={() => void loadHeroes()}
           disabled={heroesStatus.state === 'loading'}
         >
-          {heroesStatus.state === 'loading' ? 'Refreshing...' : 'Refresh heroes'}
+          {heroesStatus.state === 'loading' ? t('app.refreshing') : t('app.refreshHeroes')}
         </Button>
       </div>
       {status.message ? (
@@ -367,7 +376,7 @@ function HeroDashboard({ heroes, heroesStatus, loadHeroes, status }) {
         {heroesStatus.state === 'error' ? (
           <p className="text-sm text-red-600">{heroesStatus.message}</p>
         ) : heroesStatus.state === 'loading' ? (
-          <p className="text-sm text-slate-500">Loading heroes...</p>
+          <p className="text-sm text-slate-500">{t('app.loadingHeroes')}</p>
         ) : heroes.length ? (
           <div className="grid gap-4 md:grid-cols-2">
             {heroes.map((hero) => (
@@ -375,9 +384,7 @@ function HeroDashboard({ heroes, heroesStatus, loadHeroes, status }) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">
-            No heroes found. Run <code>npm run seed:superheroes</code> to populate the cache.
-          </p>
+          <p className="text-sm text-slate-500">{t('app.noHeroesSeedHint')}</p>
         )}
       </div>
     </section>
@@ -385,17 +392,14 @@ function HeroDashboard({ heroes, heroesStatus, loadHeroes, status }) {
 }
 
 function EnvironmentNotice() {
+  const { t } = useI18n()
+
   return (
     <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900 shadow">
-      <h2 className="text-lg font-semibold">Pending environment variables</h2>
-      <p className="mt-2 text-sm">
-        Copy <code>.env.example</code> to <code>.env</code> and add your <code>VITE_SUPABASE_URL</code> and{' '}
-        <code>VITE_SUPABASE_ANON_KEY</code> values.
-      </p>
+      <h2 className="text-lg font-semibold">{t('app.pendingEnvVars')}</h2>
+      <p className="mt-2 text-sm">{t('app.envVarsHint')}</p>
     </section>
   )
 }
 
 export default App
-
-

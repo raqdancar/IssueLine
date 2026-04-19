@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
+﻿import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const alignmentColors = {
   good: 'text-emerald-600 bg-emerald-50 border-emerald-100',
@@ -13,6 +14,7 @@ const fallbackImage =
 const statLabels = ['intelligence', 'strength', 'speed', 'durability', 'power', 'combat']
 
 function HeroTab({ hero }) {
+  const { t } = useI18n()
   const alignment = hero.alignment?.toLowerCase()
   const badgeClasses = alignmentColors[alignment] ?? 'text-slate-600 bg-slate-100 border-slate-200'
   const heroImages = hero.heroImages ?? []
@@ -37,7 +39,7 @@ function HeroTab({ hero }) {
     <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg">
       <div className="flex items-start gap-4">
         {detailHref ? (
-          <Link to={detailHref} aria-label={`View details for ${hero.name}`} className="inline-block focus:outline-none">
+          <Link to={detailHref} aria-label={t('heroTab.viewDetailsFor', { name: hero.name })} className="inline-block focus:outline-none">
             {portrait}
           </Link>
         ) : (
@@ -58,9 +60,9 @@ function HeroTab({ hero }) {
             ) : null}
           </div>
           {displayName && displayName !== hero.name ? (
-            <p className="body-xs text-slate-500">aka {displayName}</p>
+            <p className="body-xs text-slate-500">{t('heroTab.aka', { name: displayName })}</p>
           ) : null}
-          <p className="eyebrow mt-2">{hero.publisher ?? 'Independent'}</p>
+          <p className="eyebrow mt-2">{hero.publisher ?? t('heroTab.independent')}</p>
         </div>
       </div>
 
@@ -88,7 +90,7 @@ function HeroTab({ hero }) {
             <dd className="title-xs text-slate-800">
               {Number.isFinite(Number(stats[label]))
                 ? Number(stats[label])
-                : (stats[label] ?? '�')}
+                : (stats[label] ?? t('heroTab.noStatValue'))}
             </dd>
           </div>
         ))}
