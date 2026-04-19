@@ -238,5 +238,7 @@ The script checks:
 - `npm run build`: create a production build.
 - `npm run preview`: preview the production build locally.
 - `npm run verify:prod`: smoke-check deployed frontend + backend URLs.
+- `npm run import:gcd`: run the internal guided GCD series importer CLI (backend tool).
+- `npm run import:gcd:issue`: run the internal guided GCD single-issue importer CLI (backend tool).
 - `npm --prefix ui run lint`: run ESLint on the frontend.
 

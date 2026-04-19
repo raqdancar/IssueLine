@@ -49,3 +49,110 @@ Set these in the Koyeb service:
 
 In your Vercel project, set:
 - `VITE_BACKEND_URL=https://<your-koyeb-service-domain>`
+
+## Internal GCD import CLI
+
+Use the internal CLI to import a full GCD series into Supabase without creating public endpoints:
+
+```bash
+npm run import:gcd
+# or from repo root:
+npm run import:gcd
+```
+
+The CLI prompts:
+1. `Enter GCD series ID`
+2. `Optional: enter hero slug override (press Enter to auto-resolve)`
+3. `Exclude variant-cover items from public timeline? (y/n)`
+4. `Are cover images already uploaded to the correct bucket? (y/n)`
+5. `Enter cover folder (preferred: relative folder under /covers/<hero-slug>)` (only when answer 4 is `y`)
+
+Optional non-interactive hero override flags:
+- `--hero-slug=<slug>`
+- `--hero-api-id=<api_id>`
+- If one of these flags is provided, the hero override prompt is skipped.
+
+Example:
+```bash
+npm run import:gcd -- --hero-slug=doctor-strange
+```
+
+## Internal GCD single-issue import CLI
+
+Use the single-issue variant when you need to import one issue manually for a selected hero:
+
+```bash
+npm run import:gcd:issue
+# or from repo root:
+npm run import:gcd:issue
+```
+
+Interactive flow:
+1. Select hero from heroes already stored in `superheroes` (with search option).
+2. Enter GCD issue ID (numeric) or full issue URL.
+3. Choose whether to include it in the hero timeline immediately.
+4. Optionally link cover from `/covers/<hero-slug>/<folder>` (preferred) or legacy `/covers/<folder>`.
+
+Optional flags:
+- `--hero-slug=<slug>`
+- `--hero-api-id=<api_id>`
+- `--issue-id=<gcdIssueId-or-url>`
+- `--timeline=y|n`
+- `--covers=y|n`
+- `--covers-folder=<folder-under-covers>`
+
+Duplicate and re-import behavior:
+- The importer checks if `(hero_api_id, gcd_issue_id)` already exists.
+- `hero_issues` persistence uses upsert, so re-import updates safely instead of creating duplicates.
+- If timeline inclusion is enabled, timeline rows are upserted by `metadata.gcdIssueId`.
+- Existing rows are updated when re-importing; no blind duplicate timeline inserts.
+
+### Required env vars
+
+- `SUPABASE_URL` (or `VITE_SUPABASE_URL`)
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GCD_BASE_URL` (defaults to `https://www.comics.org`)
+- Optional when needed by GCD limits: `GCD_USERNAME`/`GCD_PASSWORD` or `GCD_SESSIONID`
+
+### Cover folder structure
+
+- Bucket: `issue-images` by default (override with `ISSUE_IMAGE_BUCKET`)
+- Prefix: `covers` by default (override with `ISSUE_IMAGE_PREFIX`)
+- Preferred structure: `covers/<hero-slug>/<folder>`
+- Example: for hero `doctor-strange` and folder `doctor_strange_2018`, importer first scans `covers/doctor-strange/doctor_strange_2018`
+- Backward compatibility: if no files are found, importer falls back to legacy `covers/<folder>`
+
+### Doctor Strange migration SQL
+
+To migrate existing Doctor Strange cover paths to hero-scoped folders:
+
+- [20260419_doctor_strange_cover_paths.sql](c:\Users\danil\OneDrive\Desktop\IssueLine\supabase\sql\20260419_doctor_strange_cover_paths.sql)
+
+### Deterministic cover matching
+
+The importer matches covers in this order:
+1. filename token that looks like a GCD issue id (preferred)
+2. normalized issue number token fallback
+
+If multiple files match the same issue, the CLI picks the lexicographically first path, reports it as ambiguous, and continues.
+If no file matches, it reports the issue in `missing covers` and continues.
+
+### Re-import behavior
+
+- `hero_issues` rows are upserted by `(hero_api_id, gcd_issue_id)`.
+- Timeline rows are upserted by `metadata.gcdIssueId` for the same hero.
+- When variant exclusion is enabled, duplicate/variant timeline rows are filtered from the canonical timeline and deleted from `hero_timelines` (source issue data remains in `hero_issues` for audit fidelity).
+
+## Tests
+
+Run backend unit tests with:
+
+```bash
+npm run test
+```
+
+Run backend tests with coverage percentage:
+
+```bash
+npm run test:coverage
+```

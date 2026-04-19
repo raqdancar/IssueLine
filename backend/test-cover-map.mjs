@@ -1,4 +1,4 @@
-import { supabaseServiceClient } from './src/services/supabaseClient.js'
+import { supabaseServiceClient } from './src/lib/supabaseClient.js'
 
 const listBucketObjects = async (bucket, prefix = '') => {
   const storage = supabaseServiceClient.storage.from(bucket)

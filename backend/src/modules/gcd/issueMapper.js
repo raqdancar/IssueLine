@@ -5,12 +5,14 @@ import { buildIssueHeadline } from '../../utils/issueHeadlineUtils.js'
 export const coerceIsoDate = (raw) => {
   if (!raw) return null
   let value = raw.trim()
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    value = value.replace('-00', '-01')
+  if (/^\d{4}-00-00$/.test(value)) {
+    value = value.replace('-00-00', '-01-01')
+  } else if (/^\d{4}-00-\d{2}$/.test(value)) {
+    value = value.replace('-00-', '-01-')
   } else if (/^\d{4}-\d{2}-00$/.test(value)) {
     value = value.replace(/-00$/, '-01')
-  } else if (/^\d{4}-00-00$/.test(value)) {
-    value = value.replace('-00-00', '-01-01')
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    value = value.replace('-00-', '-01-').replace(/-00$/, '-01')
   } else if (/^\d{4}-\d{2}$/.test(value)) {
     value = `${value}-01`
   } else if (/^\d{4}$/.test(value)) {
