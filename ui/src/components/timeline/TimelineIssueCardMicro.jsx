@@ -1,13 +1,23 @@
 import { CalendarDays } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
-function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, isFlashing = false, onEntryHighlight }) {
+function TimelineIssueCardMicro({
+  viewModel,
+  issueState,
+  isHighlighted = false,
+  isFlashing = false,
+  onEntryHighlight,
+  onIssueSelect,
+}) {
   const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
   const { seriesName, number, publicationDate, legacyNumber } = meta
   const haveIt = Boolean(issueState?.haveIt)
   const readIt = Boolean(issueState?.readIt)
-  const handleHighlight = () => onEntryHighlight?.(entryDomId)
+  const handleHighlight = () => {
+    onEntryHighlight?.(entryDomId)
+    onIssueSelect?.(entry)
+  }
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()

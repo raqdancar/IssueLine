@@ -10,6 +10,7 @@ function TimelineIssueCardCompact({
   issueStateDisabledReason,
   issueStatePending = false,
   onIssueStateToggle,
+  onIssueSelect,
   isHighlighted = false,
   isFlashing = false,
   onEntryHighlight,
@@ -17,7 +18,10 @@ function TimelineIssueCardCompact({
   const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, gradientStyle, issueDateLabel, stageName, meta } = viewModel
   const { seriesName, number, publicationDate, legacyNumber } = meta
-  const handleHighlight = () => onEntryHighlight?.(entryDomId)
+  const handleHighlight = () => {
+    onEntryHighlight?.(entryDomId)
+    onIssueSelect?.(entry)
+  }
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()

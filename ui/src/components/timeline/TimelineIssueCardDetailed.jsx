@@ -12,6 +12,7 @@ function TimelineIssueCardDetailed({
   issueStatePending = false,
   onIssueStateToggle,
   onCoverPreview,
+  onIssueSelect,
   isHighlighted = false,
   isFlashing = false,
   onEntryHighlight,
@@ -31,7 +32,10 @@ function TimelineIssueCardDetailed({
   } = viewModel
 
   const { seriesName, number, volume, publicationDate, price, pageCount, editing, rating, legacyNumber } = meta
-  const handleHighlight = () => onEntryHighlight?.(entryDomId)
+  const handleHighlight = () => {
+    onEntryHighlight?.(entryDomId)
+    onIssueSelect?.(entry)
+  }
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -199,4 +203,3 @@ function TimelineIssueCardDetailed({
 }
 
 export default TimelineIssueCardDetailed
-

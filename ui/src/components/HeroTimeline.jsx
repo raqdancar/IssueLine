@@ -4,6 +4,7 @@ import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './timeline/TimelineNavigatorToggle'
 import TimelineList from './timeline/TimelineList'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
+import IssueDetailsDialog from './issue-details/IssueDetailsDialog'
 import { isAnnualIssueEntry } from './timeline/utils'
 import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket, resolveYearBucket } from '../utils/timeline'
 import { backendBaseUrl } from '@/utils/backend.js'
@@ -33,6 +34,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   const [zoomLevel, setZoomLevel] = useState(1)
   const [highlightedEntryDomId, setHighlightedEntryDomId] = useState(null)
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
+  const [selectedIssueId, setSelectedIssueId] = useState(null)
   const [{ status, entries, error }, setState] = useState({
     status: apiBaseUrl ? 'idle' : 'disabled',
     entries: [],
@@ -92,6 +94,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 
   useEffect(() => {
     setIssueFilter('all')
+    setSelectedIssueId(null)
   }, [slug])
 
   const severityLookup = useMemo(() => severityVariants, [])
@@ -299,6 +302,15 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     setCoverViewer({ open: true, src, alt: alt ?? t('common.issueCover') })
   }
 
+  const openIssueDetails = useCallback((entry) => {
+    if (!entry?.id) return
+    setSelectedIssueId(entry.id)
+  }, [])
+
+  const closeIssueDetails = useCallback(() => {
+    setSelectedIssueId(null)
+  }, [])
+
   const navigatorHasContent =
     monthAnchors.length > 0 || stageAnchors.length > 0 || issueAnchors.length > 0
   const canShowNavigator = navigatorHasContent
@@ -383,6 +395,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
                   triggerFlash(entryDomId)
                 }}
                 onCoverPreview={openCoverViewer}
+                onIssueSelect={openIssueDetails}
                 onIssueStateToggle={handleIssueStateToggle}
               />
             </div>
@@ -395,12 +408,18 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
         alt={coverViewer.alt}
         onClose={() => setCoverViewer({ open: false, src: null, alt: '' })}
       />
+      <IssueDetailsDialog
+        open={Boolean(selectedIssueId)}
+        heroSlug={slug}
+        issueId={selectedIssueId}
+        fallbackImage={fallbackImage}
+        onClose={closeIssueDetails}
+      />
     </section>
   )
 }
 
 export default HeroTimeline
-
 
 
 
