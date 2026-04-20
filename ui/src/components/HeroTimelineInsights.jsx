@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+ï»¿import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, Info } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
 import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
@@ -137,7 +137,7 @@ const buildStageGroups = (entries, stateIndex = {}, t, locale) => {
         startYear && endYear
           ? startYear === endYear
             ? `${startYear}`
-            : `${startYear} – ${endYear}`
+            : `${startYear} - ${endYear}`
           : startYear
             ? `${startYear}`
             : t('timeline.yearTba')
@@ -186,7 +186,7 @@ const GaugeCard = ({ label, count, total, accentClass, t }) => {
       </svg>
       <div>
         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{label}</p>
-        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || '—' })}</p>
+        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || 'â€”' })}</p>
       </div>
     </div>
   )
@@ -271,7 +271,7 @@ function StageAccordionItem({
         <div className="min-w-0">
           <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-slate-900'}`}>{stage.name}</p>
           <p className={`text-xs ${isComplete ? 'text-emerald-700' : 'text-slate-500'}`}>
-            {stage.yearLabel} • {stage.issueCount} {t('timeline.indexIssues').toLowerCase()} • {progressLabel}
+            {stage.yearLabel} â€¢ {stage.issueCount} {t('timeline.indexIssues').toLowerCase()} â€¢ {progressLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-2">
@@ -437,7 +437,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     return {
       startYear: start,
       endYear: end,
-      label: start === end ? `${start}` : `${start} – ${end}`,
+      label: start === end ? `${start}` : `${start} - ${end}`,
     }
   }, [state.entries, t])
 
@@ -561,3 +561,4 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 }
 
 export default HeroTimelineInsights
+

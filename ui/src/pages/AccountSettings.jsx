@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const AVATAR_BUCKET = import.meta.env.VITE_SUPABASE_AVATAR_BUCKET || 'avatars'
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024
@@ -32,6 +33,7 @@ const extensionFromFile = (file) => {
 }
 
 function AccountSettings({ onRequireSignIn }) {
+  const { t } = useI18n()
   const { session, isAuthenticated } = useSessionContext()
   const [profileForm, setProfileForm] = useState(initialProfileForm)
   const [passwordForm, setPasswordForm] = useState(initialPasswordForm)
@@ -74,7 +76,7 @@ function AccountSettings({ onRequireSignIn }) {
       const { data, error } = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(avatarPath, 60 * 60 * 24)
       if (!active) return
       if (error) {
-        setAvatarStatus({ type: 'error', message: `Avatar preview error: ${error.message}` })
+        setAvatarStatus({ type: 'error', message: t('account.avatarPreviewError', { message: error.message }) })
         setAvatarPreviewUrl(null)
         return
       }
@@ -86,7 +88,7 @@ function AccountSettings({ onRequireSignIn }) {
     return () => {
       active = false
     }
-  }, [avatarPath, user?.id])
+  }, [avatarPath, user?.id, t])
 
   const handleProfileInputChange = (event) => {
     const { name, value } = event.target
@@ -101,7 +103,7 @@ function AccountSettings({ onRequireSignIn }) {
   const handleAvatarFileChange = (event) => {
     const file = event.target.files?.[0] ?? null
     setAvatarFile(file)
-    setAvatarStatus({ type: 'idle', message: file ? `Selected: ${file.name}` : '' })
+    setAvatarStatus({ type: 'idle', message: file ? t('account.selectedFile', { name: file.name }) : '' })
   }
 
   const handleProfileSave = async (event) => {
@@ -109,7 +111,7 @@ function AccountSettings({ onRequireSignIn }) {
     if (!supabase || !isAuthenticated) return
 
     setSavingProfile(true)
-    setProfileStatus({ type: 'loading', message: 'Saving profile...' })
+    setProfileStatus({ type: 'loading', message: t('account.savingProfileStatus') })
 
     const displayName = profileForm.displayName.trim()
     const { error } = await supabase.auth.updateUser({
@@ -128,29 +130,29 @@ function AccountSettings({ onRequireSignIn }) {
       return
     }
 
-    setProfileStatus({ type: 'success', message: 'Profile updated successfully.' })
+    setProfileStatus({ type: 'success', message: t('account.profileUpdated') })
     setSavingProfile(false)
   }
 
   const handleAvatarUpload = async () => {
     if (!supabase || !isAuthenticated || !user) return
     if (!avatarFile) {
-      setAvatarStatus({ type: 'error', message: 'Select an image file first.' })
+      setAvatarStatus({ type: 'error', message: t('account.selectImageFirst') })
       return
     }
 
     if (!ALLOWED_AVATAR_TYPES.includes(avatarFile.type)) {
-      setAvatarStatus({ type: 'error', message: 'Only JPG, PNG, WEBP, or GIF images are allowed.' })
+      setAvatarStatus({ type: 'error', message: t('account.allowedTypesOnly') })
       return
     }
 
     if (avatarFile.size > MAX_AVATAR_BYTES) {
-      setAvatarStatus({ type: 'error', message: 'Avatar file must be 5MB or smaller.' })
+      setAvatarStatus({ type: 'error', message: t('account.maxAvatarSize') })
       return
     }
 
     setSavingAvatar(true)
-    setAvatarStatus({ type: 'loading', message: 'Uploading avatar...' })
+    setAvatarStatus({ type: 'loading', message: t('account.uploadingAvatarStatus') })
 
     const ext = extensionFromFile(avatarFile)
     const nextPath = `${user.id}/avatar.${ext}`
@@ -191,7 +193,7 @@ function AccountSettings({ onRequireSignIn }) {
       .createSignedUrl(nextPath, 60 * 60 * 24)
 
     if (signedError) {
-      setAvatarStatus({ type: 'error', message: `Uploaded, but preview failed: ${signedError.message}` })
+      setAvatarStatus({ type: 'error', message: t('account.uploadedButPreviewFailed', { message: signedError.message }) })
       setAvatarPath(nextPath)
       setAvatarFile(null)
       setSavingAvatar(false)
@@ -201,19 +203,19 @@ function AccountSettings({ onRequireSignIn }) {
     setAvatarPath(nextPath)
     setAvatarPreviewUrl(signedData?.signedUrl ?? null)
     setAvatarFile(null)
-    setAvatarStatus({ type: 'success', message: 'Avatar uploaded and saved.' })
+    setAvatarStatus({ type: 'success', message: t('account.avatarUploadedAndSaved') })
     setSavingAvatar(false)
   }
 
   const handleAvatarDelete = async () => {
     if (!supabase || !isAuthenticated || !user) return
     if (!avatarPath) {
-      setAvatarStatus({ type: 'error', message: 'There is no avatar to delete.' })
+      setAvatarStatus({ type: 'error', message: t('account.noAvatarToDelete') })
       return
     }
 
     setDeletingAvatar(true)
-    setAvatarStatus({ type: 'loading', message: 'Deleting avatar...' })
+    setAvatarStatus({ type: 'loading', message: t('account.deletingAvatarStatus') })
 
     const { error: removeError } = await supabase.storage.from(AVATAR_BUCKET).remove([avatarPath])
     if (removeError) {
@@ -239,7 +241,7 @@ function AccountSettings({ onRequireSignIn }) {
     setAvatarPath(null)
     setAvatarPreviewUrl(null)
     setAvatarFile(null)
-    setAvatarStatus({ type: 'success', message: 'Avatar deleted.' })
+    setAvatarStatus({ type: 'success', message: t('account.avatarDeleted') })
     setDeletingAvatar(false)
   }
 
@@ -251,22 +253,22 @@ function AccountSettings({ onRequireSignIn }) {
     const confirmPassword = passwordForm.confirmPassword.trim()
 
     if (!nextPassword) {
-      setPasswordStatus({ type: 'error', message: 'Please enter your new password.' })
+      setPasswordStatus({ type: 'error', message: t('account.enterNewPassword') })
       return
     }
 
     if (nextPassword.length < 8) {
-      setPasswordStatus({ type: 'error', message: 'Password must be at least 8 characters long.' })
+      setPasswordStatus({ type: 'error', message: t('account.passwordMinLength') })
       return
     }
 
     if (nextPassword !== confirmPassword) {
-      setPasswordStatus({ type: 'error', message: 'Password confirmation does not match.' })
+      setPasswordStatus({ type: 'error', message: t('account.passwordConfirmationMismatch') })
       return
     }
 
     setSavingPassword(true)
-    setPasswordStatus({ type: 'loading', message: 'Updating password...' })
+    setPasswordStatus({ type: 'loading', message: t('account.updatingPasswordStatus') })
 
     const { error } = await supabase.auth.updateUser({ password: nextPassword })
 
@@ -277,7 +279,7 @@ function AccountSettings({ onRequireSignIn }) {
     }
 
     setPasswordForm(initialPasswordForm)
-    setPasswordStatus({ type: 'success', message: 'Password updated successfully.' })
+    setPasswordStatus({ type: 'success', message: t('account.passwordUpdated') })
     setSavingPassword(false)
   }
 
@@ -288,16 +290,14 @@ function AccountSettings({ onRequireSignIn }) {
       <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="eyebrow">Account</p>
-            <h2 className="title-md">Account settings</h2>
+            <p className="eyebrow">{t('common.account')}</p>
+            <h2 className="title-md">{t('account.title')}</h2>
           </div>
           <Button asChild variant="outline">
-            <Link to="/">Back to roster</Link>
+            <Link to="/">{t('account.backToRoster')}</Link>
           </Button>
         </div>
-        <p className="mt-4 body-sm">
-          Configure <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to manage user settings.
-        </p>
+        <p className="mt-4 body-sm">{t('account.supabaseHint')}</p>
       </section>
     )
   }
@@ -307,17 +307,17 @@ function AccountSettings({ onRequireSignIn }) {
       <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 text-slate-700 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="eyebrow">Account</p>
-            <h2 className="title-md">Account settings</h2>
-            <p className="mt-2 body-sm">Sign in first to manage your profile, avatar, and password.</p>
+            <p className="eyebrow">{t('common.account')}</p>
+            <h2 className="title-md">{t('account.title')}</h2>
+            <p className="mt-2 body-sm">{t('account.signInHint')}</p>
           </div>
           <Button asChild variant="outline">
-            <Link to="/">Back to roster</Link>
+            <Link to="/">{t('account.backToRoster')}</Link>
           </Button>
         </div>
         <div className="mt-6">
           <Button type="button" onClick={onRequireSignIn}>
-            Sign in
+            {t('account.signIn')}
           </Button>
         </div>
       </section>
@@ -328,12 +328,12 @@ function AccountSettings({ onRequireSignIn }) {
     <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="eyebrow">Account</p>
-          <h2 className="title-md">Account settings</h2>
-          <p className="mt-2 body-sm">Manage your display name, private avatar image, and password.</p>
+          <p className="eyebrow">{t('common.account')}</p>
+          <h2 className="title-md">{t('account.title')}</h2>
+          <p className="mt-2 body-sm">{t('account.subtitle')}</p>
         </div>
         <Button asChild variant="outline">
-          <Link to="/">Back to roster</Link>
+          <Link to="/">{t('account.backToRoster')}</Link>
         </Button>
       </div>
 
@@ -341,145 +341,86 @@ function AccountSettings({ onRequireSignIn }) {
         <aside className="rounded-3xl border border-slate-100 bg-white/80 p-5 shadow-sm lg:col-span-4 xl:col-span-3 xl:sticky xl:top-24">
           <div className="mx-auto h-36 w-36 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
             {avatarPreview ? (
-              <img
-                src={avatarPreview}
-                alt="Profile avatar preview"
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
+              <img src={avatarPreview} alt={t('account.avatarPreviewAlt')} className="h-full w-full object-cover" loading="lazy" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase tracking-widest text-slate-400">
-                No avatar
+                {t('account.noAvatar')}
               </div>
             )}
           </div>
           <div className="mt-4 space-y-2 text-sm">
-            <p className="text-slate-500">Email</p>
+            <p className="text-slate-500">{t('account.email')}</p>
             <p className="font-medium text-slate-800">{user.email}</p>
-            <p className="text-xs text-slate-500">Private bucket: {AVATAR_BUCKET}</p>
+            <p className="text-xs text-slate-500">{t('account.privateBucket', { bucket: AVATAR_BUCKET })}</p>
           </div>
         </aside>
 
         <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-8 xl:col-span-5">
-          <h3 className="text-base font-semibold text-slate-900">Profile</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t('account.profile')}</h3>
           <form className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handleProfileSave}>
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="displayName">Display name</Label>
+              <Label htmlFor="displayName">{t('account.displayName')}</Label>
               <Input
                 id="displayName"
                 name="displayName"
                 value={profileForm.displayName}
                 onChange={handleProfileInputChange}
-                placeholder="Stephen Strange"
+                placeholder={t('account.displayNamePlaceholder')}
               />
             </div>
             {profileStatus.message ? (
-              <p
-                className={`text-sm md:col-span-2 ${
-                  profileStatus.type === 'error'
-                    ? 'text-rose-600'
-                    : profileStatus.type === 'success'
-                      ? 'text-emerald-600'
-                      : 'text-slate-500'
-                }`}
-              >
+              <p className={`text-sm md:col-span-2 ${profileStatus.type === 'error' ? 'text-rose-600' : profileStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
                 {profileStatus.message}
               </p>
             ) : null}
             <Button type="submit" disabled={isSavingProfile} className="md:col-span-2">
-              {isSavingProfile ? 'Saving...' : 'Save profile'}
+              {isSavingProfile ? t('account.savingProfile') : t('account.saveProfile')}
             </Button>
           </form>
         </article>
 
         <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-6 xl:col-span-4">
-          <h3 className="text-base font-semibold text-slate-900">Avatar upload</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t('account.avatarUpload')}</h3>
           <div className="mt-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="avatarFile">Upload from your device</Label>
-              <Input
-                id="avatarFile"
-                name="avatarFile"
-                type="file"
-                accept={ALLOWED_AVATAR_TYPES.join(',')}
-                onChange={handleAvatarFileChange}
-              />
-              <p className="text-xs text-slate-500">Allowed: JPG, PNG, WEBP, GIF. Max: 5MB.</p>
+              <Label htmlFor="avatarFile">{t('account.uploadFromDevice')}</Label>
+              <Input id="avatarFile" name="avatarFile" type="file" accept={ALLOWED_AVATAR_TYPES.join(',')} onChange={handleAvatarFileChange} />
+              <p className="text-xs text-slate-500">{t('account.avatarRules')}</p>
             </div>
             {avatarStatus.message ? (
-              <p
-                className={`text-sm ${
-                  avatarStatus.type === 'error'
-                    ? 'text-rose-600'
-                    : avatarStatus.type === 'success'
-                      ? 'text-emerald-600'
-                      : 'text-slate-500'
-                }`}
-              >
+              <p className={`text-sm ${avatarStatus.type === 'error' ? 'text-rose-600' : avatarStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
                 {avatarStatus.message}
               </p>
             ) : null}
             <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                disabled={isSavingAvatar || isDeletingAvatar}
-                onClick={() => void handleAvatarUpload()}
-              >
-                {isSavingAvatar ? 'Uploading...' : 'Upload avatar'}
+              <Button type="button" disabled={isSavingAvatar || isDeletingAvatar} onClick={() => void handleAvatarUpload()}>
+                {isSavingAvatar ? t('account.uploadingAvatar') : t('account.uploadAvatar')}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-800"
-                disabled={!avatarPath || isSavingAvatar || isDeletingAvatar}
-                onClick={() => void handleAvatarDelete()}
-              >
-                {isDeletingAvatar ? 'Deleting...' : 'Delete avatar'}
+              <Button type="button" variant="outline" className="border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-800" disabled={!avatarPath || isSavingAvatar || isDeletingAvatar} onClick={() => void handleAvatarDelete()}>
+                {isDeletingAvatar ? t('account.deletingAvatar') : t('account.deleteAvatar')}
               </Button>
             </div>
           </div>
         </article>
 
         <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-12">
-          <h3 className="text-base font-semibold text-slate-900">Password</h3>
+          <h3 className="text-base font-semibold text-slate-900">{t('account.password')}</h3>
           <form className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handlePasswordSave}>
             <div className="space-y-2">
-              <Label htmlFor="nextPassword">New password</Label>
-              <Input
-                id="nextPassword"
-                name="nextPassword"
-                type="password"
-                value={passwordForm.nextPassword}
-                onChange={handlePasswordInputChange}
-                placeholder="At least 8 characters"
-              />
+              <Label htmlFor="nextPassword">{t('account.newPassword')}</Label>
+              <Input id="nextPassword" name="nextPassword" type="password" value={passwordForm.nextPassword} onChange={handlePasswordInputChange} placeholder={t('account.passwordPlaceholder')} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm new password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={passwordForm.confirmPassword}
-                onChange={handlePasswordInputChange}
-                placeholder="Repeat your new password"
-              />
+              <Label htmlFor="confirmPassword">{t('account.confirmNewPassword')}</Label>
+              <Input id="confirmPassword" name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={handlePasswordInputChange} placeholder={t('account.repeatPasswordPlaceholder')} />
             </div>
             {passwordStatus.message ? (
-              <p
-                className={`text-sm md:col-span-2 ${
-                  passwordStatus.type === 'error'
-                    ? 'text-rose-600'
-                    : passwordStatus.type === 'success'
-                      ? 'text-emerald-600'
-                      : 'text-slate-500'
-                }`}
-              >
+              <p className={`text-sm md:col-span-2 ${passwordStatus.type === 'error' ? 'text-rose-600' : passwordStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
                 {passwordStatus.message}
               </p>
             ) : null}
             <Button type="submit" disabled={isSavingPassword} className="md:col-span-2">
-              {isSavingPassword ? 'Updating...' : 'Update password'}
+              {isSavingPassword ? t('account.updatingPassword') : t('account.updatePassword')}
             </Button>
           </form>
         </article>
