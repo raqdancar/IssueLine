@@ -268,6 +268,11 @@ const messages = {
       configureBackendForInsights: 'Configura VITE_BACKEND_URL para ver insights de publicación de este héroe.',
       percentReadTitle: '{{percent}}% leído',
       issuesCountOfTotal: '{{count}} / {{total}} números',
+      collectedCoverageTitle: 'Cobertura de recopilatorios',
+      collectedCoverageSubtitle: 'Recopilatorios y los numeros que contienen a traves de las etapas.',
+      collectedCoverageEmpty: 'Todavia no hay recopilatorios enlazados para este heroe.',
+      collectedIssuesCount: '{{count}} numeros enlazados',
+      collectedStagesCount: '{{count}} etapas cubiertas',
     },
   }
 

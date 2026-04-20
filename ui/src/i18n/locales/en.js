@@ -279,6 +279,11 @@
     configureBackendForInsights: 'Configure VITE_BACKEND_URL to view publishing insights for this hero.',
     percentReadTitle: '{{percent}}% read',
     issuesCountOfTotal: '{{count}} / {{total}} issues',
+    collectedCoverageTitle: 'Collected coverage',
+    collectedCoverageSubtitle: 'Collected editions and their contained issues across timeline stages.',
+    collectedCoverageEmpty: 'No collected editions linked yet for this hero.',
+    collectedIssuesCount: '{{count}} linked issues',
+    collectedStagesCount: '{{count}} covered stages',
   },
   issueDetails: {
     title: 'Issue details',

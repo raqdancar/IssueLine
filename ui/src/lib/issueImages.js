@@ -1,5 +1,6 @@
 ﻿// Timeline covers live in the hero-images bucket
 export const ISSUE_IMAGE_BUCKET = 'issue-images'
+const ABSOLUTE_URL_REGEX = /^https?:\/\//i
 
 const trimTrailingSlash = (value) => {
   if (!value) return value
@@ -25,13 +26,24 @@ const getSupabaseBaseUrl = () => {
   return getRuntimeEnv('VITE_SUPABASE_URL') || getRuntimeEnv('NEXT_PUBLIC_SUPABASE_URL') || null
 }
 
-export const buildIssueImageUrl = (relativePath) => {
-  if (!relativePath) return null
+export const buildPublicStorageUrl = (value, bucketName = ISSUE_IMAGE_BUCKET) => {
+  if (!value) return null
+  const asString = String(value).trim()
+  if (!asString) return null
+  if (ABSOLUTE_URL_REGEX.test(asString)) {
+    return asString
+  }
+
   const baseUrl = getSupabaseBaseUrl()
   if (!baseUrl) return null
   const sanitizedBase = trimTrailingSlash(baseUrl)
-  const sanitizedPath = trimLeadingSlash(String(relativePath))
-  return `${sanitizedBase}/storage/v1/object/public/${ISSUE_IMAGE_BUCKET}/${sanitizedPath}`
+  const sanitizedBucket = trimLeadingSlash(String(bucketName || ISSUE_IMAGE_BUCKET))
+  const sanitizedPath = trimLeadingSlash(asString)
+  return `${sanitizedBase}/storage/v1/object/public/${sanitizedBucket}/${sanitizedPath}`
+}
+
+export const buildIssueImageUrl = (relativePath) => {
+  return buildPublicStorageUrl(relativePath, ISSUE_IMAGE_BUCKET)
 }
 
 export const resolveIssueCoverImage = (metadata = {}, fallbackImage = null) => {

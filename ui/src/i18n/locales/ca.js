@@ -269,6 +269,11 @@ const messages = {
       configureBackendForInsights: "Configura VITE_BACKEND_URL per veure insights de publicació d'aquest heroi.",
       percentReadTitle: '{{percent}}% llegit',
       issuesCountOfTotal: '{{count}} / {{total}} números',
+      collectedCoverageTitle: 'Cobertura de recopilatoris',
+      collectedCoverageSubtitle: 'Recopilatoris i els numeros que contenen al llarg de les etapes.',
+      collectedCoverageEmpty: 'Encara no hi ha recopilatoris enllacats per a aquest heroi.',
+      collectedIssuesCount: '{{count}} numeros enllacats',
+      collectedStagesCount: '{{count}} etapes cobertes',
     },
   }
 

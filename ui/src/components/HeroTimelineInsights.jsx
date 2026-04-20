@@ -5,6 +5,9 @@ import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from
 import { Button } from '@/components/ui/button'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { buildPublicStorageUrl } from '@/lib/issueImages'
+
+const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 
 const resolveStageName = (entry, t) => {
   const meta = entry?.metadata ?? {}
@@ -156,6 +159,15 @@ const buildStageGroups = (entries, stateIndex = {}, t, locale) => {
       return aValue - bValue
     })
 }
+
+const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLECTED_EDITION_IMAGE_BUCKET)
+
+const buildStageCoverageMap = (stages = []) =>
+  stages.reduce((acc, stage) => {
+    if (!stage?.key) return acc
+    acc[stage.key] = stage.count ?? 0
+    return acc
+  }, {})
 
 const GaugeCard = ({ label, count, total, accentClass, t }) => {
   const percent = total > 0 ? Math.round((count / total) * 100) : 0
@@ -376,6 +388,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const [state, setState] = useState(() => ({
     status: !apiBaseUrl || !heroSlug ? 'disabled' : 'idle',
     entries: [],
+    collectedEditions: [],
     error: null,
   }))
   const [openStage, setOpenStage] = useState(null)
@@ -388,12 +401,12 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
   useEffect(() => {
     if (!apiBaseUrl || !heroSlug) {
-      setState({ status: 'disabled', entries: [], error: null })
+      setState({ status: 'disabled', entries: [], collectedEditions: [], error: null })
       return undefined
     }
 
     const controller = new AbortController()
-    setState({ status: 'loading', entries: [], error: null })
+    setState({ status: 'loading', entries: [], collectedEditions: [], error: null })
 
     const loadEntries = async () => {
       try {
@@ -405,10 +418,15 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           throw new Error(payload?.error ?? `Request failed with status ${response.status}`)
         }
         const payload = await response.json()
-        setState({ status: 'success', entries: payload.entries ?? [], error: null })
+        setState({
+          status: 'success',
+          entries: payload.entries ?? [],
+          collectedEditions: payload.collectedEditionsOverview ?? [],
+          error: null,
+        })
       } catch (error) {
         if (controller.signal.aborted) return
-        setState({ status: 'error', entries: [], error: error.message || t('timeline.loadingOverview') })
+        setState({ status: 'error', entries: [], collectedEditions: [], error: error.message || t('timeline.loadingOverview') })
       }
     }
 
@@ -417,9 +435,14 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   }, [apiBaseUrl, heroSlug, t])
 
   const totalIssues = state.entries.length
+  const collectedEditions = state.collectedEditions ?? []
   const stageGroups = useMemo(
     () => buildStageGroups(state.entries, statesByIssueId ?? {}, t, locale),
     [state.entries, statesByIssueId, t, locale],
+  )
+  const stageCoverageOrder = useMemo(
+    () => stageGroups.map((stage) => ({ key: stage.key, name: stage.name })),
+    [stageGroups],
   )
   const issueStatesArray = useMemo(() => Object.values(statesByIssueId ?? {}), [statesByIssueId])
   const haveItCount = issueStatesArray.filter((item) => item.haveIt).length
@@ -550,6 +573,89 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                   t={t}
                 />
               ))
+            )}
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectedCoverageTitle')}</p>
+              <p className="text-xs text-slate-500">{t('timeline.collectedCoverageSubtitle')}</p>
+            </div>
+            {collectedEditions.length ? (
+              <div className="grid gap-3 lg:grid-cols-2">
+                {collectedEditions.map((edition) => {
+                  const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
+                  const stageCoverage = buildStageCoverageMap(edition.stages)
+                  const coveredStageCount = edition.stages?.length ?? 0
+                  const visibleIssues = (edition.issues ?? []).slice(0, 8)
+                  const hiddenIssuesCount = Math.max((edition.issues?.length ?? 0) - visibleIssues.length, 0)
+
+                  return (
+                    <article key={edition.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="flex gap-3">
+                        <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
+                          {coverImage ? (
+                            <img src={coverImage} alt={edition.title ?? t('issueDetails.collected.placeholderTitle')} className="h-full w-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-slate-100 px-1 text-center">
+                              <span className="body-xs text-slate-500">{t('timeline.noCover')}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                          <p className="body-sm font-semibold text-slate-900 break-words">{edition.title}</p>
+                          {edition.subtitle ? <p className="body-xs text-slate-600 break-words">{edition.subtitle}</p> : null}
+                          <p className="body-xs text-slate-500">
+                            {edition.format ?? 'unknown'}{edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
+                          </p>
+                          <p className="body-xs text-slate-500">
+                            {t('timeline.collectedIssuesCount', { count: edition.issueCount ?? 0 })}
+                            {' - '}
+                            {t('timeline.collectedStagesCount', { count: coveredStageCount })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {stageCoverageOrder.length ? (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex gap-1">
+                            {stageCoverageOrder.map((stage) => {
+                              const count = stageCoverage[stage.key] ?? 0
+                              return (
+                                <div
+                                  key={`${edition.id}-${stage.key}`}
+                                  className={`h-2 flex-1 rounded-full ${count > 0 ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                  title={`${stage.name}: ${count} ${t('timeline.indexIssues').toLowerCase()}`}
+                                />
+                              )
+                            })}
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {(edition.stages ?? []).map((stage) => (
+                              <span key={`${edition.id}-stage-${stage.key}`} className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                                {stage.name} ({stage.count})
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {visibleIssues.map((issue) => (
+                          <span key={`${edition.id}-issue-${issue.heroIssueId ?? issue.gcdIssueId}`} className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px] text-slate-700">
+                            #{issue.number ?? issue.gcdIssueId}
+                          </span>
+                        ))}
+                        {hiddenIssuesCount > 0 ? (
+                          <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px] text-slate-700">+{hiddenIssuesCount}</span>
+                        ) : null}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">{t('timeline.collectedCoverageEmpty')}</p>
             )}
           </div>
         </div>
