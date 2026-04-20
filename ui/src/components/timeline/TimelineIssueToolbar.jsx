@@ -1,8 +1,9 @@
 import { BookOpen, CheckCircle2, Loader2 } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const toolbarButtons = [
-  { key: 'haveIt', label: 'Add to collection', Icon: CheckCircle2 },
-  { key: 'readIt', label: 'Mark as read', Icon: BookOpen },
+  { key: 'haveIt', labelKey: 'timeline.addToCollection', Icon: CheckCircle2 },
+  { key: 'readIt', labelKey: 'timeline.markAsRead', Icon: BookOpen },
 ]
 
 function TimelineIssueToolbar({
@@ -14,6 +15,8 @@ function TimelineIssueToolbar({
   variant = 'light',
   className = '',
 }) {
+  const { t } = useI18n()
+
   const wrapperClasses =
     variant === 'dark'
       ? 'rounded-xl border border-white/15 bg-white/5 p-2'
@@ -37,12 +40,12 @@ function TimelineIssueToolbar({
   return (
     <div className={`w-full ${wrapperClasses} ${className}`.trim()}>
       <div className="flex flex-wrap justify-end gap-2">
-        {toolbarButtons.map(({ key, label, Icon }) => {
+        {toolbarButtons.map(({ key, labelKey, Icon }) => {
           const active = Boolean(issueState?.[key])
           const buttonDisabled = disabled || pending
           const activeClasses = key === 'haveIt' ? activeHaveClasses : activeReadClasses
-          const titleText = pending ? 'Saving your update...' : disabled ? disabledReason ?? 'Issue actions unavailable' : undefined
-          const buttonLabel = pending ? 'Saving...' : label
+          const titleText = pending ? t('timeline.savingUpdate') : disabled ? disabledReason ?? t('timeline.issueActionsUnavailable') : undefined
+          const buttonLabel = pending ? t('timeline.saving') : t(labelKey)
 
           return (
             <button

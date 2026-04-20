@@ -2,9 +2,10 @@ import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { getEntryDomId, getStageKey } from '../../utils/timeline'
 
-const formatDate = (value) => {
+const formatDate = (value, locale, t) => {
   try {
-    return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    if (!value) return t('timeline.dateTba')
+    return new Date(value).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
   } catch {
     return value
   }
@@ -35,6 +36,8 @@ export function createIssueCardViewModel({
   severityLookup,
   fallbackImage,
   issueState,
+  t,
+  locale,
 }) {
   const baseVariant = severityLookup[entry.severity] ?? severityLookup.info
   const hasHaveIt = Boolean(issueState?.haveIt)
@@ -58,7 +61,7 @@ export function createIssueCardViewModel({
       : undefined
 
   const isLast = index === totalEntries - 1
-  const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? 'Issue'
+  const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? t('timeline.issueFallback')
   const meta = entry.metadata ?? {}
   const coverImage = resolveIssueCoverImage(meta, fallbackImage)
 
@@ -84,7 +87,7 @@ export function createIssueCardViewModel({
     issueLabel,
     headline: entry.headline,
     summary: entry.summary,
-    issueDateLabel: formatDate(entry.issue_date),
+    issueDateLabel: formatDate(entry.issue_date, locale, t),
     severityVariant,
     gradientStyle,
     stageKey,

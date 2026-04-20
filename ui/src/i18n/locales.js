@@ -1,4 +1,4 @@
-export const SUPPORTED_LOCALES = ['es', 'ca']
+export const SUPPORTED_LOCALES = ['es', 'ca', 'en']
 export const DEFAULT_LOCALE = 'es'
 export const LOCALE_STORAGE_KEY = 'issueline.locale'
 
@@ -23,6 +23,9 @@ export const translations = {
       openMenu: 'Abrir menú',
       closeMenu: 'Cerrar menú',
       chooseLanguage: 'Elegir idioma',
+      languageSpanish: 'Español',
+      languageCatalan: 'Català ',
+      languageEnglish: 'English',
       noActiveSession: 'Sin sesión activa',
       signInSignUp: 'Iniciar sesión / Crear cuenta',
     },
@@ -291,6 +294,9 @@ export const translations = {
       openMenu: 'Obre menú',
       closeMenu: 'Tanca menú',
       chooseLanguage: 'Tria idioma',
+      languageSpanish: 'Espanyol',
+      languageCatalan: 'Català',
+      languageEnglish: 'English',
       noActiveSession: 'Sense sessió activa',
       signInSignUp: 'Inicia sessió / Crea compte',
     },
@@ -538,6 +544,33 @@ export const translations = {
       configureBackendForInsights: "Configura VITE_BACKEND_URL per veure insights de publicació d'aquest heroi.",
       percentReadTitle: '{{percent}}% llegit',
       issuesCountOfTotal: '{{count}} / {{total}} números',
+    },
+  },
+  en: {
+    common: {
+      appName: 'IssueLine',
+      account: 'Account',
+      signIn: 'Sign in',
+      signUp: 'Sign up',
+      signOut: 'Sign out',
+      save: 'Save',
+      cancel: 'Cancel',
+      loading: 'Loading...',
+      error: 'Error',
+      close: 'Close',
+      unknown: 'Unknown',
+      issue: 'Issue',
+      issueCover: 'Issue cover',
+    },
+    header: {
+      openMenu: 'Open menu',
+      closeMenu: 'Close menu',
+      chooseLanguage: 'Choose language',
+      languageSpanish: 'Spanish',
+      languageCatalan: 'Catalan',
+      languageEnglish: 'English',
+      noActiveSession: 'No active session',
+      signInSignUp: 'Sign in / Sign up',
     },
   },
 }

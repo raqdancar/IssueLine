@@ -86,7 +86,7 @@ function HeroTab({ hero }) {
             key={label}
             className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2 shadow-inner"
           >
-            <dt className="eyebrow text-slate-400">{label}</dt>
+            <dt className="eyebrow text-slate-400">{t(`heroDetail.stats.${label}`)}</dt>
             <dd className="title-xs text-slate-800">
               {Number.isFinite(Number(stats[label]))
                 ? Number(stats[label])

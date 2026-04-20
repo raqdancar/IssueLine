@@ -23,6 +23,12 @@ const getInitialLocale = () => {
   }
 
   const browserLanguage = window.navigator.language?.toLowerCase() ?? ''
+  if (browserLanguage.startsWith('en')) {
+    return 'en'
+  }
+  if (browserLanguage.startsWith('es')) {
+    return 'es'
+  }
   if (browserLanguage.startsWith('ca')) {
     return 'ca'
   }
@@ -79,4 +85,3 @@ export function I18nProvider({ children }) {
 }
 
 export const useI18n = () => useContext(I18nContext)
-

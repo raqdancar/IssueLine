@@ -3,6 +3,7 @@ import TimelineIssueCardDetailed from './timeline/TimelineIssueCardDetailed'
 import TimelineIssueCardCompact from './timeline/TimelineIssueCardCompact'
 import TimelineIssueCardMicro from './timeline/TimelineIssueCardMicro'
 import { createIssueCardViewModel } from './timeline/issueCardViewModel'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const densityComponents = {
   detailed: TimelineIssueCardDetailed,
@@ -11,6 +12,7 @@ const densityComponents = {
 }
 
 function TimelineIssueCard(props) {
+  const { t, locale } = useI18n()
   const {
     entry,
     index,
@@ -34,8 +36,10 @@ function TimelineIssueCard(props) {
         severityLookup,
         fallbackImage,
         issueState,
+        t,
+        locale,
       }),
-    [entry, index, totalEntries, severityLookup, fallbackImage, issueState],
+    [entry, index, totalEntries, severityLookup, fallbackImage, issueState, t, locale],
   )
 
   const SelectedComponent = densityComponents[density] ?? TimelineIssueCardDetailed

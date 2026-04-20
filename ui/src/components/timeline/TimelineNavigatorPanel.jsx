@@ -1,4 +1,5 @@
-﻿import { EyeOff } from 'lucide-react'
+import { EyeOff } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineNavigatorPanel({
   indexMode,
@@ -9,6 +10,7 @@ function TimelineNavigatorPanel({
   onAnchorClick,
   onToggleVisibility,
 }) {
+  const { t } = useI18n()
   const anchors = anchorLookup[indexMode] ?? []
   const isPillMode = indexMode === 'year' || indexMode === 'issue'
   const isStageMode = indexMode === 'stage'
@@ -21,12 +23,12 @@ function TimelineNavigatorPanel({
   return (
     <aside className="flex w-full flex-col overflow-hidden rounded-3xl border border-slate-100/80 bg-linear-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur lg:sticky lg:top-6 lg:max-h-[80vh] lg:max-w-sm">
       <div className="flex items-center justify-between gap-2">
-        <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">Jump to</p>
+        <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">{t('timeline.jumpTo')}</p>
         <button
           type="button"
           onClick={onToggleVisibility}
           className="rounded-full border border-slate-200 bg-white p-1 text-slate-500 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-          aria-label="Hide timeline index"
+          aria-label={t('timeline.hideTimelineIndex')}
         >
           <EyeOff className="h-4 w-4" />
         </button>
@@ -49,7 +51,7 @@ function TimelineNavigatorPanel({
                     : 'cursor-not-allowed text-slate-300'
               }`}
             >
-              {option.label}
+              {t(option.labelKey)}
             </button>
           )
         })}
@@ -103,25 +105,21 @@ function TimelineNavigatorPanel({
                   className={`group relative rounded-2xl border px-3 text-xs font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${baseClasses} ${activeClasses} ${buttonSizeClasses}`}
                 >
                   <div className={labelContainerClasses}>
-                    <span className={labelTextClasses}>
-                      {anchor.label}
-                    </span>
+                    <span className={labelTextClasses}>{anchor.label}</span>
                     {!isPillMode && isStageMode && anchor.summary ? (
                       <p className={`mt-1 text-[11px] font-normal leading-snug ${summaryClasses}`}>
                         {anchor.summary}
                       </p>
                     ) : null}
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full uppercase ${countBadgeSizeClasses} ${countBadgeClasses} ${countAlignClasses}`}
-                  >
+                  <span className={`shrink-0 rounded-full uppercase ${countBadgeSizeClasses} ${countBadgeClasses} ${countAlignClasses}`}>
                     {anchor.count}
                   </span>
                 </button>
               )
             })
           ) : (
-            <p className="text-[11px] text-slate-400">No anchors for this view.</p>
+            <p className="text-[11px] text-slate-400">{t('timeline.noAnchorsForView')}</p>
           )}
         </div>
       </div>

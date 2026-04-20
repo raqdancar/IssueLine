@@ -1,9 +1,13 @@
+import { useI18n } from '@/i18n/I18nProvider.jsx'
+
 const variantClasses = {
   light: 'bg-indigo-50/90 text-indigo-800 ring-indigo-100',
   dark: 'bg-emerald-400/20 text-emerald-50 ring-emerald-300/30',
 }
 
 function TimelineStageTab({ label, variant = 'light' }) {
+  const { t } = useI18n()
+
   if (!label) {
     return null
   }
@@ -13,7 +17,7 @@ function TimelineStageTab({ label, variant = 'light' }) {
   return (
     <div
       className={`flex min-w-[36px] flex-col items-center justify-center self-stretch px-1 shadow-inner ring-1 transition ${variantClass}`}
-      aria-label={`Stage ${label}`}
+      aria-label={t('timeline.stageLabel', { label })}
       title={label}
       style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
     >
@@ -25,6 +29,3 @@ function TimelineStageTab({ label, variant = 'light' }) {
 }
 
 export default TimelineStageTab
-
-
-

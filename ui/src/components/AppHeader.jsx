@@ -1,19 +1,28 @@
 ﻿import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Languages, Menu, X } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Check, ChevronDown, Languages, Menu, X } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { SUPPORTED_LOCALES } from '@/i18n/locales'
 
 function AppHeader({
   session,
   navAvatarUrl,
   onOpenAuthDialog,
   onSignOut,
-  onOpenLanguageMenu,
+  onSelectLanguage,
+  currentLocale = 'es',
   languageLabel = 'ES',
 }) {
   const { t } = useI18n()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const languageLabelByLocale = {
+    es: t('header.languageSpanish'),
+    ca: t('header.languageCatalan'),
+    en: t('header.languageEnglish'),
+  }
 
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -46,22 +55,46 @@ function AppHeader({
         </button>
 
         <div className="hidden items-center justify-end gap-2 text-sm md:flex">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-            aria-label={t('header.chooseLanguage')}
-            onClick={onOpenLanguageMenu}
-          >
-            <Languages className="h-4 w-4" aria-hidden="true" />
-            {languageLabel}
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+                aria-label={t('header.chooseLanguage')}
+              >
+                <Languages className="h-4 w-4" aria-hidden="true" />
+                {languageLabel}
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-48 border-white/20 bg-slate-900 p-1 text-white">
+              <div className="flex flex-col gap-1">
+                {SUPPORTED_LOCALES.map((localeOption) => {
+                  const isActive = currentLocale === localeOption
+                  return (
+                    <button
+                      key={localeOption}
+                      type="button"
+                      onClick={() => onSelectLanguage?.(localeOption)}
+                      className={`inline-flex items-center justify-between rounded-md px-3 py-2 text-sm transition ${
+                        isActive ? 'bg-white/20 text-white' : 'text-slate-200 hover:bg-white/10'
+                      }`}
+                    >
+                      <span>{languageLabelByLocale[localeOption] ?? localeOption.toUpperCase()}</span>
+                      {isActive ? <Check className="h-4 w-4" aria-hidden="true" /> : null}
+                    </button>
+                  )
+                })}
+              </div>
+            </PopoverContent>
+          </Popover>
           {session ? (
             <>
               <img
                 src={navAvatarUrl || '/vite.svg'}
-                alt="User avatar"
+                alt={t('header.userAvatarAlt')}
                 className="h-8 w-8 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
                 loading="lazy"
               />
@@ -106,26 +139,35 @@ function AppHeader({
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                 <img
                   src={navAvatarUrl || '/vite.svg'}
-                  alt="User avatar"
+                  alt={t('header.userAvatarAlt')}
                   className="h-7 w-7 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
                   loading="lazy"
                 />
                 <span className="truncate text-sm text-slate-200">{session.user.email}</span>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="w-full justify-start border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-                aria-label={t('header.chooseLanguage')}
-                onClick={() => {
-                  onOpenLanguageMenu?.()
-                  closeMobileMenu()
-                }}
-              >
-                <Languages className="h-4 w-4" aria-hidden="true" />
-                {languageLabel}
-              </Button>
+              <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                <p className="text-xs uppercase tracking-widest text-slate-300">{t('header.chooseLanguage')}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {SUPPORTED_LOCALES.map((localeOption) => {
+                    const isActive = currentLocale === localeOption
+                    return (
+                      <Button
+                        key={localeOption}
+                        type="button"
+                        size="sm"
+                        variant={isActive ? 'secondary' : 'outline'}
+                        className="w-full border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+                        onClick={() => {
+                          onSelectLanguage?.(localeOption)
+                          closeMobileMenu()
+                        }}
+                      >
+                        {localeOption.toUpperCase()}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
               <Button
                 asChild
                 type="button"
@@ -150,20 +192,29 @@ function AppHeader({
             </>
           ) : (
             <>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="w-full justify-start border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
-                aria-label={t('header.chooseLanguage')}
-                onClick={() => {
-                  onOpenLanguageMenu?.()
-                  closeMobileMenu()
-                }}
-              >
-                <Languages className="h-4 w-4" aria-hidden="true" />
-                {languageLabel}
-              </Button>
+              <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                <p className="text-xs uppercase tracking-widest text-slate-300">{t('header.chooseLanguage')}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {SUPPORTED_LOCALES.map((localeOption) => {
+                    const isActive = currentLocale === localeOption
+                    return (
+                      <Button
+                        key={localeOption}
+                        type="button"
+                        size="sm"
+                        variant={isActive ? 'secondary' : 'outline'}
+                        className="w-full border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+                        onClick={() => {
+                          onSelectLanguage?.(localeOption)
+                          closeMobileMenu()
+                        }}
+                      >
+                        {localeOption.toUpperCase()}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
               <p className="text-xs uppercase tracking-widest text-slate-400">{t('header.noActiveSession')}</p>
               <Button
                 type="button"

@@ -1,6 +1,8 @@
 import { CalendarDays } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, isFlashing = false, onEntryHighlight }) {
+  const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
   const { seriesName, number, publicationDate, legacyNumber } = meta
   const haveIt = Boolean(issueState?.haveIt)
@@ -40,7 +42,7 @@ function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, 
             {number || legacyNumber ? (
               <span className="inline-flex items-center gap-2 text-slate-500">
                 {number ? <span>#{number}</span> : null}
-                {legacyNumber ? <span className="text-indigo-600">Legacy #{legacyNumber}</span> : null}
+                {legacyNumber ? <span className="text-indigo-600">{t('timeline.legacy')} #{legacyNumber}</span> : null}
               </span>
             ) : null}
           </div>
@@ -52,8 +54,8 @@ function TimelineIssueCardMicro({ viewModel, issueState, isHighlighted = false, 
           </div>
           {(haveIt || readIt) && (
             <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold">
-              {haveIt ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Have</span> : null}
-              {readIt ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-700">Read</span> : null}
+              {haveIt ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">{t('timeline.have')}</span> : null}
+              {readIt ? <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-700">{t('timeline.read')}</span> : null}
             </div>
           )}
           {stageName ? (

@@ -1,5 +1,6 @@
 import { CalendarDays } from 'lucide-react'
 import IssueStateActions from './IssueStateActions'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineIssueCardCompact({
   viewModel,
@@ -13,6 +14,7 @@ function TimelineIssueCardCompact({
   isFlashing = false,
   onEntryHighlight,
 }) {
+  const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, gradientStyle, issueDateLabel, stageName, meta } = viewModel
   const { seriesName, number, publicationDate, legacyNumber } = meta
   const handleHighlight = () => onEntryHighlight?.(entryDomId)
@@ -57,13 +59,13 @@ function TimelineIssueCardCompact({
               <div className="flex flex-wrap items-center gap-2">
                 {seriesName || number ? (
                   <span className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
-                    <span>{seriesName ?? 'Issue'}</span>
+                    <span>{seriesName ?? t('timeline.issueFallback')}</span>
                     {number ? <span className="text-slate-500">#{number}</span> : null}
                   </span>
                 ) : null}
                 {legacyNumber ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold text-indigo-700 shadow-sm">
-                    Legacy <span className="text-sm font-black text-indigo-900">#{legacyNumber}</span>
+                    {t('timeline.legacy')} <span className="text-sm font-black text-indigo-900">#{legacyNumber}</span>
                   </span>
                 ) : null}
               </div>

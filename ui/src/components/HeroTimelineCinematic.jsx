@@ -6,22 +6,17 @@ import CoverFullscreenViewer from './CoverFullscreenViewer'
 import TimelineIssueToolbar from './timeline/TimelineIssueToolbar'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
-const timelineSortOptions = [
-  { label: 'Newest first', value: 'desc' },
-  { label: 'Oldest first', value: 'asc' },
-]
-
-
-const formatDate = (value) => {
-  if (!value) return 'Date TBA'
+const formatDate = (value, locale, t) => {
+  if (!value) return t('timeline.dateTba')
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) {
     return value
   }
-  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return parsed.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 const resolveYear = (entry) => {
@@ -76,6 +71,7 @@ const groupEntriesByYear = (entries, direction = 'desc') => {
 }
 
 function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
+  const { t, locale } = useI18n()
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [sortDirection, setSortDirection] = useState('desc')
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
@@ -113,19 +109,23 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
         setState({ status: 'success', entries: payload.entries ?? [], error: null })
       } catch (fetchError) {
         if (controller.signal.aborted) return
-        setState({ status: 'error', entries: [], error: fetchError.message || 'Unable to load timeline data.' })
+        setState({
+          status: 'error',
+          entries: [],
+          error: fetchError.message || t('timeline.loadingTimeline'),
+        })
       }
     }
 
     void loadTimeline()
 
     return () => controller.abort()
-  }, [backendBaseUrl, slug])
+  }, [backendBaseUrl, slug, t])
 
   const openCoverViewer = (src, alt) => {
     if (!src || typeof window === 'undefined') return
     if (!window.matchMedia('(max-width: 767px)').matches) return
-    setCoverViewer({ open: true, src, alt: alt ?? 'Issue cover' })
+    setCoverViewer({ open: true, src, alt: alt ?? t('common.issueCover') })
   }
 
   const handleIssueStateToggle = (issueId, field, nextValue) => {
@@ -137,16 +137,16 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
 
   if (!slug) {
     return (
-      <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 body-xs text-slate-500">
-        Missing hero slug. Timeline data cannot be requested yet.
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 body-xs text-slate-500">
+        {t('timeline.missingHeroSlug')}
       </div>
     )
   }
 
   if (!backendBaseUrl) {
     return (
-      <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 body-xs text-amber-800">
-        Set <code>VITE_BACKEND_URL</code> in your environment to enable hero timelines.
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 body-xs text-amber-800">
+        {t('timeline.configureBackendForTimeline')}
       </div>
     )
   }
@@ -159,18 +159,18 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
       </div>
       <div className="relative flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Cinematic timeline</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('timeline.cinematicTimeline')}</p>
           <h3 className="title-sm text-white">{heroName}</h3>
-          <p className="body-xs text-slate-400">Grouped by publication year</p>
+          <p className="body-xs text-slate-400">{t('timeline.groupedByYear')}</p>
         </div>
         <div className="flex flex-col items-end gap-3 text-xs text-slate-300 sm:flex-row sm:items-center">
           <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
             {status}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Sort</span>
+            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('timeline.sort')}</span>
             <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
-              {timelineSortOptions.map((option) => {
+              {[{ label: t('timeline.newestFirst'), value: 'desc' }, { label: t('timeline.oldestFirst'), value: 'asc' }].map((option) => {
                 const isActive = sortDirection === option.value
                 return (
                   <button
@@ -192,11 +192,11 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
       </div>
       <div className="relative mt-6 space-y-6">
         {status === 'loading' ? (
-          <p className="body-sm text-slate-300">Loading timeline...</p>
+          <p className="body-sm text-slate-300">{t('timeline.loadingTimeline')}</p>
         ) : status === 'error' ? (
           <p className="body-sm text-rose-300">{error}</p>
         ) : groupedEntries.length === 0 ? (
-          <p className="body-sm text-slate-300">No issues have been logged for this hero yet.</p>
+          <p className="body-sm text-slate-300">{t('timeline.noIssuesLogged')}</p>
         ) : (
           groupedEntries.map(({ year, entries: yearEntries }) => (
             <div key={year} className="space-y-4">
@@ -233,12 +233,12 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                                   <button
                                     type="button"
                                     className="h-full w-full cursor-zoom-in md:cursor-default"
-                                    onClick={() => openCoverViewer(coverImage, issueLabel ?? 'Issue cover')}
-                                    aria-label="Open cover in fullscreen on mobile"
+                                    onClick={() => openCoverViewer(coverImage, issueLabel ?? t('common.issueCover'))}
+                                    aria-label={t('timeline.openCoverMobile')}
                                   >
                                     <img
                                       src={coverImage}
-                                      alt={issueLabel ?? 'Issue cover'}
+                                      alt={issueLabel ?? t('common.issueCover')}
                                       className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                                       loading="lazy"
                                     />
@@ -246,9 +246,9 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                                 ) : (
                                   <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-b from-slate-800/70 to-slate-900 text-center text-slate-400">
                                     <span className="text-[12px] font-semibold uppercase tracking-[0.2em]">
-                                      Cover TBD
+                                      {t('timeline.coverTbd')}
                                     </span>
-                                    <span className="text-[11px] text-slate-500">Add one in Supabase</span>
+                                    <span className="text-[11px] text-slate-500">{t('timeline.addOneInSupabase')}</span>
                                   </div>
                                 )}
                               </div>
@@ -258,10 +258,10 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                             <div className="flex-1 space-y-2">
                               <div className="flex flex-wrap items-center gap-2 text-xs text-indigo-200">
                                 <span className="rounded-full border border-indigo-400/40 px-2 py-0.5">
-                                  {meta.series_name ?? meta.seriesName ?? 'Strange Tales'}
+                                  {meta.series_name ?? meta.seriesName ?? t('timeline.issueFallback')}
                                 </span>
-                                {meta.number ? <span>No. {meta.number}</span> : null}
-                                {meta.volume ? <span>Vol. {meta.volume}</span> : null}
+                                {meta.number ? <span>{t('timeline.noPrefix', { number: meta.number })}</span> : null}
+                                {meta.volume ? <span>{t('timeline.volume')} {meta.volume}</span> : null}
                               </div>
                               <h4 className="title-sm text-white">{entry.headline}</h4>
                               {entry.summary ? <p className="body-sm text-slate-200/80">{entry.summary}</p> : null}
@@ -269,25 +269,25 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                                 <p className="text-xs text-emerald-100/80">{stageSummary}</p>
                               ) : null}
                               <dl className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
-                                <div>
-                                  <dt className="font-semibold text-slate-100">Release</dt>
-                                  <dd>{formatDate(entry.issue_date)}</dd>
+                                  <div>
+                                  <dt className="font-semibold text-slate-100">{t('timeline.release')}</dt>
+                                  <dd>{formatDate(entry.issue_date, locale, t)}</dd>
                                 </div>
                                 {meta.price ? (
                                   <div>
-                                    <dt className="font-semibold text-slate-100">Price</dt>
+                                    <dt className="font-semibold text-slate-100">{t('timeline.price')}</dt>
                                     <dd>{meta.price}</dd>
                                   </div>
                                 ) : null}
                                 {pageCount ? (
                                   <div>
-                                    <dt className="font-semibold text-slate-100">Pages</dt>
+                                    <dt className="font-semibold text-slate-100">{t('timeline.pages')}</dt>
                                     <dd>{pageCount}</dd>
                                   </div>
                                 ) : null}
                                 {meta.rating ? (
                                   <div>
-                                    <dt className="font-semibold text-slate-100">Rating</dt>
+                                    <dt className="font-semibold text-slate-100">{t('timeline.rating')}</dt>
                                     <dd>{meta.rating}</dd>
                                   </div>
                                 ) : null}
@@ -299,7 +299,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
                                   rel="noreferrer"
                                   className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-200 hover:text-white"
                                 >
-                                  View issue
+                                  {t('timeline.viewIssue')}
                                 </a>
                               ) : null}
                             </div>

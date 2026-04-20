@@ -22,20 +22,20 @@ export const severityVariants = {
 }
 
 export const timelineSortOptions = [
-  { label: 'Newest first', value: 'desc' },
-  { label: 'Oldest first', value: 'asc' },
+  { labelKey: 'timeline.newestFirst', value: 'desc' },
+  { labelKey: 'timeline.oldestFirst', value: 'asc' },
 ]
 
 export const timelineIssueFilterOptions = [
-  { label: 'All issues', value: 'all' },
-  { label: 'Annuals only', value: 'annuals' },
+  { labelKey: 'timeline.allIssues', value: 'all' },
+  { labelKey: 'timeline.annualsOnly', value: 'annuals' },
 ]
 
 export const indexModeOptions = [
-  { label: 'Months', value: 'month' },
-  { label: 'Years', value: 'year' },
-  { label: 'Stages', value: 'stage' },
-  { label: 'Issues', value: 'issue' },
+  { labelKey: 'timeline.indexMonths', value: 'month' },
+  { labelKey: 'timeline.indexYears', value: 'year' },
+  { labelKey: 'timeline.indexStages', value: 'stage' },
+  { labelKey: 'timeline.indexIssues', value: 'issue' },
 ]
 
 export const MIN_ZOOM_LEVEL = 0.85

@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineHeader({
   heroName,
@@ -17,24 +18,26 @@ function TimelineHeader({
   issueFilterOptions = [],
   onIssueFilterChange,
 }) {
+  const { t } = useI18n()
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
       <div>
-        <p className="title-xs">{heroName} timeline</p>
-        <p className="body-xs text-slate-500">Events sync from the IssueLine backend.</p>
+        <p className="title-xs">{t('timeline.heroTimelineTitle', { heroName })}</p>
+        <p className="body-xs text-slate-500">{t('timeline.eventsSyncFromBackend')}</p>
         {!isAuthenticated ? (
-          <p className="body-xs text-slate-400">Sign in to track which issues you own or have read.</p>
+          <p className="body-xs text-slate-400">{t('timeline.signInToTrackIssues')}</p>
         ) : null}
         {isAuthenticated && isSyncingIssueStates ? (
-          <p className="body-xs text-slate-400">Syncing your issue states...</p>
+          <p className="body-xs text-slate-400">{t('timeline.syncingIssueStates')}</p>
         ) : null}
         {issueStatesError ? (
-          <p className="body-xs text-rose-500">Unable to sync your issue states. Please try again.</p>
+          <p className="body-xs text-rose-500">{t('timeline.issueStateSyncError')}</p>
         ) : null}
       </div>
       <div className="flex flex-wrap items-center justify-end gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="body-xs text-slate-500">Sort by date:</span>
+          <span className="body-xs text-slate-500">{t('timeline.sortByDate')}</span>
           <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
             {sortOptions.map((option) => {
               const isActive = sortDirection === option.value
@@ -50,20 +53,20 @@ function TimelineHeader({
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               )
             })}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="body-xs text-slate-500">Zoom timeline:</span>
+          <span className="body-xs text-slate-500">{t('timeline.zoomTimeline')}</span>
           <div className="inline-flex items-center rounded-full border border-slate-200 bg-white">
             <button
               type="button"
               onClick={onZoomOut}
               disabled={isZoomedOut}
-              aria-label="Zoom out timeline"
+              aria-label={t('timeline.zoomOutTimeline')}
               className={`rounded-l-full p-2 text-slate-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                 isZoomedOut ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-900'
               }`}
@@ -77,7 +80,7 @@ function TimelineHeader({
               type="button"
               onClick={onZoomIn}
               disabled={isZoomedIn}
-              aria-label="Zoom in timeline"
+              aria-label={t('timeline.zoomInTimeline')}
               className={`rounded-r-full p-2 text-slate-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                 isZoomedIn ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-900'
               }`}
@@ -88,7 +91,7 @@ function TimelineHeader({
         </div>
         {issueFilterOptions.length ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="body-xs text-slate-500">Filter issues:</span>
+            <span className="body-xs text-slate-500">{t('timeline.filterIssues')}</span>
             <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
               {issueFilterOptions.map((option) => {
                 const isActive = issueFilter === option.value
@@ -104,7 +107,7 @@ function TimelineHeader({
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </button>
                 )
               })}

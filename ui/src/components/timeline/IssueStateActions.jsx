@@ -1,14 +1,17 @@
 import { BookOpen, CheckCircle2, Loader2 } from 'lucide-react'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const ISSUE_STATE_TOGGLES = [
-  { key: 'haveIt', label: 'Have it', Icon: CheckCircle2 },
-  { key: 'readIt', label: 'Read it', Icon: BookOpen },
+  { key: 'haveIt', labelKey: 'timeline.haveIt', Icon: CheckCircle2 },
+  { key: 'readIt', labelKey: 'timeline.readIt', Icon: BookOpen },
 ]
 
 function IssueStateActions({ issueState, disabled, disabledReason, pending, onToggle }) {
+  const { t } = useI18n()
+
   return (
     <div className="mt-3 flex flex-wrap gap-2">
-      {ISSUE_STATE_TOGGLES.map(({ key, label, Icon }) => {
+      {ISSUE_STATE_TOGGLES.map(({ key, labelKey, Icon }) => {
         const active = Boolean(issueState?.[key])
         const isContextDisabled = disabled
         const isPending = pending
@@ -19,9 +22,9 @@ function IssueStateActions({ issueState, disabled, disabledReason, pending, onTo
             ? 'cursor-not-allowed opacity-60'
             : ''
         const titleText = isPending
-          ? 'Saving your update...'
+          ? t('timeline.savingUpdate')
           : isContextDisabled
-            ? disabledReason ?? 'Issue states unavailable'
+            ? disabledReason ?? t('timeline.issueStatesUnavailable')
             : undefined
 
         return (
@@ -44,7 +47,7 @@ function IssueStateActions({ issueState, disabled, disabledReason, pending, onTo
             ) : (
               <Icon className="h-3.5 w-3.5" aria-hidden="true" />
             )}
-            {isPending ? 'Saving...' : label}
+            {isPending ? t('timeline.saving') : t(labelKey)}
           </button>
         )
       })}

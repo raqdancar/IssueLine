@@ -1,6 +1,7 @@
 import { CalendarDays } from 'lucide-react'
 import TimelineStageTab from './TimelineStageTab'
 import TimelineIssueToolbar from './TimelineIssueToolbar'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineIssueCardDetailed({
   viewModel,
@@ -15,6 +16,7 @@ function TimelineIssueCardDetailed({
   isFlashing = false,
   onEntryHighlight,
 }) {
+  const { t } = useI18n()
   const {
     entry,
     entryDomId,
@@ -66,11 +68,11 @@ function TimelineIssueCardDetailed({
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   {seriesName || number ? (
                     <span className="inline-flex items-center gap-3 rounded-full border border-slate-300/70 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm">
-                      <span>{seriesName ?? 'Issue'}</span>
+                      <span>{seriesName ?? t('timeline.issueFallback')}</span>
                       {number ? (
                         <span
                           className="text-2xl font-black leading-none tracking-tight text-slate-900 drop-shadow-sm"
-                          aria-label={`Issue number ${number}`}
+                          aria-label={t('timeline.issueLabel', { number })}
                         >
                           #{number}
                         </span>
@@ -80,9 +82,9 @@ function TimelineIssueCardDetailed({
                   {legacyNumber ? (
                     <span
                       className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm"
-                      aria-label={`Legacy numbering ${legacyNumber}`}
+                      aria-label={`${t('timeline.legacy')} #${legacyNumber}`}
                     >
-                      Legacy
+                      {t('timeline.legacy')}
                       <span className="text-base font-black text-indigo-900">#{legacyNumber}</span>
                     </span>
                   ) : null}
@@ -101,21 +103,21 @@ function TimelineIssueCardDetailed({
                       className="h-full w-full cursor-zoom-in md:cursor-default"
                       onClick={(event) => {
                         event.stopPropagation()
-                        onCoverPreview?.(coverImage, entry.metadata?.issueLabel ?? 'Issue cover')
+                        onCoverPreview?.(coverImage, entry.metadata?.issueLabel ?? t('common.issueCover'))
                       }}
-                      aria-label="Open cover in fullscreen on mobile"
+                      aria-label={t('timeline.openCoverMobile')}
                     >
                       <img
                         src={coverImage}
-                        alt={entry.metadata?.issueLabel ?? 'Issue cover'}
+                        alt={entry.metadata?.issueLabel ?? t('common.issueCover')}
                         className="h-full w-full object-contain"
                         loading="lazy"
                       />
                     </button>
                   ) : (
                     <div className="flex h-full w-full flex-col items-center justify-center bg-slate-50 text-center">
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">No cover</span>
-                      <span className="text-[10px] text-slate-300">Available soon</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{t('timeline.noCover')}</span>
+                      <span className="text-[10px] text-slate-300">{t('timeline.coverAvailableSoon')}</span>
                     </div>
                   )}
                 </div>
@@ -127,42 +129,42 @@ function TimelineIssueCardDetailed({
                 <div className="grid gap-1 text-slate-600 body-xs sm:grid-cols-2">
                   {seriesName ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Series:</span> {seriesName}
+                      <span className="font-semibold text-slate-700">{t('timeline.series')}</span> {seriesName}
                     </p>
                   ) : null}
                   {number ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Issue:</span> {number}
+                      <span className="font-semibold text-slate-700">{t('timeline.issue')}</span> {number}
                     </p>
                   ) : null}
                   {volume ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Volume:</span> {volume}
+                      <span className="font-semibold text-slate-700">{t('timeline.volume')}</span> {volume}
                     </p>
                   ) : null}
                   {publicationDate ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Publication:</span> {publicationDate}
+                      <span className="font-semibold text-slate-700">{t('timeline.publication')}</span> {publicationDate}
                     </p>
                   ) : null}
                   {price ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Price:</span> {price}
+                      <span className="font-semibold text-slate-700">{t('timeline.price')}</span> {price}
                     </p>
                   ) : null}
                   {pageCount ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Pages:</span> {pageCount}
+                      <span className="font-semibold text-slate-700">{t('timeline.pages')}</span> {pageCount}
                     </p>
                   ) : null}
                   {editing ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Editing:</span> {editing}
+                      <span className="font-semibold text-slate-700">{t('timeline.editing')}</span> {editing}
                     </p>
                   ) : null}
                   {rating ? (
                     <p>
-                      <span className="font-semibold text-slate-700">Rating:</span> {rating}
+                      <span className="font-semibold text-slate-700">{t('timeline.rating')}</span> {rating}
                     </p>
                   ) : null}
                 </div>
@@ -173,7 +175,7 @@ function TimelineIssueCardDetailed({
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 body-xs font-semibold text-indigo-700 underline"
                   >
-                    View on comics.org
+                    {t('timeline.viewOnComicsOrg')}
                   </a>
                 ) : null}
               </div>
@@ -197,5 +199,4 @@ function TimelineIssueCardDetailed({
 }
 
 export default TimelineIssueCardDetailed
-
 

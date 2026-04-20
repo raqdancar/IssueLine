@@ -9,6 +9,7 @@ import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket, resolveYea
 import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 import {
   COMPACT_DENSITY_THRESHOLD,
   MAX_ZOOM_LEVEL,
@@ -22,6 +23,7 @@ import {
 } from './timeline/constants'
 
 function HeroTimeline({ slug, heroName, fallbackImage }) {
+  const { t } = useI18n()
   const apiBaseUrl = backendBaseUrl
   const [sortDirection, setSortDirection] = useState('desc')
   const [indexMode, setIndexMode] = useState('month')
@@ -46,9 +48,9 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId : null
   const isSyncingIssueStates = issueStatesQuery.isFetching
   const issueStateDisabledReason = !isAuthenticated
-    ? 'Sign in to track your collection.'
+    ? t('timeline.signInToTrackCollection')
     : issueStatesQuery.isError
-      ? 'Issue state sync is unavailable right now.'
+      ? t('timeline.issueStateSyncUnavailable')
       : undefined
   const issueStateDisabled = !isAuthenticated || issueStatesQuery.isError
   const [flashState, setFlashState] = useState({ id: null, token: 0 })
@@ -78,7 +80,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
         setState({
           status: 'error',
           entries: [],
-          error: fetchError.message || 'Unable to load timeline data.',
+          error: fetchError.message || t('timeline.loadingTimeline'),
         })
       }
     }
@@ -294,7 +296,7 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
   const openCoverViewer = (src, alt) => {
     if (!src || typeof window === 'undefined') return
     if (!window.matchMedia('(max-width: 767px)').matches) return
-    setCoverViewer({ open: true, src, alt: alt ?? 'Issue cover' })
+    setCoverViewer({ open: true, src, alt: alt ?? t('common.issueCover') })
   }
 
   const navigatorHasContent =
@@ -303,16 +305,16 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 
   if (!slug) {
     return (
-      <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 body-xs text-slate-500">
-        Missing hero slug. Timeline data cannot be requested yet.
+        <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 body-xs text-slate-500">
+        {t('timeline.missingHeroSlug')}
       </div>
     )
   }
 
   if (!apiBaseUrl) {
     return (
-      <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 body-xs text-amber-800">
-        Set <code>VITE_BACKEND_URL</code> in your environment to enable hero timelines.
+        <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 body-xs text-amber-800">
+        {t('timeline.configureBackendForTimeline')}
       </div>
     )
   }
@@ -338,15 +340,13 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
       />
       <div className="mt-6 space-y-4">
         {status === 'loading' ? (
-          <p className="body-sm text-slate-500">Loading timeline...</p>
+          <p className="body-sm text-slate-500">{t('timeline.loadingTimeline')}</p>
         ) : status === 'error' ? (
           <p className="body-sm text-rose-600">{error}</p>
         ) : orderedEntries.length === 0 ? (
-          <p className="body-sm text-slate-500">No issues have been logged for this hero yet.</p>
+          <p className="body-sm text-slate-500">{t('timeline.noIssuesLogged')}</p>
         ) : filteredEntries.length === 0 ? (
-          <p className="body-sm text-slate-500">
-            No annual issues are available for this hero. Switch back to 'All issues' to view the complete timeline.
-          </p>
+          <p className="body-sm text-slate-500">{t('timeline.noAnnualIssues')}</p>
         ) : (
           <div className="flex flex-col gap-4 lg:flex-row">
             {canShowNavigator && isNavigatorVisible ? (
@@ -400,8 +400,6 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
 }
 
 export default HeroTimeline
-
-
 
 
 
