@@ -1,10 +1,10 @@
-import { gcdGet } from '../client.js'
 import { mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import { upsertHeroTimelineEntriesByGcdIssueId } from '../../hero/timelineService.js'
 import { linkImportedIssueCovers } from './coverLinkService.js'
 import { supabaseServiceClient } from '../../../lib/supabaseClient.js'
 import { normalizeGcdIssueIdInput } from './issueIdentifierUtils.js'
+import { gcdGetWithRateLimitRetry } from './rateLimitRetryService.js'
 
 const loadExistingHeroIssue = async ({ heroApiId, gcdIssueId }) => {
   const { data, error } = await supabaseServiceClient
@@ -48,7 +48,11 @@ export const importSingleGcdIssueIntoSupabase = async ({
 
   const normalizedIssueId = normalizeGcdIssueIdInput(gcdIssueId)
   logger.log(`Loading GCD issue ${normalizedIssueId}...`)
-  const issue = await gcdGet(`issue/${normalizedIssueId}/`)
+  const issueFetch = await gcdGetWithRateLimitRetry(`issue/${normalizedIssueId}/`, {
+    logger,
+    label: `issue/${normalizedIssueId}`,
+  })
+  const issue = issueFetch.data
 
   if (!issue) {
     throw new Error(`Issue ${normalizedIssueId} was not found in GCD.`)
@@ -106,5 +110,7 @@ export const importSingleGcdIssueIntoSupabase = async ({
     timelineSkipped,
     coversAttempted: coversAvailable,
     coverSummary,
+    rateLimitPauses: issueFetch.pauses,
+    rateLimitWaitedMs: issueFetch.waitedMs,
   }
 }

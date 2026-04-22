@@ -90,6 +90,355 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   })
 }
 
+const toSafeInteger = (value) => {
+  if (value === null || value === undefined || value === '') return null
+  const numeric = Number(value)
+  if (!Number.isSafeInteger(numeric) || numeric <= 0) return null
+  return numeric
+}
+
+const resolveTimelineIssueNumber = (timelineEntry, heroIssueRow) => {
+  if (heroIssueRow?.number) return heroIssueRow.number
+  const metadata = timelineEntry?.metadata ?? {}
+  return metadata.number ?? timelineEntry?.issue_code ?? null
+}
+
+const parseIssueNumberForSort = (value) => {
+  if (value === null || value === undefined) return null
+  const match = String(value).match(/\d+/)
+  if (!match) return null
+  const numeric = Number(match[0])
+  return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null
+}
+
+const resolveTimelineIssueDetailPayload = (timelineEntry, heroIssueRow) => {
+  const metadata = timelineEntry?.metadata ?? {}
+  const gcdIssueId = toSafeInteger(metadata.gcdIssueId ?? metadata.gcd_issue_id)
+  const stageName = metadata.stage_name ?? metadata.stageName ?? metadata.stage?.name ?? metadata.stage?.label ?? null
+  const stageSummary =
+    metadata.stage_summary ?? metadata.stageSummary ?? metadata.stage?.short_summary ?? metadata.stage?.summary ?? null
+  const sourceUrl =
+    timelineEntry.source_url ??
+    metadata.source_url ??
+    metadata.sourceUrl ??
+    (gcdIssueId ? `https://www.comics.org/issue/${gcdIssueId}/` : null)
+
+  return {
+    id: timelineEntry.id,
+    heroApiId: timelineEntry.hero_api_id,
+    headline: timelineEntry.headline,
+    summary: timelineEntry.summary,
+    issueCode: timelineEntry.issue_code,
+    issueDate: timelineEntry.issue_date,
+    severity: timelineEntry.severity,
+    sourceUrl,
+    createdAt: timelineEntry.created_at,
+    updatedAt: timelineEntry.updated_at,
+    issue: {
+      title: heroIssueRow?.title ?? metadata.title ?? null,
+      number: resolveTimelineIssueNumber(timelineEntry, heroIssueRow),
+      legacyNumber: metadata.legacy_number ?? metadata.legacyNumber ?? null,
+    },
+    series: {
+      id: heroIssueRow?.series_id ?? toSafeInteger(metadata.series_id ?? metadata.seriesId),
+      title: heroIssueRow?.series_name ?? metadata.series_name ?? metadata.seriesName ?? null,
+      volume: heroIssueRow?.volume ?? metadata.volume ?? null,
+    },
+    dates: {
+      publicationDate: heroIssueRow?.publication_date ?? metadata.publication_date ?? metadata.publicationDate ?? null,
+      coverDate: heroIssueRow?.key_date ?? metadata.key_date ?? metadata.keyDate ?? null,
+      onSaleDate: heroIssueRow?.on_sale_date ?? metadata.on_sale_date ?? metadata.onSaleDate ?? null,
+    },
+    stage: {
+      key: metadata.stage_key ?? metadata.stageKey ?? metadata.stage?.key ?? null,
+      name: stageName,
+      summary: stageSummary,
+    },
+    credits: {
+      editing: metadata.editing ?? null,
+      rating: metadata.rating ?? null,
+    },
+    pricing: {
+      price: heroIssueRow?.price ?? metadata.price ?? null,
+      pageCount: heroIssueRow?.page_count ?? metadata.page_count ?? metadata.pageCount ?? null,
+    },
+    gcd: {
+      issueId: gcdIssueId,
+      issueApiUrl:
+        metadata.api_url ??
+        metadata.apiUrl ??
+        heroIssueRow?.raw?.api_url ??
+        (gcdIssueId ? `https://www.comics.org/api/issue/${gcdIssueId}/` : null),
+    },
+    images: {
+      coverImagePath: heroIssueRow?.cover_image_path ?? metadata.cover_image_path ?? metadata.coverImagePath ?? null,
+      cover: heroIssueRow?.cover ?? metadata.cover ?? metadata.cover_url ?? metadata.coverUrl ?? null,
+      coverOriginal: heroIssueRow?.cover_original ?? metadata.cover_original ?? null,
+    },
+    metadata,
+    rawIssue: heroIssueRow?.raw ?? null,
+  }
+}
+
+const mapCollectedEditionRow = (row) => {
+  const edition = row?.collected_editions
+  if (!edition?.id) return null
+
+  const sourceExternalId = edition.source_external_id ? String(edition.source_external_id) : null
+  const sourceUrl =
+    edition.source === 'gcd' && sourceExternalId
+      ? `https://www.comics.org/issue/${sourceExternalId}/`
+      : null
+
+  return {
+    id: edition.id,
+    title: edition.title ?? null,
+    subtitle: edition.subtitle ?? null,
+    seriesTitle: edition.series_title ?? null,
+    format: edition.format ?? 'unknown',
+    coverImageUrl: edition.cover_image_url ?? null,
+    publicationDate: edition.publication_date ?? null,
+    publisher: edition.publisher ?? null,
+    isbn: edition.isbn ?? null,
+    source: edition.source ?? null,
+    sourceExternalId,
+    sourceSeriesId: edition.source_series_id ?? null,
+    notes: row?.notes ?? null,
+    sourceUrl,
+  }
+}
+
+const loadCollectedEditionsForHeroIssue = async (heroIssueId) => {
+  if (!heroIssueId) return []
+
+  const { data, error } = await supabaseServiceClient
+    .from('collected_edition_issue_links')
+    .select(
+      'notes, collected_editions(id, title, subtitle, series_title, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn)'
+    )
+    .eq('hero_issue_id', heroIssueId)
+
+  if (error) {
+    throw new Error(`Failed to load collected editions for issue: ${error.message}`)
+  }
+
+  return (data ?? []).map(mapCollectedEditionRow).filter(Boolean)
+}
+
+const resolveStageIdentityFromMetadata = (metadata = {}) => {
+  const name = metadata.stage_name ?? metadata.stageName ?? metadata.stage?.name ?? metadata.stage?.label ?? null
+  if (!name) return null
+  const key = String(name).trim().toLowerCase()
+  if (!key) return null
+  return { key, name }
+}
+
+const resolveGcdIssueIdFromMetadata = (metadata = {}) => {
+  const value = metadata.gcdIssueId ?? metadata.gcd_issue_id
+  const numeric = Number(value)
+  if (!Number.isSafeInteger(numeric) || numeric <= 0) return null
+  return numeric
+}
+
+export const getHeroCollectedEditionsOverview = async (heroApiId) => {
+  if (!heroApiId) return []
+
+  const { data: editionRows, error: editionError } = await supabaseServiceClient
+    .from('collected_editions')
+    .select('id, title, subtitle, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn')
+    .eq('hero_api_id', heroApiId)
+    .order('publication_date', { ascending: true, nullsFirst: false })
+
+  if (editionError) {
+    throw new Error(`Failed to load collected editions overview: ${editionError.message}`)
+  }
+
+  const editions = editionRows ?? []
+  if (!editions.length) return []
+
+  const collectedEditionIds = editions.map((row) => row.id)
+
+  const { data: linksRows, error: linksError } = await supabaseServiceClient
+    .from('collected_edition_issue_links')
+    .select('collected_edition_id, hero_issue_id, notes')
+    .in('collected_edition_id', collectedEditionIds)
+
+  if (linksError) {
+    throw new Error(`Failed to load collected-edition links: ${linksError.message}`)
+  }
+
+  const links = linksRows ?? []
+  if (!links.length) {
+    return editions.map((row) => ({
+      id: row.id,
+      title: row.title,
+      subtitle: row.subtitle,
+      publisher: row.publisher,
+      publicationDate: row.publication_date ?? null,
+      format: row.format ?? 'unknown',
+      coverImageUrl: row.cover_image_url ?? null,
+      source: row.source ?? null,
+      sourceExternalId: row.source_external_id ? String(row.source_external_id) : null,
+      sourceSeriesId: row.source_series_id ?? null,
+      isbn: row.isbn ?? null,
+      issueCount: 0,
+      issues: [],
+      stages: [],
+    }))
+  }
+
+  const heroIssueIds = Array.from(new Set(links.map((link) => link.hero_issue_id).filter(Boolean)))
+
+  const { data: heroIssueRows, error: heroIssueError } = await supabaseServiceClient
+    .from('hero_issues')
+    .select('id, gcd_issue_id, number, series_name, title')
+    .eq('hero_api_id', heroApiId)
+    .in('id', heroIssueIds)
+
+  if (heroIssueError) {
+    throw new Error(`Failed to load hero issues for collected overview: ${heroIssueError.message}`)
+  }
+
+  const { data: timelineRows, error: timelineError } = await supabaseServiceClient
+    .from('hero_timelines')
+    .select('metadata')
+    .eq('hero_api_id', heroApiId)
+
+  if (timelineError) {
+    throw new Error(`Failed to load timeline metadata for collected overview: ${timelineError.message}`)
+  }
+
+  const issueById = new Map((heroIssueRows ?? []).map((row) => [row.id, row]))
+  const timelineStageByGcdIssueId = new Map()
+  for (const row of timelineRows ?? []) {
+    const metadata = row.metadata ?? {}
+    const gcdIssueId = resolveGcdIssueIdFromMetadata(metadata)
+    if (!gcdIssueId || timelineStageByGcdIssueId.has(gcdIssueId)) continue
+    const stage = resolveStageIdentityFromMetadata(metadata)
+    timelineStageByGcdIssueId.set(gcdIssueId, stage)
+  }
+
+  const linksByEditionId = new Map()
+  for (const link of links) {
+    if (!linksByEditionId.has(link.collected_edition_id)) {
+      linksByEditionId.set(link.collected_edition_id, [])
+    }
+    linksByEditionId.get(link.collected_edition_id).push(link)
+  }
+
+  return editions.map((edition) => {
+    const relatedLinks = linksByEditionId.get(edition.id) ?? []
+    const stageMap = new Map()
+    const issues = []
+
+    for (const link of relatedLinks) {
+      const issue = issueById.get(link.hero_issue_id)
+      if (!issue) continue
+      const stage = timelineStageByGcdIssueId.get(issue.gcd_issue_id)
+
+      if (stage?.key) {
+        const current = stageMap.get(stage.key) ?? { key: stage.key, name: stage.name, count: 0 }
+        current.count += 1
+        stageMap.set(stage.key, current)
+      }
+
+      const issueNumber = issue.number ?? null
+      const issueLabel = issueNumber
+        ? `${issue.series_name ?? 'Issue'} #${issueNumber}`
+        : issue.title ?? issue.series_name ?? `Issue ${issue.gcd_issue_id}`
+
+      issues.push({
+        heroIssueId: issue.id,
+        gcdIssueId: issue.gcd_issue_id,
+        number: issueNumber,
+        sortNumber: parseIssueNumberForSort(issueNumber),
+        seriesName: issue.series_name ?? null,
+        title: issue.title ?? null,
+        label: issueLabel,
+        note: link.notes ?? null,
+        stageKey: stage?.key ?? null,
+        stageName: stage?.name ?? null,
+      })
+    }
+
+    return {
+      id: edition.id,
+      title: edition.title,
+      subtitle: edition.subtitle,
+      publisher: edition.publisher,
+      publicationDate: edition.publication_date ?? null,
+      format: edition.format ?? 'unknown',
+      coverImageUrl: edition.cover_image_url ?? null,
+      source: edition.source ?? null,
+      sourceExternalId: edition.source_external_id ? String(edition.source_external_id) : null,
+      sourceSeriesId: edition.source_series_id ?? null,
+      isbn: edition.isbn ?? null,
+      issueCount: issues.length,
+      issues: issues.sort((a, b) => {
+        const safeA = Number.isSafeInteger(a.sortNumber) ? a.sortNumber : Number.POSITIVE_INFINITY
+        const safeB = Number.isSafeInteger(b.sortNumber) ? b.sortNumber : Number.POSITIVE_INFINITY
+        if (safeA !== safeB) return safeA - safeB
+        return (a.gcdIssueId ?? 0) - (b.gcdIssueId ?? 0)
+      }),
+      stages: Array.from(stageMap.values()),
+    }
+  })
+}
+
+export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => {
+  if (!heroApiId) {
+    throw new Error('Hero identifier is required.')
+  }
+  if (!issueId) {
+    throw new Error('Timeline issue identifier is required.')
+  }
+
+  const { data: timelineEntry, error: timelineError } = await supabaseServiceClient
+    .from('hero_timelines')
+    .select('id, hero_api_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, created_at, updated_at')
+    .eq('hero_api_id', heroApiId)
+    .eq('id', issueId)
+    .limit(1)
+    .maybeSingle()
+
+  if (timelineError) {
+    throw new Error(`Failed to load timeline issue detail: ${timelineError.message}`)
+  }
+  if (!timelineEntry) {
+    return null
+  }
+
+  const metadata = timelineEntry.metadata ?? {}
+  const gcdIssueId = toSafeInteger(metadata.gcdIssueId ?? metadata.gcd_issue_id)
+  let heroIssueRow = null
+  let heroIssueId = null
+
+  if (gcdIssueId) {
+    const { data, error } = await supabaseServiceClient
+      .from('hero_issues')
+      .select(
+        'id, gcd_issue_id, series_id, series_name, number, volume, title, key_date, on_sale_date, publication_date, price, page_count, cover, cover_original, cover_image_path, raw'
+      )
+      .eq('hero_api_id', heroApiId)
+      .eq('gcd_issue_id', gcdIssueId)
+      .limit(1)
+      .maybeSingle()
+
+    if (error) {
+      throw new Error(`Failed to load cached issue metadata: ${error.message}`)
+    }
+    heroIssueRow = data ?? null
+    heroIssueId = heroIssueRow?.id ?? null
+  }
+
+  const collectedEditions = await loadCollectedEditionsForHeroIssue(heroIssueId)
+
+  return {
+    issue: resolveTimelineIssueDetailPayload(timelineEntry, heroIssueRow),
+    collectedEditions,
+  }
+}
+
 export const createHeroTimelineEntry = async ({
   heroApiId,
   headline,

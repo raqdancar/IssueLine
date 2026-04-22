@@ -1,4 +1,3 @@
-import { gcdGet } from '../client.js'
 import { mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import {
@@ -8,6 +7,7 @@ import {
 import { supabaseServiceClient } from '../../../lib/supabaseClient.js'
 import { buildTimelineVisibilityPlan } from './timelineFilterService.js'
 import { linkImportedIssueCovers } from './coverLinkService.js'
+import { gcdGetWithRateLimitRetry } from './rateLimitRetryService.js'
 
 const toSlug = (value) =>
   String(value ?? '')
@@ -167,23 +167,41 @@ const normalizeSeriesId = (value) => {
 }
 
 const fetchSeriesIssues = async ({ seriesId, logger = console }) => {
-  const series = await gcdGet(`series/${seriesId}/`)
+  const seriesFetch = await gcdGetWithRateLimitRetry(`series/${seriesId}/`, {
+    logger,
+    label: `series/${seriesId}`,
+  })
+  const series = seriesFetch.data
   const urls = series?.active_issues ?? []
   const descriptors = series?.issue_descriptors ?? []
 
   if (!urls.length) {
-    return { series, issues: [], fetchFailures: [] }
+    return {
+      series,
+      issues: [],
+      fetchFailures: [],
+      rateLimitPauses: seriesFetch.pauses,
+      rateLimitWaitedMs: seriesFetch.waitedMs,
+    }
   }
 
   const issues = []
   const fetchFailures = []
+  let rateLimitPauses = seriesFetch.pauses
+  let rateLimitWaitedMs = seriesFetch.waitedMs
 
   for (let index = 0; index < urls.length; index += 1) {
     const issueUrl = urls[index]
     if (!issueUrl) continue
 
     try {
-      const issue = await gcdGet(issueUrl)
+      const issueFetch = await gcdGetWithRateLimitRetry(issueUrl, {
+        logger,
+        label: `issue ${index + 1}/${urls.length}`,
+      })
+      const issue = issueFetch.data
+      rateLimitPauses += issueFetch.pauses
+      rateLimitWaitedMs += issueFetch.waitedMs
       if (!issue.descriptor && descriptors[index]) {
         issue.descriptor = descriptors[index]
       }
@@ -199,7 +217,13 @@ const fetchSeriesIssues = async ({ seriesId, logger = console }) => {
     }
   }
 
-  return { series, issues, fetchFailures }
+  return {
+    series,
+    issues,
+    fetchFailures,
+    rateLimitPauses,
+    rateLimitWaitedMs,
+  }
 }
 
 const resolveDistinctGcdIssueIds = (issues) => {
@@ -226,6 +250,8 @@ const toImportSummary = ({
   deletedVariants,
   coverSummary,
   includeCovers,
+  rateLimitPauses,
+  rateLimitWaitedMs,
 }) => ({
   seriesId,
   seriesLabel,
@@ -243,6 +269,8 @@ const toImportSummary = ({
   timelineVariantDeleteFailures: deletedVariants.failed.length,
   coversAttempted: includeCovers,
   coverSummary,
+  rateLimitPauses,
+  rateLimitWaitedMs,
 })
 
 /**
@@ -260,7 +288,7 @@ export const importGcdSeriesIntoSupabase = async ({
   const normalizedSeriesId = normalizeSeriesId(seriesId)
   logger.log(`Loading GCD series ${normalizedSeriesId}...`)
 
-  const { series, issues, fetchFailures } = await fetchSeriesIssues({
+  const { series, issues, fetchFailures, rateLimitPauses, rateLimitWaitedMs } = await fetchSeriesIssues({
     seriesId: normalizedSeriesId,
     logger,
   })
@@ -327,5 +355,7 @@ export const importGcdSeriesIntoSupabase = async ({
     deletedVariants,
     includeCovers: coversAvailable,
     coverSummary,
+    rateLimitPauses,
+    rateLimitWaitedMs,
   })
 }
