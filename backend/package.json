@@ -13,6 +13,9 @@
     "test:coverage": "node --test --experimental-test-coverage test",
     "import:gcd": "node ./scripts/import-gcd-series.mjs",
     "import:gcd:issue": "node ./scripts/import-gcd-issue.mjs",
+    "import:collected-edition": "node ./scripts/import-collected-edition.mjs",
+    "link:collected-edition-issues": "node ./scripts/link-collected-edition-issues.mjs",
+    "upload:collected-cover": "node ./scripts/upload-collected-cover.mjs",
     "sync:gcd": "node ./scripts/gcd-series-sync.mjs",
     "link:issue-covers": "node ./scripts/link-issue-covers.mjs"
   },

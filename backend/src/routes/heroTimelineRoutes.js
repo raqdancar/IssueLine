@@ -1,9 +1,20 @@
 import express from 'express'
 import { z } from 'zod'
-import { createHeroTimelineEntry, getHeroBySlug, getHeroTimelineEntries } from '../modules/hero/timelineService.js'
+import {
+  createHeroTimelineEntry,
+  getHeroBySlug,
+  getHeroCollectedEditionsOverview,
+  getHeroTimelineEntries,
+  getHeroTimelineIssueDetailById,
+} from '../modules/hero/timelineService.js'
 
 const paramsSchema = z.object({
   slug: z.string().min(1).max(120),
+})
+
+const issueParamsSchema = z.object({
+  slug: z.string().min(1).max(120),
+  issueId: z.string().min(1).max(120),
 })
 
 const severityEnum = z.enum(['info', 'success', 'warning', 'critical'])
@@ -27,6 +38,37 @@ const createSchema = z
 
 export const heroTimelineRouter = express.Router()
 
+heroTimelineRouter.get('/:slug/issues/:issueId', async (req, res, next) => {
+  try {
+    const { slug, issueId } = issueParamsSchema.parse(req.params)
+    const hero = await getHeroBySlug(slug)
+
+    if (!hero) {
+      return res.status(404).json({ error: `Hero with slug "${slug}" was not found.` })
+    }
+
+    const detail = await getHeroTimelineIssueDetailById({
+      heroApiId: hero.api_id,
+      issueId,
+    })
+
+    if (!detail) {
+      return res.status(404).json({ error: `Issue "${issueId}" was not found for hero "${slug}".` })
+    }
+
+    res.json({
+      hero: {
+        apiId: hero.api_id,
+        slug: hero.slug,
+        name: hero.name,
+      },
+      ...detail,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 heroTimelineRouter.get('/:slug', async (req, res, next) => {
   try {
     const { slug } = paramsSchema.parse(req.params)
@@ -36,10 +78,14 @@ heroTimelineRouter.get('/:slug', async (req, res, next) => {
       return res.status(404).json({ error: `Hero with slug "${slug}" was not found.` })
     }
 
-    const entries = await getHeroTimelineEntries(hero.api_id)
+    const [entries, collectedEditionsOverview] = await Promise.all([
+      getHeroTimelineEntries(hero.api_id),
+      getHeroCollectedEditionsOverview(hero.api_id),
+    ])
     res.json({
       hero,
       entries,
+      collectedEditionsOverview,
     })
   } catch (error) {
     next(error)

@@ -168,6 +168,27 @@ curl -X POST http://localhost:4600/gcd/heroes/doctor-strange/series/824/sync -H 
 
 Repeat the sync call with subsequent pages until GCD reports no more issues. Because the backend writes to Supabase first, the UI and future jobs always read from your database instead of hitting GCD directly.
 
+## GCD collected editions importer (CLI)
+
+Collected editions are stored in a dedicated table (`collected_editions`) separate from `hero_issues`.
+
+Apply migration:
+- `supabase/sql/20260420_collected_editions.sql`
+
+Run importer:
+
+```bash
+npm run import:collected-edition
+```
+
+The CLI asks for a GCD collected-edition issue identifier (numeric id or `/issue/<id>/` URL), shows normalized metadata, asks you to select the hero, and inserts into Supabase unless a duplicate already exists.
+
+To upload a local cover image to storage and sync `cover_image_url`:
+
+```bash
+npm run upload:collected-cover -- --collected-id=<uuid> --file=<local-image-path>
+```
+
 To automate multi-page imports without hitting GCDâ€™s 20-requests/min limit, use the helper script:
 
 ```bash
@@ -240,5 +261,7 @@ The script checks:
 - `npm run verify:prod`: smoke-check deployed frontend + backend URLs.
 - `npm run import:gcd`: run the internal guided GCD series importer CLI (backend tool).
 - `npm run import:gcd:issue`: run the internal guided GCD single-issue importer CLI (backend tool).
+- `npm run import:collected-edition`: run the internal guided GCD collected-edition importer CLI (backend tool).
+- `npm run upload:collected-cover`: upload local collected-edition cover and update DB URL (backend tool).
 - `npm --prefix ui run lint`: run ESLint on the frontend.
 

@@ -113,6 +113,9 @@ Duplicate and re-import behavior:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `GCD_BASE_URL` (defaults to `https://www.comics.org`)
 - Optional when needed by GCD limits: `GCD_USERNAME`/`GCD_PASSWORD` or `GCD_SESSIONID`
+- Optional retry controls for importer rate limits:
+  - `GCD_MINUTE_RETRY_WAIT_MS` (default `61000`)
+  - `GCD_MINUTE_RETRY_MAX` (default `10`)
 
 ### Cover folder structure
 
@@ -137,11 +140,79 @@ The importer matches covers in this order:
 If multiple files match the same issue, the CLI picks the lexicographically first path, reports it as ambiguous, and continues.
 If no file matches, it reports the issue in `missing covers` and continues.
 
+### Rate-limit behavior
+
+When GCD minute limit is reached during import, the importer automatically waits and retries the same request, then continues from where it stopped.
+Daily hard-limit errors still abort the run.
+
 ### Re-import behavior
 
 - `hero_issues` rows are upserted by `(hero_api_id, gcd_issue_id)`.
 - Timeline rows are upserted by `metadata.gcdIssueId` for the same hero.
 - When variant exclusion is enabled, duplicate/variant timeline rows are filtered from the canonical timeline and deleted from `hero_timelines` (source issue data remains in `hero_issues` for audit fidelity).
+
+## Internal GCD collected-edition import CLI
+
+Use this CLI when importing one collected edition (omnibus/tpb/hardcover) from GCD into the dedicated `collected_editions` table:
+
+```bash
+npm run import:collected-edition
+# or from repo root:
+npm run import:collected-edition
+```
+
+Interactive flow:
+1. Enter GCD issue identifier (numeric id or `/issue/<id>/` URL).
+2. The importer fetches and normalizes the GCD payload.
+3. It prints the candidate metadata (title, series, dates, format, identifiers, cover URL, etc.).
+4. Select hero from Supabase heroes (search + pick by number).
+5. Confirm insertion.
+
+Duplicate handling:
+- The importer checks `collected_editions` before insert.
+- Match strategy: `source_external_id` (GCD issue id) and fallback `isbn` when present.
+- A matching row is shown and insertion is skipped.
+
+Data model:
+- `collected_editions` is intentionally separate from `hero_issues`.
+- `collected_edition_issue_links` is created for future manual linking to contained single issues (not used by this first CLI version).
+- Apply migration: `supabase/sql/20260420_collected_editions.sql`
+
+### Linking collected editions to single issues (manual CLI)
+
+Use this CLI to create rows in `collected_edition_issue_links`:
+
+```bash
+npm run link:collected-edition-issues
+```
+
+It supports:
+- collected-edition selection by title search
+- link mode `gcd` (exact `gcd_issue_id`) or `number` (issue numbers, conservative and ambiguity-safe)
+- list/range selectors like `17779,17780,18000-18005` or `110-111,114-146`
+
+Optional flags:
+- `--collected-id=<uuid>`
+- `--mode=gcd|number`
+- `--issues=<selector>`
+- `--note=<text>`
+
+### Upload collected-edition cover to storage
+
+Upload a local image to the `collected-edition-images` bucket and update `collected_editions.cover_image_url`:
+
+```bash
+npm run upload:collected-cover -- --collected-id=<uuid> --file=<local-image-path>
+```
+
+Optional flags:
+- `--bucket=<bucket-name>` (default: `collected-edition-images`)
+- `--prefix=<folder-prefix>` (default: `covers`)
+- `--no-overwrite` (fails if file already exists)
+
+Env knobs:
+- `COLLECTED_EDITION_IMAGE_BUCKET`
+- `COLLECTED_EDITION_IMAGE_PREFIX`
 
 ## Tests
 
