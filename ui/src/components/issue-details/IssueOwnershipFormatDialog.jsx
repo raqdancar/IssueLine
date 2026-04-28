@@ -1,3 +1,10 @@
+/**
+ * Diàleg modal per seleccionar en quin format de recopilatori l'usuari té una issue.
+ *
+ * Aquest component no guarda dades directament: emet esdeveniments (`onToggleEdition`,
+ * `onConfirm`) i delega la persistència al contenidor superior.
+ */
+
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, PackageCheck, X } from 'lucide-react'
@@ -7,6 +14,20 @@ import { useI18n } from '@/i18n/I18nProvider.jsx'
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 
 const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLECTED_EDITION_IMAGE_BUCKET)
+
+/**
+ * Renderitza el selector de formats de col·lecció per una issue concreta.
+ *
+ * @param {object} props
+ * @param {boolean} props.open Controla visibilitat del modal.
+ * @param {string|null} props.issueTitle Títol contextual de la issue.
+ * @param {Array} props.editions Llista de recopilatoris disponibles.
+ * @param {string[]} props.selectedEditionIds Selecció actual de recopilatoris.
+ * @param {boolean} props.loading Estat de càrrega inicial.
+ * @param {boolean} props.saving Estat de persistència en curs.
+ * @param {string|null} props.error Missatge d'error de negoci o xarxa.
+ * @returns {JSX.Element|null}
+ */
 
 function IssueOwnershipFormatDialog({
   open,
@@ -25,6 +46,7 @@ function IssueOwnershipFormatDialog({
 
   useEffect(() => {
     if (!open || typeof window === 'undefined') return undefined
+    // Evita auto-tancament immediat pel mateix click que ha obert el modal.
     setCanCloseBackdrop(false)
     const timer = window.setTimeout(() => setCanCloseBackdrop(true), 120)
     return () => window.clearTimeout(timer)

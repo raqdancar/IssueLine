@@ -1,3 +1,12 @@
+/**
+ * Rutes HTTP per gestionar l'estat d'issues de la col·lecció personal.
+ *
+ * Aquest router exposa operacions autenticades per:
+ * - consultar estats d'issues per heroi o per llista d'IDs,
+ * - actualitzar estats individuals (`en possessió` / `llegit`),
+ * - marcar etapes completes com a llegides.
+ */
+
 import express from 'express'
 import { z } from 'zod'
 import { authenticateRequest } from '../middlewares/authenticate.js'
@@ -37,9 +46,10 @@ const patchSchema = z
   .object({
     haveIt: z.boolean().optional(),
     readIt: z.boolean().optional(),
+    collectedEditionIds: z.array(z.string().uuid()).optional(),
   })
-  .refine((value) => value.haveIt !== undefined || value.readIt !== undefined, {
-    message: 'Provide haveIt and/or readIt fields.',
+  .refine((value) => value.haveIt !== undefined || value.readIt !== undefined || value.collectedEditionIds !== undefined, {
+    message: 'Provide haveIt, readIt, and/or collectedEditionIds fields.',
     path: ['haveIt'],
   })
 
@@ -63,6 +73,8 @@ export const issueStatesRouter = express.Router()
 issueStatesRouter.use(authenticateRequest)
 
 issueStatesRouter.get('/', async (req, res, next) => {
+  // Es construeix un conjunt únic d'issues per evitar duplicats quan coincideixen
+  // `issueIds` explícits amb els que venen de la cronologia de l'heroi.
   try {
     const query = querySchema.parse({
       ...req.query,

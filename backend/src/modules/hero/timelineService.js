@@ -1,4 +1,16 @@
-﻿import { supabaseServiceClient } from '../../lib/supabaseClient.js'
+/**
+ * Servei de domini per construir i consultar la cronologia d'un personatge.
+ *
+ * Aquest mòdul agrega dades de múltiples fonts internes:
+ * - `hero_timelines` (línia temporal canònica),
+ * - `hero_issues` (metadades enriquides de números),
+ * - `collected_editions` i enllaços (recopilatoris i cobertura).
+ *
+ * L'objectiu és retornar payloads preparats per al frontend, mantenint
+ * compatibilitat amb dades parcials i diferents versions de metadades.
+ */
+
+import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 import { getHeroIssueCoverPathMap } from './issuesService.js'
 
 const normalizeIssueDate = (value) => {
@@ -11,6 +23,13 @@ const normalizeIssueDate = (value) => {
   }
   return date.toISOString().slice(0, 10)
 }
+
+/**
+ * Cerca un personatge per `slug` i retorna la seva informació bàsica.
+ *
+ * @param {string} slug Slug URL del personatge.
+ * @returns {Promise<{api_id:number,name:string,slug:string,publisher:string}|null>}
+ */
 
 export const getHeroBySlug = async (slug) => {
   const normalizedSlug = slug?.trim().toLowerCase()
@@ -32,6 +51,17 @@ export const getHeroBySlug = async (slug) => {
 
   return data
 }
+
+/**
+ * Retorna la cronologia completa d'un personatge, ordenada per data.
+ *
+ * A més, intenta enriquir les entrades amb `coverImagePath` a partir de la taula
+ * de números importats. Si l'enriquiment falla, retorna igualment les entrades
+ * per no bloquejar la visualització de la cronologia.
+ *
+ * @param {number} heroApiId Identificador API del personatge.
+ * @returns {Promise<Array>} Entrades de cronologia preparades per al frontend.
+ */
 
 export const getHeroTimelineEntries = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
@@ -240,6 +270,18 @@ const resolveGcdIssueIdFromMetadata = (metadata = {}) => {
   return numeric
 }
 
+/**
+ * Construeix la vista agregada de recopilatoris per a un personatge.
+ *
+ * El resultat inclou:
+ * - metadades del recopilatori,
+ * - llistat d'issues incloses,
+ * - cobertura per etapes (stages) de cronologia.
+ *
+ * @param {number} heroApiId Identificador API del personatge.
+ * @returns {Promise<Array>} Resum de recopilatoris amb cobertura d'issues.
+ */
+
 export const getHeroCollectedEditionsOverview = async (heroApiId) => {
   if (!heroApiId) return []
 
@@ -385,6 +427,13 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
   })
 }
 
+/**
+ * Retorna el detall complet d'una issue de cronologia, incloent recopilatoris relacionats.
+ *
+ * @param {{heroApiId:number, issueId:string}} params
+ * @returns {Promise<{issue:Object, collectedEditions:Array}|null>}
+ */
+
 export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => {
   if (!heroApiId) {
     throw new Error('Hero identifier is required.')
@@ -439,6 +488,12 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
   }
 }
 
+/**
+
+ * Construeix o transforma informaci? de cronologia per a createHeroTimelineEntry.
+
+ */
+
 export const createHeroTimelineEntry = async ({
   heroApiId,
   headline,
@@ -473,6 +528,12 @@ export const createHeroTimelineEntry = async ({
   return data
 }
 
+/**
+
+ * Gestiona dades o comportament relacionat amb issues a getExistingGcdIssueIds.
+
+ */
+
 export const getExistingGcdIssueIds = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
@@ -492,6 +553,12 @@ export const getExistingGcdIssueIds = async (heroApiId) => {
   }
   return identifiers
 }
+
+/**
+
+ * Construeix o transforma informaci? de cronologia per a insertHeroTimelineEntries.
+
+ */
 
 export const insertHeroTimelineEntries = async (heroApiId, entries) => {
   if (!entries?.length) {
@@ -574,6 +641,9 @@ const loadTimelineRowsByGcdIssueId = async (heroApiId, gcdIssueIds) => {
  * Upserts timeline rows by hero + metadata.gcdIssueId.
  * If an entry has no gcdIssueId, it is inserted as a new row.
  */
+/**
+ * Construeix o transforma informaci? de cronologia per a upsertHeroTimelineEntriesByGcdIssueId.
+ */
 export const upsertHeroTimelineEntriesByGcdIssueId = async (heroApiId, entries) => {
   if (!entries?.length) {
     return { inserted: [], updated: [], skipped: [] }
@@ -642,6 +712,9 @@ export const upsertHeroTimelineEntriesByGcdIssueId = async (heroApiId, entries) 
 
 /**
  * Deletes hero timeline rows where metadata.gcdIssueId matches provided ids.
+ */
+/**
+ * Construeix o transforma informaci? de cronologia per a deleteHeroTimelineEntriesByGcdIssueIds.
  */
 export const deleteHeroTimelineEntriesByGcdIssueIds = async (heroApiId, gcdIssueIds) => {
   const targets = Array.from(
