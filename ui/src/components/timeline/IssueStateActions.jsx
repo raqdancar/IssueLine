@@ -10,7 +10,11 @@ function IssueStateActions({ issueState, disabled, disabledReason, pending, onTo
   const { t } = useI18n()
 
   return (
-    <div className="mt-3 flex flex-wrap gap-2">
+    <div
+      className="mt-3 flex flex-wrap gap-2"
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
       {ISSUE_STATE_TOGGLES.map(({ key, labelKey, Icon }) => {
         const active = Boolean(issueState?.[key])
         const isContextDisabled = disabled
@@ -34,7 +38,11 @@ function IssueStateActions({ issueState, disabled, disabledReason, pending, onTo
             aria-pressed={active}
             aria-busy={isPending ? 'true' : undefined}
             disabled={buttonDisabled}
-            onClick={() => onToggle?.(key, !active)}
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggle?.(key, !active)
+            }}
+            onKeyDown={(event) => event.stopPropagation()}
             title={titleText}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
               active

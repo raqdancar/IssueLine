@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
+import { BookOpen, CheckCircle2 } from 'lucide-react'
 import { buildIssueImageUrl } from '@/lib/issueImages'
 import { useIssueDetailsQuery } from '@/hooks/useIssueDetails.js'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,19 @@ const resolveCoverImage = (issue, fallbackImage) => {
   return coverFromStorage ?? issue.images?.cover ?? issue.images?.coverOriginal ?? fallbackImage ?? null
 }
 
-function IssueDetailsDialog({ open, heroSlug, issueId, fallbackImage, onClose }) {
+function IssueDetailsDialog({
+  open,
+  heroSlug,
+  issueId,
+  fallbackImage,
+  issueState,
+  canUseIssueStateActions,
+  issueStatePending,
+  issueStateDisabled,
+  issueStateDisabledReason,
+  onIssueStateToggle,
+  onClose,
+}) {
   const { t } = useI18n()
   const query = useIssueDetailsQuery({
     heroSlug,
@@ -52,7 +65,29 @@ function IssueDetailsDialog({ open, heroSlug, issueId, fallbackImage, onClose })
     >
       <div className="w-full max-w-5xl" onClick={(event) => event.stopPropagation()}>
         <div className="max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/30 sm:p-6">
-          <IssueDetailsHeader issue={issue} onClose={onClose} />
+          <IssueDetailsHeader
+            issue={issue}
+            onClose={onClose}
+            actionButtons={[
+              {
+                key: 'haveIt',
+                active: Boolean(issueState?.haveIt),
+                icon: CheckCircle2,
+                label: t('timeline.addToCollection'),
+                onClick: () => onIssueStateToggle?.('haveIt', !issueState?.haveIt),
+              },
+              {
+                key: 'readIt',
+                active: Boolean(issueState?.readIt),
+                icon: BookOpen,
+                label: t('timeline.markAsRead'),
+                onClick: () => onIssueStateToggle?.('readIt', !issueState?.readIt),
+              },
+            ]}
+            actionsDisabled={Boolean(!canUseIssueStateActions || issueStateDisabled)}
+            actionsPending={Boolean(issueStatePending)}
+            actionsDisabledReason={issueStateDisabledReason ?? t('timeline.issueActionsUnavailable')}
+          />
 
           {query.isLoading ? (
             <div className="space-y-4 py-4">

@@ -63,11 +63,15 @@ export const useIssueStateMutation = (heroSlug) => {
       await queryClient.cancelQueries({ queryKey })
       const previous = queryClient.getQueryData(queryKey)
       const optimistic = buildStateIndex(previous)
-      const currentState = optimistic[issueId] ?? { issueId, haveIt: false, readIt: false }
+      const currentState = optimistic[issueId] ?? { issueId, haveIt: false, readIt: false, collectedEditionIds: [] }
 
+      const nextHaveIt = patch.haveIt ?? currentState.haveIt
       const nextState = {
         ...currentState,
         ...patch,
+        collectedEditionIds: nextHaveIt
+          ? patch.collectedEditionIds ?? currentState.collectedEditionIds ?? []
+          : [],
         updatedAt: new Date().toISOString(),
       }
 
@@ -95,6 +99,7 @@ export const useIssueStateMutation = (heroSlug) => {
         }
         return stateIndexToArray(next)
       })
+      void queryClient.invalidateQueries({ queryKey })
     },
   })
 }
@@ -126,7 +131,7 @@ export const useStageReadMutation = (heroSlug) => {
       const timestamp = new Date().toISOString()
       issueIds.forEach((issueId) => {
         if (!issueId) return
-        const current = optimistic[issueId] ?? { issueId, haveIt: false, readIt: false }
+        const current = optimistic[issueId] ?? { issueId, haveIt: false, readIt: false, collectedEditionIds: [] }
         optimistic[issueId] = { ...current, readIt: true, updatedAt: timestamp }
       })
       queryClient.setQueryData(queryKey, stateIndexToArray(optimistic))

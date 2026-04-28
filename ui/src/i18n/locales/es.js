@@ -320,6 +320,14 @@ const messages = {
         placeholderTitle: 'Marcador de recopilatorio',
         placeholderBody: 'Todavia no se han conectado datos de recopilatorios.',
       },
+      ownershipDialog: {
+        eyebrow: 'Formato en coleccion',
+        title: 'Como tienes este numero?',
+        loading: 'Cargando recopilatorios...',
+        loadError: 'No se pudieron cargar los recopilatorios para este numero.',
+        noCollectedEditions: 'Todavia no hay recopilatorios enlazados para este numero. Puedes guardar igualmente.',
+        confirm: 'Guardar en coleccion',
+      },
     },
   }
 

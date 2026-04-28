@@ -38,7 +38,11 @@ function TimelineIssueToolbar({
       : 'border-sky-300 bg-sky-100 text-sky-700'
 
   return (
-    <div className={`w-full ${wrapperClasses} ${className}`.trim()}>
+    <div
+      className={`w-full ${wrapperClasses} ${className}`.trim()}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
       <div className="flex flex-wrap justify-end gap-2">
         {toolbarButtons.map(({ key, labelKey, Icon }) => {
           const active = Boolean(issueState?.[key])
@@ -56,7 +60,11 @@ function TimelineIssueToolbar({
               aria-label={buttonLabel}
               disabled={buttonDisabled}
               title={titleText}
-              onClick={() => onToggle?.(key, !active)}
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggle?.(key, !active)
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 ${
                 variant === 'dark' ? 'focus-visible:ring-white/50' : 'focus-visible:ring-slate-400'
               } ${active ? activeClasses : actionBaseClasses} ${buttonDisabled ? 'cursor-not-allowed opacity-70' : ''}`}

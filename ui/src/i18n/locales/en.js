@@ -322,6 +322,14 @@
       placeholderTitle: 'Collected format placeholder',
       placeholderBody: 'No collected edition data has been connected yet.',
     },
+    ownershipDialog: {
+      eyebrow: 'Collection format',
+      title: 'How do you own this issue?',
+      loading: 'Loading collected editions...',
+      loadError: 'Unable to load collected editions for this issue.',
+      noCollectedEditions: 'No collected editions are linked to this issue yet. You can still save ownership.',
+      confirm: 'Save ownership',
+    },
   },
 }
 

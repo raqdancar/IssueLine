@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Info } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
 import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
@@ -168,6 +168,158 @@ const buildStageCoverageMap = (stages = []) =>
     acc[stage.key] = stage.count ?? 0
     return acc
   }, {})
+
+
+const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
+  const viewportRef = useRef(null)
+  const trackRef = useRef(null)
+  const isInteractingRef = useRef(false)
+  const resumeTimeoutRef = useRef(null)
+  const dragStateRef = useRef({
+    active: false,
+    pointerId: null,
+    startX: 0,
+    startScrollLeft: 0,
+  })
+
+  const normalizedIssues = useMemo(() => issues.filter(Boolean), [issues])
+  const repeatedIssues = normalizedIssues.length > 1 ? [...normalizedIssues, ...normalizedIssues] : normalizedIssues
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    const track = trackRef.current
+    if (!viewport || !track || normalizedIssues.length <= 1) return
+    if (typeof window === 'undefined') return
+
+    const speedPixelsPerSecond = 24
+    let frameId = null
+    let lastFrameTime = performance.now()
+
+    const tick = (frameTime) => {
+      const deltaSeconds = (frameTime - lastFrameTime) / 1000
+      lastFrameTime = frameTime
+
+      const loopWidth = track.scrollWidth / 2
+      if (!isInteractingRef.current && Number.isFinite(loopWidth) && loopWidth > viewport.clientWidth) {
+        viewport.scrollLeft += speedPixelsPerSecond * deltaSeconds
+        if (viewport.scrollLeft >= loopWidth) {
+          viewport.scrollLeft -= loopWidth
+        }
+      } else if (Number.isFinite(loopWidth) && loopWidth <= viewport.clientWidth && viewport.scrollLeft !== 0) {
+        viewport.scrollLeft = 0
+      }
+
+      frameId = window.requestAnimationFrame(tick)
+    }
+
+    frameId = window.requestAnimationFrame(tick)
+    return () => {
+      if (resumeTimeoutRef.current) {
+        window.clearTimeout(resumeTimeoutRef.current)
+        resumeTimeoutRef.current = null
+      }
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
+    }
+  }, [normalizedIssues])
+
+  const pauseAutoScroll = () => {
+    isInteractingRef.current = true
+    if (resumeTimeoutRef.current && typeof window !== 'undefined') {
+      window.clearTimeout(resumeTimeoutRef.current)
+      resumeTimeoutRef.current = null
+    }
+  }
+
+  const resumeAutoScroll = (delayMs = 0) => {
+    if (typeof window === 'undefined') return
+    if (resumeTimeoutRef.current) {
+      window.clearTimeout(resumeTimeoutRef.current)
+    }
+    resumeTimeoutRef.current = window.setTimeout(() => {
+      isInteractingRef.current = false
+      resumeTimeoutRef.current = null
+    }, delayMs)
+  }
+
+  const handlePointerDown = (event) => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+
+    dragStateRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: viewport.scrollLeft,
+    }
+    pauseAutoScroll()
+    viewport.setPointerCapture?.(event.pointerId)
+  }
+
+  const handlePointerMove = (event) => {
+    const viewport = viewportRef.current
+    const drag = dragStateRef.current
+    if (!viewport || !drag.active || drag.pointerId !== event.pointerId) return
+
+    const deltaX = event.clientX - drag.startX
+    viewport.scrollLeft = drag.startScrollLeft - deltaX
+  }
+
+  const finishPointerDrag = (event, delayMs = 900) => {
+    const viewport = viewportRef.current
+    const drag = dragStateRef.current
+    if (!drag.active || drag.pointerId !== event.pointerId) return
+
+    dragStateRef.current = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      startScrollLeft: 0,
+    }
+    viewport?.releasePointerCapture?.(event.pointerId)
+    resumeAutoScroll(delayMs)
+  }
+
+  return (
+    <div className="relative mt-3">
+      <div
+        ref={viewportRef}
+        className="no-scrollbar cursor-grab select-none active:cursor-grabbing overflow-x-auto rounded-xl border border-slate-200/80 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-2.5 py-2"
+        style={{ touchAction: 'pan-x' }}
+        onMouseEnter={pauseAutoScroll}
+        onMouseLeave={() => resumeAutoScroll(350)}
+        onTouchStart={pauseAutoScroll}
+        onTouchEnd={() => resumeAutoScroll(1200)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={(event) => finishPointerDrag(event, 900)}
+        onPointerCancel={(event) => finishPointerDrag(event, 900)}
+        onScroll={() => resumeAutoScroll(1200)}
+        onFocus={pauseAutoScroll}
+        onBlur={() => resumeAutoScroll(350)}
+      >
+        <div ref={trackRef} className="inline-flex min-w-max gap-2 pr-4">
+          {repeatedIssues.map((issue, index) => {
+            const issueKey = issue.heroIssueId ?? issue.gcdIssueId ?? issue.number ?? index
+            const isDuplicatedToken = normalizedIssues.length > 1 && index >= normalizedIssues.length
+            return (
+              <span
+                key={`${editionId}-issue-${issueKey}-${isDuplicatedToken ? 'dup' : 'src'}-${index}`}
+                className="shrink-0 rounded-full border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-sm"
+                aria-hidden={isDuplicatedToken}
+              >
+                #{issue.number ?? issue.gcdIssueId}
+              </span>
+            )
+          })}
+        </div>
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-6 rounded-l-xl bg-gradient-to-r from-slate-50/95 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-6 rounded-r-xl bg-gradient-to-l from-slate-50/95 to-transparent" />
+    </div>
+  )
+}
 
 const GaugeCard = ({ label, count, total, accentClass, t }) => {
   const percent = total > 0 ? Math.round((count / total) * 100) : 0
@@ -587,8 +739,6 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                   const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
                   const stageCoverage = buildStageCoverageMap(edition.stages)
                   const coveredStageCount = edition.stages?.length ?? 0
-                  const visibleIssues = (edition.issues ?? []).slice(0, 8)
-                  const hiddenIssuesCount = Math.max((edition.issues?.length ?? 0) - visibleIssues.length, 0)
 
                   return (
                     <article key={edition.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
@@ -640,16 +790,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                         </div>
                       ) : null}
 
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {visibleIssues.map((issue) => (
-                          <span key={`${edition.id}-issue-${issue.heroIssueId ?? issue.gcdIssueId}`} className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px] text-slate-700">
-                            #{issue.number ?? issue.gcdIssueId}
-                          </span>
-                        ))}
-                        {hiddenIssuesCount > 0 ? (
-                          <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[11px] text-slate-700">+{hiddenIssuesCount}</span>
-                        ) : null}
-                      </div>
+                      <AutoScrollIssueStrip editionId={edition.id} issues={edition.issues ?? []} />
                     </article>
                   )
                 })}

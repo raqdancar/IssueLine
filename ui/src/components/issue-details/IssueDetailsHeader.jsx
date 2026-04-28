@@ -1,7 +1,14 @@
-import { X } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
-function IssueDetailsHeader({ issue, onClose }) {
+function IssueDetailsHeader({
+  issue,
+  onClose,
+  actionButtons = [],
+  actionsDisabled = false,
+  actionsPending = false,
+  actionsDisabledReason,
+}) {
   const { t } = useI18n()
   const issueNumber = issue?.issue?.number
   const fallbackTitle = issueNumber ? t('timeline.issueLabel', { number: issueNumber }) : t('issueDetails.title')
@@ -15,14 +22,46 @@ function IssueDetailsHeader({ issue, onClose }) {
         <h2 className="title-sm text-slate-900">{title}</h2>
         {subtitle ? <p className="body-xs text-slate-500">{subtitle}</p> : null}
       </div>
-      <button
-        type="button"
-        onClick={onClose}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100"
-      >
-        <X className="h-4 w-4" aria-hidden="true" />
-        <span className="sr-only">{t('issueDetails.closeDialog')}</span>
-      </button>
+      <div className="flex items-center gap-2">
+        {actionButtons.map(({ key, active, icon: Icon, label, onClick }) => {
+          const buttonDisabled = actionsDisabled || actionsPending
+          const titleText = actionsPending
+            ? t('timeline.savingUpdate')
+            : actionsDisabled
+              ? actionsDisabledReason ?? t('timeline.issueActionsUnavailable')
+              : label
+
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={active}
+              aria-label={actionsPending ? t('timeline.saving') : label}
+              aria-busy={actionsPending ? 'true' : undefined}
+              disabled={buttonDisabled}
+              title={titleText}
+              onClick={onClick}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                active
+                  ? key === 'haveIt'
+                    ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
+                    : 'border-sky-300 bg-sky-100 text-sky-700'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/30 hover:text-slate-900'
+              } ${buttonDisabled ? 'cursor-not-allowed opacity-70' : ''}`}
+            >
+              {actionsPending ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <Icon className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          )
+        })}
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:bg-slate-100"
+        >
+          <X className="h-5 w-5" aria-hidden="true" />
+          <span className="sr-only">{t('issueDetails.closeDialog')}</span>
+        </button>
+      </div>
     </header>
   )
 }

@@ -321,6 +321,14 @@ const messages = {
         placeholderTitle: 'Marcador de recopilatori',
         placeholderBody: 'Encara no s han connectat dades de recopilatoris.',
       },
+      ownershipDialog: {
+        eyebrow: 'Format en colleccio',
+        title: 'Com tens aquest numero?',
+        loading: 'Carregant recopilatoris...',
+        loadError: 'No s han pogut carregar els recopilatoris per a aquest numero.',
+        noCollectedEditions: 'Encara no hi ha recopilatoris enllacats per a aquest numero. Ho pots guardar igualment.',
+        confirm: 'Desar en colleccio',
+      },
     },
   }
 
