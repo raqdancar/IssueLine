@@ -285,7 +285,7 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
     <div className="relative mt-3">
       <div
         ref={viewportRef}
-        className="no-scrollbar cursor-grab select-none active:cursor-grabbing overflow-x-auto rounded-xl border border-slate-200/80 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-2.5 py-2"
+        className="no-scrollbar cursor-grab select-none active:cursor-grabbing overflow-x-auto rounded-xl border border-slate-200/80 bg-linear-to-r from-slate-50 via-white to-slate-50 px-2.5 py-2"
         style={{ touchAction: 'pan-x' }}
         onMouseEnter={pauseAutoScroll}
         onMouseLeave={() => resumeAutoScroll(350)}
@@ -315,8 +315,8 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
           })}
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-6 rounded-l-xl bg-gradient-to-r from-slate-50/95 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-6 rounded-r-xl bg-gradient-to-l from-slate-50/95 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-6 rounded-l-xl bg-linear-to-r from-slate-50/95 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-6 rounded-r-xl bg-linear-to-l from-slate-50/95 to-transparent" />
     </div>
   )
 }
@@ -544,6 +544,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     error: null,
   }))
   const [openStage, setOpenStage] = useState(null)
+  const [insightTab, setInsightTab] = useState('progress')
   const { isAuthenticated } = useSessionContext()
   const { statesByIssueId, canFetchStates, isFetching: issueStatesLoading } = useIssueStatesQuery(heroSlug, {
     enabled: Boolean(heroSlug),
@@ -682,123 +683,160 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
       {state.status === 'success' ? (
         <div className="mt-6 space-y-6">
-          <div className="space-y-4 rounded-3xl border border-slate-100 bg-white/60 p-4 shadow-inner">
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectionProgress')}</p>
-            {isAuthenticated ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <GaugeCard label={t('timeline.haveIt')} count={haveItCount} total={totalIssues} accentClass="text-emerald-500" t={t} />
-                <GaugeCard label={t('timeline.readIt')} count={readItCount} total={totalIssues} accentClass="text-indigo-500" t={t} />
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500">{t('timeline.signInForCharts')}</p>
-            )}
-
-            {!canFetchStates && isAuthenticated ? (
-              <p className="flex items-center gap-2 text-xs text-slate-500">
-                <Info className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                {t('timeline.signInToTrackOwnedRead')}
-              </p>
-            ) : issueStatesLoading ? (
-              <p className="text-xs text-slate-500">{t('timeline.syncingCollection')}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-3">
-            {stageGroups.length === 0 ? (
-              <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-500">
-                {t('timeline.stageMetadataMissing')}
-              </div>
-            ) : (
-              stageGroups.map((stage) => (
-                <StageAccordionItem
-                  key={stage.key}
-                  stage={stage}
-                  isOpen={openStage === stage.key}
-                  onToggle={() => setOpenStage((current) => (current === stage.key ? null : stage.key))}
-                  canManageStates={canFetchStates}
-                  onBulkRead={() => handleStageBulkRead(stage)}
-                  actionState={buildActionState(stage.key)}
-                  issueStatesByIssueId={statesByIssueId}
-                  pendingIssueId={pendingIssueId}
-                  onIssueToggle={handleIssueToggle}
-                  issueActionError={issueActionError}
-                  t={t}
-                />
-              ))
-            )}
-          </div>
-
-          <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectedCoverageTitle')}</p>
-              <p className="text-xs text-slate-500">{t('timeline.collectedCoverageSubtitle')}</p>
+          <div className="-mx-1 overflow-x-auto px-1">
+            <div role="tablist" aria-label={t('timeline.publishingResume')} className="flex min-w-max items-end gap-2 border-b border-border/80">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={insightTab === 'progress'}
+                className={`-mb-px rounded-t-xl border-x border-t border-b px-4 py-2 text-sm font-semibold transition ${
+                  insightTab === 'progress'
+                    ? 'border-primary/70 border-b-card bg-card text-foreground shadow-sm'
+                    : 'border-transparent text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+                }`}
+                onClick={() => setInsightTab('progress')}
+              >
+                {t('timeline.collectionProgress')}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={insightTab === 'collected'}
+                className={`-mb-px rounded-t-xl border-x border-t border-b px-4 py-2 text-sm font-semibold transition ${
+                  insightTab === 'collected'
+                    ? 'border-primary/70 border-b-card bg-card text-foreground shadow-sm'
+                    : 'border-transparent text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+                }`}
+                onClick={() => setInsightTab('collected')}
+              >
+                {t('timeline.collectedEditionsTab')}
+              </button>
             </div>
-            {collectedEditions.length ? (
-              <div className="grid gap-3 lg:grid-cols-2">
-                {collectedEditions.map((edition) => {
-                  const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
-                  const stageCoverage = buildStageCoverageMap(edition.stages)
-                  const coveredStageCount = edition.stages?.length ?? 0
-
-                  return (
-                    <article key={edition.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <div className="flex gap-3">
-                        <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
-                          {coverImage ? (
-                            <img src={coverImage} alt={edition.title ?? t('issueDetails.collected.placeholderTitle')} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-slate-100 px-1 text-center">
-                              <span className="body-xs text-slate-500">{t('timeline.noCover')}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0 space-y-1">
-                          <p className="body-sm font-semibold text-slate-900 break-words">{edition.title}</p>
-                          {edition.subtitle ? <p className="body-xs text-slate-600 break-words">{edition.subtitle}</p> : null}
-                          <p className="body-xs text-slate-500">
-                            {edition.format ?? 'unknown'}{edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
-                          </p>
-                          <p className="body-xs text-slate-500">
-                            {t('timeline.collectedIssuesCount', { count: edition.issueCount ?? 0 })}
-                            {' - '}
-                            {t('timeline.collectedStagesCount', { count: coveredStageCount })}
-                          </p>
-                        </div>
-                      </div>
-
-                      {stageCoverageOrder.length ? (
-                        <div className="mt-3 space-y-2">
-                          <div className="flex gap-1">
-                            {stageCoverageOrder.map((stage) => {
-                              const count = stageCoverage[stage.key] ?? 0
-                              return (
-                                <div
-                                  key={`${edition.id}-${stage.key}`}
-                                  className={`h-2 flex-1 rounded-full ${count > 0 ? 'bg-indigo-500' : 'bg-slate-200'}`}
-                                  title={`${stage.name}: ${count} ${t('timeline.indexIssues').toLowerCase()}`}
-                                />
-                              )
-                            })}
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {(edition.stages ?? []).map((stage) => (
-                              <span key={`${edition.id}-stage-${stage.key}`} className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
-                                {stage.name} ({stage.count})
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <AutoScrollIssueStrip editionId={edition.id} issues={edition.issues ?? []} />
-                    </article>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">{t('timeline.collectedCoverageEmpty')}</p>
-            )}
           </div>
+
+          {insightTab === 'progress' ? (
+            <>
+              <div className="space-y-4 rounded-3xl border border-slate-100 bg-white/60 p-4 shadow-inner">
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectionProgress')}</p>
+                {isAuthenticated ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <GaugeCard label={t('timeline.haveIt')} count={haveItCount} total={totalIssues} accentClass="text-emerald-500" t={t} />
+                    <GaugeCard label={t('timeline.readIt')} count={readItCount} total={totalIssues} accentClass="text-indigo-500" t={t} />
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">{t('timeline.signInForCharts')}</p>
+                )}
+
+                {!canFetchStates && isAuthenticated ? (
+                  <p className="flex items-center gap-2 text-xs text-slate-500">
+                    <Info className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                    {t('timeline.signInToTrackOwnedRead')}
+                  </p>
+                ) : issueStatesLoading ? (
+                  <p className="text-xs text-slate-500">{t('timeline.syncingCollection')}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-3">
+                {stageGroups.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-sm text-slate-500">
+                    {t('timeline.stageMetadataMissing')}
+                  </div>
+                ) : (
+                  stageGroups.map((stage) => (
+                    <StageAccordionItem
+                      key={stage.key}
+                      stage={stage}
+                      isOpen={openStage === stage.key}
+                      onToggle={() => setOpenStage((current) => (current === stage.key ? null : stage.key))}
+                      canManageStates={canFetchStates}
+                      onBulkRead={() => handleStageBulkRead(stage)}
+                      actionState={buildActionState(stage.key)}
+                      issueStatesByIssueId={statesByIssueId}
+                      pendingIssueId={pendingIssueId}
+                      onIssueToggle={handleIssueToggle}
+                      issueActionError={issueActionError}
+                      t={t}
+                    />
+                  ))
+                )}
+              </div>
+            </>
+          ) : null}
+
+          {insightTab === 'collected' ? (
+            <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectedCoverageTitle')}</p>
+                <p className="text-xs text-slate-500">{t('timeline.collectedCoverageSubtitle')}</p>
+              </div>
+              {collectedEditions.length ? (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {collectedEditions.map((edition) => {
+                    const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
+                    const stageCoverage = buildStageCoverageMap(edition.stages)
+                    const coveredStageCount = edition.stages?.length ?? 0
+
+                    return (
+                      <article key={edition.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="flex gap-3">
+                          <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
+                            {coverImage ? (
+                              <img src={coverImage} alt={edition.title ?? t('issueDetails.collected.placeholderTitle')} className="h-full w-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-slate-100 px-1 text-center">
+                                <span className="body-xs text-slate-500">{t('timeline.noCover')}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 space-y-1">
+                            <p className="body-sm font-semibold text-slate-900 break-words">{edition.title}</p>
+                            {edition.subtitle ? <p className="body-xs text-slate-600 break-words">{edition.subtitle}</p> : null}
+                            <p className="body-xs text-slate-500">
+                              {edition.format ?? 'unknown'}{edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
+                            </p>
+                            <p className="body-xs text-slate-500">
+                              {t('timeline.collectedIssuesCount', { count: edition.issueCount ?? 0 })}
+                              {' - '}
+                              {t('timeline.collectedStagesCount', { count: coveredStageCount })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {stageCoverageOrder.length ? (
+                          <div className="mt-3 space-y-2">
+                            <div className="flex gap-1">
+                              {stageCoverageOrder.map((stage) => {
+                                const count = stageCoverage[stage.key] ?? 0
+                                return (
+                                  <div
+                                    key={`${edition.id}-${stage.key}`}
+                                    className={`h-2 flex-1 rounded-full ${count > 0 ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                    title={`${stage.name}: ${count} ${t('timeline.indexIssues').toLowerCase()}`}
+                                  />
+                                )
+                              })}
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {(edition.stages ?? []).map((stage) => (
+                                <span key={`${edition.id}-stage-${stage.key}`} className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                                  {stage.name} ({stage.count})
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <AutoScrollIssueStrip editionId={edition.id} issues={edition.issues ?? []} />
+                      </article>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">{t('timeline.collectedCoverageEmpty')}</p>
+              )}
+            </div>
+          ) : null}
         </div>
       ) : state.status === 'loading' ? (
         <div className="mt-6 h-32 animate-pulse rounded-2xl bg-slate-100/70" />

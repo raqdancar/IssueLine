@@ -208,7 +208,7 @@ function HeroDetail() {
                 <div
                   className={`relative mx-auto overflow-hidden ${
                     hasTimelineLogo
-                      ? 'h-40 w-full max-w-none'
+                      ? 'h-28 w-full max-w-none sm:h-32 lg:h-40'
                       : 'h-36 w-36 rounded-full border border-slate-200 bg-slate-100/60 shadow-inner'
                   }`}
                 >

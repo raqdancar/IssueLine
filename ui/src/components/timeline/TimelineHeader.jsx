@@ -38,7 +38,7 @@ function TimelineHeader({
           <img
             src={timelineLogoSrc}
             alt={timelineLogoAlt ?? t('timeline.heroTimelineTitle', { heroName })}
-            className="mb-2 h-14 w-auto max-w-[320px] object-contain"
+            className="mb-2 h-12 w-auto max-w-full object-contain sm:h-14 sm:max-w-[320px]"
             loading="lazy"
             onError={() => setLogoVisible(false)}
           />

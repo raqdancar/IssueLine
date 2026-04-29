@@ -115,7 +115,8 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: hsl(var(--border));
+    outline-color: hsl(var(--ring) / 0.5);
     }
   body {
     @apply bg-background text-foreground;
@@ -150,6 +151,21 @@
     object-fit: cover;
     box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25);
     opacity: 0.32;
+  }
+
+  @media (max-width: 640px) {
+    .timeline-logo-cover-track {
+      gap: 0.45rem;
+      padding: 0 0.25rem;
+      animation-duration: 90s;
+    }
+
+    .timeline-logo-cover-cell {
+      width: 3.2rem;
+      height: 4.4rem;
+      border-radius: 0.35rem;
+      opacity: 0.24;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
