@@ -26,7 +26,7 @@ import {
   timelineSortOptions,
 } from './timeline/constants'
 
-function HeroTimeline({ slug, heroName, fallbackImage }) {
+function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, timelineLogoAlt = null }) {
   const { t } = useI18n()
   const apiBaseUrl = backendBaseUrl
   const [sortDirection, setSortDirection] = useState('desc')
@@ -479,6 +479,8 @@ function HeroTimeline({ slug, heroName, fallbackImage }) {
     <section className="mt-8 w-full rounded-2xl border border-slate-100 bg-linear-to-br from-white to-slate-50 p-4">
       <TimelineHeader
         heroName={heroName}
+        timelineLogoSrc={timelineLogoSrc}
+        timelineLogoAlt={timelineLogoAlt}
         isAuthenticated={isAuthenticated}
         isSyncingIssueStates={isSyncingIssueStates}
         issueStatesError={issueStatesQuery.isError}

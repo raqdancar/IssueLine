@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineHeader({
   heroName,
+  timelineLogoSrc = null,
+  timelineLogoAlt = null,
   isAuthenticated,
   isSyncingIssueStates,
   issueStatesError,
@@ -22,11 +25,26 @@ function TimelineHeader({
   onPersonalFilterChange,
 }) {
   const { t } = useI18n()
+  const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
+
+  useEffect(() => {
+    setLogoVisible(Boolean(timelineLogoSrc))
+  }, [timelineLogoSrc])
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
       <div>
-        <p className="title-xs">{t('timeline.heroTimelineTitle', { heroName })}</p>
+        {timelineLogoSrc && logoVisible ? (
+          <img
+            src={timelineLogoSrc}
+            alt={timelineLogoAlt ?? t('timeline.heroTimelineTitle', { heroName })}
+            className="mb-2 h-14 w-auto max-w-[320px] object-contain"
+            loading="lazy"
+            onError={() => setLogoVisible(false)}
+          />
+        ) : (
+          <p className="title-xs">{t('timeline.heroTimelineTitle', { heroName })}</p>
+        )}
         <p className="body-xs text-slate-500">{t('timeline.eventsSyncFromBackend')}</p>
         {!isAuthenticated ? (
           <p className="body-xs text-slate-400">{t('timeline.signInToTrackIssues')}</p>

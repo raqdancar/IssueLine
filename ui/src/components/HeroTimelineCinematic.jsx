@@ -70,9 +70,10 @@ const groupEntriesByYear = (entries, direction = 'desc') => {
     }))
 }
 
-function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
+function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc = null, timelineLogoAlt = null }) {
   const { t, locale } = useI18n()
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
+  const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
   const [sortDirection, setSortDirection] = useState('desc')
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
   const { isAuthenticated } = useSessionContext()
@@ -87,6 +88,10 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
   const issueStateMutation = useIssueStateMutation(slug)
   const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
   const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId ?? null : null
+
+  useEffect(() => {
+    setLogoVisible(Boolean(timelineLogoSrc))
+  }, [timelineLogoSrc])
 
   useEffect(() => {
     if (!backendBaseUrl || !slug) return undefined
@@ -160,7 +165,17 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage }) {
       <div className="relative flex flex-wrap items-baseline justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('timeline.cinematicTimeline')}</p>
-          <h3 className="title-sm text-white">{heroName}</h3>
+          {timelineLogoSrc && logoVisible ? (
+            <img
+              src={timelineLogoSrc}
+              alt={timelineLogoAlt ?? heroName}
+              className="mt-1 h-16 w-auto max-w-[360px] object-contain"
+              loading="lazy"
+              onError={() => setLogoVisible(false)}
+            />
+          ) : (
+            <h3 className="title-sm text-white">{heroName}</h3>
+          )}
           <p className="body-xs text-slate-400">{t('timeline.groupedByYear')}</p>
         </div>
         <div className="flex flex-col items-end gap-3 text-xs text-slate-300 sm:flex-row sm:items-center">

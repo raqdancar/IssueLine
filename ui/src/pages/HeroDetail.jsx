@@ -11,6 +11,18 @@ const statLabelKeys = ['intelligence', 'strength', 'speed', 'durability', 'power
 const fallbackImage =
   'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=600&q=70'
 
+const resolveTimelineLogoBaseUrl = () => {
+  const configured = import.meta.env.VITE_TIMELINE_LOGO_BASE_URL
+  if (configured) return configured.replace(/\/+$/, '')
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  if (supabaseUrl) {
+    return `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/timeline-logos`
+  }
+  return '/timeline-logos'
+}
+
+const timelineLogoBaseUrl = resolveTimelineLogoBaseUrl()
+
 function HeroDetail() {
   const { t } = useI18n()
   const { slug } = useParams()
@@ -20,6 +32,7 @@ function HeroDetail() {
     error: null,
   })
   const [timelineView, setTimelineView] = useState('classic')
+  const [timelineLogoUnavailable, setTimelineLogoUnavailable] = useState(false)
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !slug) {
@@ -78,8 +91,17 @@ function HeroDetail() {
   const primaryImage = heroImages[0]
   const imageSrc = primaryImage?.public_url ?? hero?.images?.lg ?? hero?.images?.md ?? fallbackImage
   const imageAlt = primaryImage?.alt ?? hero?.name ?? t('heroDetail.heroPortrait')
+  const timelineLogoSrc = hero?.slug ? `${timelineLogoBaseUrl}/${hero.slug}.png` : null
+  const timelineLogoAlt = hero?.name ? `${hero.name} timeline logo` : null
+  const hasTimelineLogo = Boolean(timelineLogoSrc) && !timelineLogoUnavailable
+  const showcaseImageSrc = hasTimelineLogo ? timelineLogoSrc : imageSrc
+  const showcaseImageAlt = hasTimelineLogo ? timelineLogoAlt : imageAlt
   const alignment = hero?.alignment?.toLowerCase()
   const stats = hero?.powerstats ?? {}
+
+  useEffect(() => {
+    setTimelineLogoUnavailable(false)
+  }, [timelineLogoSrc])
 
   const detailHeader = useMemo(
     () => (
@@ -118,8 +140,24 @@ function HeroDetail() {
           <div className="space-y-8">
             <div className="grid gap-8 lg:grid-cols-[minmax(160px,200px),1fr] xl:gap-12">
               <aside className="space-y-6 rounded-3xl border border-slate-100 bg-white/85 p-5 text-sm text-slate-600 shadow-lg shadow-slate-200/60 ring-1 ring-white/70 backdrop-blur">
-                <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-full border border-slate-200 bg-slate-100/60 shadow-inner">
-                  <img src={imageSrc} alt={imageAlt} className="h-full w-full object-cover" loading="lazy" />
+                <div
+                  className={`relative mx-auto overflow-hidden ${
+                    hasTimelineLogo
+                      ? 'h-40 w-full max-w-none'
+                      : 'h-36 w-36 rounded-full border border-slate-200 bg-slate-100/60 shadow-inner'
+                  }`}
+                >
+                  <img
+                    src={showcaseImageSrc}
+                    alt={showcaseImageAlt}
+                    className={`h-full w-full ${hasTimelineLogo ? 'object-contain' : 'object-cover'}`}
+                    loading="lazy"
+                    onError={() => {
+                      if (hasTimelineLogo) {
+                        setTimelineLogoUnavailable(true)
+                      }
+                    }}
+                  />
                 </div>
                 <div className="space-y-4 rounded-3xl border border-slate-100 bg-linear-to-br from-white/90 via-slate-50/80 to-white/60 p-5 text-sm text-slate-600 shadow-inner">
                   <p className="text-sm font-semibold text-slate-800">{t('heroDetail.spotlightTitle')}</p>
@@ -195,10 +233,22 @@ function HeroDetail() {
                 </div>
                 <div className="space-y-4">
                   {timelineView === 'classic' && (
-                    <HeroTimeline slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
+                    <HeroTimeline
+                      slug={hero.slug}
+                      heroName={hero.name}
+                      fallbackImage={imageSrc}
+                      timelineLogoSrc={timelineLogoSrc}
+                      timelineLogoAlt={timelineLogoAlt}
+                    />
                   )}
                   {timelineView === 'cinematic' && (
-                    <HeroTimelineCinematic slug={hero.slug} heroName={hero.name} fallbackImage={imageSrc} />
+                    <HeroTimelineCinematic
+                      slug={hero.slug}
+                      heroName={hero.name}
+                      fallbackImage={imageSrc}
+                      timelineLogoSrc={timelineLogoSrc}
+                      timelineLogoAlt={timelineLogoAlt}
+                    />
                   )}
                 </div>
               </div>
