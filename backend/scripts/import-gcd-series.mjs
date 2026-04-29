@@ -48,6 +48,8 @@ const printSummary = (summary) => {
   console.log(`Existing variant timeline rows deleted: ${summary.timelineVariantRowsDeleted}`)
   console.log(`Variant timeline delete failures: ${summary.timelineVariantDeleteFailures}`)
   console.log(`Cover linking attempted: ${summary.coversAttempted ? 'yes' : 'no'}`)
+  console.log(`Rate-limit pauses: ${summary.rateLimitPauses ?? 0}`)
+  console.log(`Rate-limit wait time (s): ${Math.round((summary.rateLimitWaitedMs ?? 0) / 1000)}`)
 
   if (summary.coverSummary) {
     console.log(`Cover folder used: ${summary.coverSummary.folder}`)

@@ -1,4 +1,8 @@
-﻿import { setTimeout as delay } from 'node:timers/promises'
+/**
+ * Script operatiu per automatitzar tasques de manteniment, importaci? o verificaci?.
+ */
+
+import { setTimeout as delay } from 'node:timers/promises'
 import { environment } from '../src/config/environment.js'
 import { getHeroBySlug } from '../src/modules/hero/timelineService.js'
 import { syncSeriesIssuesForHero } from '../src/modules/gcd/issueSyncService.js'
@@ -92,20 +96,27 @@ const buildIssueQueue = async (seriesId, startDescriptor, endDescriptor, filters
 
   const normalizedStart = startDescriptor ? Number(startDescriptor) : null
   const normalizedEnd = endDescriptor ? Number(endDescriptor) : null
+  const seenNumbers = new Set()
+  const queue = []
 
-  return descriptors
-    .map((descriptor, index) => ({
+  descriptors.forEach((descriptor, index) => {
+    const number = normalizeDescriptorNumber(descriptor)
+    const url = issues[index]
+    if (!url || number === null) return
+    if (normalizedStart !== null && number < normalizedStart) return
+    if (normalizedEnd !== null && number > normalizedEnd) return
+    if (seenNumbers.has(number)) return
+    if (!shouldIncludeDescriptor(descriptor, filters)) return
+
+    queue.push({
       descriptor,
-      number: normalizeDescriptorNumber(descriptor),
-      url: issues[index],
-    }))
-    .filter((entry) => {
-      if (!entry.url || entry.number === null) return false
-      if (!shouldIncludeDescriptor(entry.descriptor, filters)) return false
-      if (normalizedStart !== null && entry.number < normalizedStart) return false
-      if (normalizedEnd !== null && entry.number > normalizedEnd) return false
-      return true
+      number,
+      url,
     })
+    seenNumbers.add(number)
+  })
+
+  return queue
 }
 
 const main = async () => {

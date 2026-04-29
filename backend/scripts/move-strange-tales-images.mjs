@@ -1,4 +1,8 @@
-﻿import path from 'node:path'
+/**
+ * Script operatiu per automatitzar tasques de manteniment, importaci? o verificaci?.
+ */
+
+import path from 'node:path'
 import process from 'node:process'
 import { environment } from '../src/config/environment.js'
 import { supabaseServiceClient } from '../src/lib/supabaseClient.js'

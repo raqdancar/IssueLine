@@ -85,6 +85,8 @@ const printSummary = (summary) => {
   console.log(`Timeline updated: ${summary.timelineUpdated}`)
   console.log(`Timeline skipped/errors: ${summary.timelineSkipped}`)
   console.log(`Cover linking attempted: ${summary.coversAttempted ? 'yes' : 'no'}`)
+  console.log(`Rate-limit pauses: ${summary.rateLimitPauses ?? 0}`)
+  console.log(`Rate-limit wait time (s): ${Math.round((summary.rateLimitWaitedMs ?? 0) / 1000)}`)
 
   if (summary.coverSummary) {
     console.log(`Cover folder used: ${summary.coverSummary.folder}`)

@@ -1,3 +1,7 @@
+/**
+ * Script operatiu per automatitzar tasques de manteniment, importaci? o verificaci?.
+ */
+
 import process from 'node:process'
 import { supabaseServiceClient } from '../src/lib/supabaseClient.js'
 import { coerceSeriesSlugSource } from '../src/utils/seriesNameUtils.js'
@@ -40,7 +44,13 @@ const sanitizeSegment = (value) => value?.replace(/^\/+|\/+$/g, '') ?? ''
 const slugifySeriesName = (value) => {
   const source = coerceSeriesSlugSource(value)
   if (!source) return null
-  const withoutParens = source.replace(/\([^)]*\)/g, ' ')
+  const withoutParens = source.replace(/\(([^)]*)\)/g, (_, inner) => {
+    const digitTokens = inner?.match(/\d+/g)
+    if (digitTokens?.length) {
+      return ` ${digitTokens.join('_')} `
+    }
+    return ' '
+  })
   return withoutParens
     .toLowerCase()
     .replace(/&/g, 'and')
@@ -54,7 +64,7 @@ const buildFolderCandidates = (slug) => {
   if (!slug) return candidates
 
   const enqueue = (value) => {
-    const normalized = value.replace(/^_+|_+$/g, '')
+    const normalized = value.replace(/_+/g, '_').replace(/^_+|_+$/g, '')
     if (normalized) {
       candidates.add(normalized)
     }
@@ -68,6 +78,8 @@ const buildFolderCandidates = (slug) => {
     (value) => value.replace(/_vol_\d+$/, ''),
     (value) => value.replace(/_volume$/, ''),
     (value) => value.replace(/_\d{4}$/, ''),
+    (value) => value.replace(/_of_/g, '_'),
+    (value) => value.replace(/_of_/g, '_').replace(/_series$/, '').replace(/_\d{4}$/, ''),
   ]
 
   for (const transform of transforms) {
