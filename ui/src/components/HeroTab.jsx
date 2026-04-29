@@ -24,6 +24,15 @@ function HeroTab({ hero }) {
   const displayName = hero.full_name || hero.biography?.['full-name'] || hero.name
   const stats = hero.powerstats ?? {}
   const hasTimelineIssues = Boolean(hero.hasTimelineIssues)
+  const timelineCoverage = hero.timelineCoverage ?? { count: 0, startYear: null, endYear: null }
+  const coverageYearLabel =
+    timelineCoverage.startYear && timelineCoverage.endYear
+      ? timelineCoverage.startYear === timelineCoverage.endYear
+        ? `${timelineCoverage.startYear}`
+        : `${timelineCoverage.startYear} - ${timelineCoverage.endYear}`
+      : timelineCoverage.startYear
+        ? `${timelineCoverage.startYear}`
+        : t('timeline.yearTba')
 
   const detailHref = hero.slug && hasTimelineIssues ? `/heroes/${hero.slug}` : null
 
@@ -81,6 +90,13 @@ function HeroTab({ hero }) {
           ) : null}
           <p className="eyebrow mt-2">{hero.publisher ?? t('heroTab.independent')}</p>
         </div>
+        {hasTimelineIssues ? (
+          <div className="shrink-0 rounded-3xl border border-indigo-900/50 bg-linear-to-br from-indigo-950 via-indigo-900 to-indigo-800 px-4 py-3 text-center text-white shadow-inner">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/75">{t('timeline.coverage')}</p>
+            <p className="text-2xl font-black leading-none tracking-wide">{coverageYearLabel}</p>
+            <p className="mt-1 text-xs text-white/75">{t('timeline.trackedIssues', { count: timelineCoverage.count ?? 0 })}</p>
+          </div>
+        ) : null}
       </div>
 
       {heroImages.length > 1 ? (

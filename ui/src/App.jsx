@@ -72,11 +72,12 @@ function App() {
     const heroRows = heroesResult.data ?? []
     const heroApiIds = heroRows.map((hero) => hero.api_id).filter(Boolean)
     let heroesWithIssues = new Set()
+    const heroCoverageById = new Map()
 
     if (heroApiIds.length) {
       const { data: timelineRows, error: timelineError } = await supabase
         .from('hero_timelines')
-        .select('hero_api_id')
+        .select('hero_api_id, issue_date')
         .in('hero_api_id', heroApiIds)
 
       if (timelineError) {
@@ -84,7 +85,31 @@ function App() {
         return
       }
 
-      heroesWithIssues = new Set((timelineRows ?? []).map((row) => row.hero_api_id))
+      const rows = timelineRows ?? []
+      heroesWithIssues = new Set(rows.map((row) => row.hero_api_id))
+
+      rows.forEach((row) => {
+        if (!row?.hero_api_id) return
+        const current = heroCoverageById.get(row.hero_api_id) ?? {
+          count: 0,
+          startYear: null,
+          endYear: null,
+        }
+
+        current.count += 1
+        const parsedDate = row.issue_date ? new Date(row.issue_date) : null
+        if (parsedDate && !Number.isNaN(parsedDate.getTime())) {
+          const year = parsedDate.getUTCFullYear()
+          if (current.startYear === null || year < current.startYear) {
+            current.startYear = year
+          }
+          if (current.endYear === null || year > current.endYear) {
+            current.endYear = year
+          }
+        }
+
+        heroCoverageById.set(row.hero_api_id, current)
+      })
     }
 
     const imagesByHero = (imagesResult.data ?? []).reduce((acc, image) => {
@@ -99,6 +124,7 @@ function App() {
       ...hero,
       heroImages: imagesByHero[hero.api_id] ?? [],
       hasTimelineIssues: heroesWithIssues.has(hero.api_id),
+      timelineCoverage: heroCoverageById.get(hero.api_id) ?? { count: 0, startYear: null, endYear: null },
     }))
 
     setHeroes(enrichedHeroes)
