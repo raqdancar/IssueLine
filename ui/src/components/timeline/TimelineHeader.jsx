@@ -14,9 +14,12 @@ function TimelineHeader({
   onZoomOut,
   isZoomedIn,
   isZoomedOut,
-  issueFilter = 'all',
-  issueFilterOptions = [],
-  onIssueFilterChange,
+  publicationFilter = 'all',
+  publicationFilterOptions = [],
+  onPublicationFilterChange,
+  personalFilter = 'all',
+  personalFilterOptions = [],
+  onPersonalFilterChange,
 }) {
   const { t } = useI18n()
 
@@ -89,18 +92,43 @@ function TimelineHeader({
             </button>
           </div>
         </div>
-        {issueFilterOptions.length ? (
+        {publicationFilterOptions.length ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="body-xs text-slate-500">{t('timeline.filterIssues')}</span>
+            <span className="body-xs text-slate-500">{t('timeline.filterPublication')}</span>
             <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
-              {issueFilterOptions.map((option) => {
-                const isActive = issueFilter === option.value
+              {publicationFilterOptions.map((option) => {
+                const isActive = publicationFilter === option.value
                 return (
                   <button
                     key={option.value}
                     type="button"
                     aria-pressed={isActive}
-                    onClick={() => onIssueFilterChange?.(option.value)}
+                    onClick={() => onPublicationFilterChange?.(option.value)}
+                    className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                      isActive
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {t(option.labelKey)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
+        {personalFilterOptions.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="body-xs text-slate-500">{t('timeline.filterCollection')}</span>
+            <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+              {personalFilterOptions.map((option) => {
+                const isActive = personalFilter === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => onPersonalFilterChange?.(option.value)}
                     className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                       isActive
                         ? 'bg-slate-900 text-white shadow-sm'

@@ -13,6 +13,20 @@ import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 const ISSUE_STATES_TABLE = 'user_issue_states'
 const ISSUE_COLLECTED_EDITIONS_TABLE = 'user_issue_collected_editions'
 
+const isMissingRelationError = (error) => {
+  const code = error?.code ?? ''
+  const message = String(error?.message ?? '').toLowerCase()
+  return (
+    code === '42P01' ||
+    code === 'PGRST204' ||
+    message.includes('does not exist') ||
+    message.includes('relation') ||
+    message.includes('could not find the table') ||
+    message.includes('schema cache') ||
+    message.includes('user_issue_collected_editions')
+  )
+}
+
 const mapStateRow = (row, collectedEditionIds = []) => ({
   issueId: row.issue_id,
   haveIt: Boolean(row.have_it),
@@ -130,6 +144,11 @@ const getCollectedEditionSelectionsByIssueIds = async ({ userId, issueIds }) => 
     .in('issue_id', issueIds)
 
   if (error) {
+    if (isMissingRelationError(error)) {
+      // Backward compatibility for environments where the ownership table
+      // has not been migrated yet.
+      return new Map()
+    }
     throw new Error(`Failed to load collected-edition selections: ${error.message}`)
   }
 
@@ -206,6 +225,9 @@ const syncCollectedEditionSelections = async ({ userId, issueId, collectedEditio
     .eq('issue_id', issueId)
 
   if (deleteError) {
+    if (isMissingRelationError(deleteError)) {
+      return
+    }
     throw new Error(`Failed to clear previous collected-edition selections: ${deleteError.message}`)
   }
 
@@ -222,6 +244,9 @@ const syncCollectedEditionSelections = async ({ userId, issueId, collectedEditio
     .insert(payload)
 
   if (insertError) {
+    if (isMissingRelationError(insertError)) {
+      return
+    }
     throw new Error(`Failed to save collected-edition selections: ${insertError.message}`)
   }
 }
@@ -353,6 +378,9 @@ const propagateHaveItForCollectedEditions = async ({ userId, heroApiId, collecte
       })
 
     if (ownershipError) {
+      if (isMissingRelationError(ownershipError)) {
+        return affectedIssueIds
+      }
       throw new Error(`Failed to propagate collected-edition ownership links: ${ownershipError.message}`)
     }
   }
@@ -461,11 +489,18 @@ export const applyIssueStatePatch = async ({ userId, issueId, patch }) => {
     throw new Error(`Failed to save issue state: ${error.message}`)
   }
 
-  await syncCollectedEditionSelections({
-    userId,
-    issueId,
-    collectedEditionIds: nextHaveIt ? nextCollectedEditionIds : [],
-  })
+  // Avoid touching collected-edition ownership links on read-only toggles.
+  // We only sync when ownership changes or when an explicit selection payload arrives.
+  const shouldSyncCollectedSelections =
+    nextHaveIt || incomingCollectedEditionIds !== undefined || patch.haveIt === false
+
+  if (shouldSyncCollectedSelections) {
+    await syncCollectedEditionSelections({
+      userId,
+      issueId,
+      collectedEditionIds: nextHaveIt ? nextCollectedEditionIds : [],
+    })
+  }
 
   let propagatedIssueIds = []
   if (patch.haveIt === true && incomingCollectedEditionIds !== undefined && nextCollectedEditionIds.length) {

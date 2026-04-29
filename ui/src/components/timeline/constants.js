@@ -26,9 +26,17 @@ export const timelineSortOptions = [
   { labelKey: 'timeline.oldestFirst', value: 'asc' },
 ]
 
-export const timelineIssueFilterOptions = [
+export const timelinePublicationFilterOptions = [
   { labelKey: 'timeline.allIssues', value: 'all' },
   { labelKey: 'timeline.annualsOnly', value: 'annuals' },
+]
+
+export const timelinePersonalFilterOptions = [
+  { labelKey: 'timeline.allTracked', value: 'all' },
+  { labelKey: 'timeline.unreadOnly', value: 'unread' },
+  { labelKey: 'timeline.unownedOnly', value: 'unowned' },
+  { labelKey: 'timeline.readOnly', value: 'read' },
+  { labelKey: 'timeline.ownedOnly', value: 'owned' },
 ]
 
 export const indexModeOptions = [
