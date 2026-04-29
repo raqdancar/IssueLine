@@ -1,3 +1,12 @@
+/**
+ * Hooks de React Query per consultar i mutar l'estat d'issues d'un personatge.
+ *
+ * Aquest fitxer centralitza:
+ * - lectura d'estats (`en possessió`, `llegit`, formats de recopilatori),
+ * - mutacions amb actualització optimista de UI,
+ * - sincronització de canvis amb la caché de React Query.
+ */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { fetchIssueStates, markStageIssuesRead, patchIssueState } from '@/lib/issueStatesApi.js'
@@ -22,6 +31,14 @@ const buildStateIndex = (input) => {
 
 const stateIndexToArray = (index) => Object.values(index ?? {})
 
+/**
+ * Consulta els estats d'issues per un personatge i els indexa per `issueId`.
+ *
+ * @param {string} heroSlug Slug del personatge.
+ * @param {{enabled?: boolean}} options Control d'activació de la query.
+ * @returns {{statesByIssueId:Object, canFetchStates:boolean} & import('@tanstack/react-query').UseQueryResult}
+ */
+
 export const useIssueStatesQuery = (heroSlug, { enabled = true } = {}) => {
   const { session } = useSessionContext()
   const accessToken = session?.access_token ?? null
@@ -45,6 +62,18 @@ export const useIssueStatesQuery = (heroSlug, { enabled = true } = {}) => {
   }
 }
 
+/**
+ * Mutació per actualitzar l'estat d'una issue individual.
+ *
+ * Inclou estratègia optimista per evitar latència visual:
+ * - aplica el canvi a caché abans de la resposta,
+ * - fa rollback automàtic en cas d'error,
+ * - invalida la query per absorbir propagacions de backend.
+ *
+ * @param {string} heroSlug Slug del personatge.
+ * @returns {import('@tanstack/react-query').UseMutationResult}
+ */
+
 export const useIssueStateMutation = (heroSlug) => {
   const queryClient = useQueryClient()
   const { session } = useSessionContext()
@@ -60,6 +89,8 @@ export const useIssueStateMutation = (heroSlug) => {
       return patchIssueState({ issueId, patch, accessToken })
     },
     onMutate: async ({ issueId, patch }) => {
+      // S'atura temporalment la query per evitar que una resposta antiga
+      // sobrescrigui l'estat optimista que es mostrarà immediatament a UI.
       await queryClient.cancelQueries({ queryKey })
       const previous = queryClient.getQueryData(queryKey)
       const optimistic = buildStateIndex(previous)
@@ -103,6 +134,13 @@ export const useIssueStateMutation = (heroSlug) => {
     },
   })
 }
+
+/**
+ * Mutació per marcar una etapa de cronologia completa com a `llegida`.
+ *
+ * @param {string} heroSlug Slug del personatge.
+ * @returns {import('@tanstack/react-query').UseMutationResult}
+ */
 
 export const useStageReadMutation = (heroSlug) => {
   const queryClient = useQueryClient()

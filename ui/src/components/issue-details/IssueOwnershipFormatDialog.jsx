@@ -59,7 +59,7 @@ function IssueOwnershipFormatDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-950/65 px-3 py-4"
+      className="fixed inset-0 z-130 flex items-center justify-center bg-slate-950/65 px-3 py-4"
       onClick={() => {
         if (!canCloseBackdrop) return
         onClose?.()
@@ -113,13 +113,18 @@ function IssueOwnershipFormatDialog({
                     />
                     <div className="h-16 w-11 shrink-0 overflow-hidden rounded border border-slate-200 bg-slate-100">
                       {coverImage ? (
-                        <img src={coverImage} alt={edition.title ?? ''} className="h-full w-full object-cover" loading="lazy" />
+                        <img
+                          src={coverImage}
+                          alt={edition.title ? `${edition.title} cover` : ''}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">N/A</div>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 break-words">{edition.title ?? t('issueDetails.collected.placeholderTitle')}</p>
+                      <p className="text-sm font-semibold text-slate-900 wrap-break-word">{edition.title ?? t('issueDetails.collected.placeholderTitle')}</p>
                       <p className="text-xs text-slate-600">
                         {edition.format ?? 'unknown'}
                         {edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
