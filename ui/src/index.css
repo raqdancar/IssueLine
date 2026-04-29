@@ -123,6 +123,41 @@
 }
 
 @layer utilities {
+  @keyframes timeline-logo-covers-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .timeline-logo-cover-track {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: max-content;
+    height: 100%;
+    padding: 0 0.5rem;
+    animation: timeline-logo-covers-marquee 70s linear infinite;
+  }
+
+  .timeline-logo-cover-cell {
+    width: 5.25rem;
+    height: 7.25rem;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+    object-fit: cover;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.25);
+    opacity: 0.32;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-logo-cover-track {
+      animation: none;
+    }
+  }
+
   .theme-shell,
   .theme-shell * {
     transition-property: background-color, border-color, color, fill, stroke;

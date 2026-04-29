@@ -94,7 +94,7 @@ function TimelineHeader({
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="min-w-[3.5rem] text-center text-[11px] font-semibold text-slate-700 tabular-nums">
+            <span className="min-w-14 text-center text-[11px] font-semibold text-slate-700 tabular-nums">
               {zoomPercentage}%
             </span>
             <button

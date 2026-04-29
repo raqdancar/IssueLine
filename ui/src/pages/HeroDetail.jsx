@@ -6,6 +6,8 @@ import HeroTimelineInsights from '@/components/HeroTimelineInsights'
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { backendBaseUrl } from '@/utils/backend.js'
+import { resolveIssueCoverImage } from '@/lib/issueImages'
 
 const statLabelKeys = ['intelligence', 'strength', 'speed', 'durability', 'power', 'combat']
 const fallbackImage =
@@ -22,6 +24,16 @@ const resolveTimelineLogoBaseUrl = () => {
 }
 
 const timelineLogoBaseUrl = resolveTimelineLogoBaseUrl()
+const shuffleArray = (input) => {
+  const clone = [...input]
+  for (let index = clone.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    const tmp = clone[index]
+    clone[index] = clone[randomIndex]
+    clone[randomIndex] = tmp
+  }
+  return clone
+}
 
 function HeroDetail() {
   const { t } = useI18n()
@@ -33,6 +45,7 @@ function HeroDetail() {
   })
   const [timelineView, setTimelineView] = useState('classic')
   const [timelineLogoUnavailable, setTimelineLogoUnavailable] = useState(false)
+  const [timelineBackdropCovers, setTimelineBackdropCovers] = useState([])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !slug) {
@@ -98,10 +111,62 @@ function HeroDetail() {
   const showcaseImageAlt = hasTimelineLogo ? timelineLogoAlt : imageAlt
   const alignment = hero?.alignment?.toLowerCase()
   const stats = hero?.powerstats ?? {}
+  const animatedBackdropCovers = useMemo(
+    () => (timelineBackdropCovers.length ? [...timelineBackdropCovers, ...timelineBackdropCovers] : []),
+    [timelineBackdropCovers],
+  )
 
   useEffect(() => {
     setTimelineLogoUnavailable(false)
   }, [timelineLogoSrc])
+
+  useEffect(() => {
+    if (!slug || !backendBaseUrl || !hasTimelineLogo) {
+      setTimelineBackdropCovers([])
+      return undefined
+    }
+
+    const controller = new AbortController()
+    let active = true
+
+    const loadTimelineBackdropCovers = async () => {
+      try {
+        const response = await fetch(`${backendBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          setTimelineBackdropCovers([])
+          return
+        }
+
+        const payload = await response.json()
+        const coverCandidates = (payload?.entries ?? [])
+          .map((entry) => resolveIssueCoverImage(entry?.metadata ?? {}, null))
+          .filter(Boolean)
+
+        if (!active || !coverCandidates.length) {
+          if (active) setTimelineBackdropCovers([])
+          return
+        }
+
+        const uniqueCovers = Array.from(new Set(coverCandidates))
+        const randomized = shuffleArray(uniqueCovers).slice(0, 16)
+        if (active) {
+          setTimelineBackdropCovers(randomized)
+        }
+      } catch {
+        if (active) setTimelineBackdropCovers([])
+      }
+    }
+
+    void loadTimelineBackdropCovers()
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [hasTimelineLogo, slug])
 
   const detailHeader = useMemo(
     () => (
@@ -147,17 +212,44 @@ function HeroDetail() {
                       : 'h-36 w-36 rounded-full border border-slate-200 bg-slate-100/60 shadow-inner'
                   }`}
                 >
-                  <img
-                    src={showcaseImageSrc}
-                    alt={showcaseImageAlt}
-                    className={`h-full w-full ${hasTimelineLogo ? 'object-contain' : 'object-cover'}`}
-                    loading="lazy"
-                    onError={() => {
-                      if (hasTimelineLogo) {
-                        setTimelineLogoUnavailable(true)
-                      }
-                    }}
-                  />
+                  {hasTimelineLogo ? (
+                    <>
+                      {animatedBackdropCovers.length ? (
+                        <div className="absolute inset-0 overflow-hidden">
+                          <div className="timeline-logo-cover-track">
+                            {animatedBackdropCovers.map((coverSrc, index) => (
+                              <img
+                                key={`${coverSrc}-${index}`}
+                                src={coverSrc}
+                                alt=""
+                                aria-hidden="true"
+                                className="timeline-logo-cover-cell"
+                                loading="lazy"
+                              />
+                            ))}
+                          </div>
+                          <div className="absolute inset-0 bg-linear-to-r from-white/45 via-white/30 to-white/45" />
+                          <div className="absolute inset-0 bg-linear-to-t from-white/35 via-transparent to-white/25" />
+                        </div>
+                      ) : null}
+                      <img
+                        src={showcaseImageSrc}
+                        alt={showcaseImageAlt}
+                        className="relative z-10 h-full w-full object-contain"
+                        loading="lazy"
+                        onError={() => {
+                          setTimelineLogoUnavailable(true)
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <img
+                      src={showcaseImageSrc}
+                      alt={showcaseImageAlt}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
                 </div>
                 <div className="space-y-4 rounded-3xl border border-slate-100 bg-linear-to-br from-white/90 via-slate-50/80 to-white/60 p-5 text-sm text-slate-600 shadow-inner">
                   <p className="text-sm font-semibold text-slate-800">{t('heroDetail.spotlightTitle')}</p>
