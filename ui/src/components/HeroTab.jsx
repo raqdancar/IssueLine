@@ -42,7 +42,7 @@ function HeroTab({ hero }) {
       alt={imageAlt}
       className={cn(
         'h-28 w-28 rounded-xl object-cover shadow transition duration-200',
-        hasTimelineIssues ? 'hover:scale-[1.02]' : 'cursor-not-allowed grayscale-[65%] opacity-80'
+        hasTimelineIssues ? 'hover:scale-[1.02]' : 'cursor-not-allowed grayscale-65 opacity-80'
       )}
       loading="lazy"
     />

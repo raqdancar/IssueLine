@@ -441,7 +441,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
 
   const { data: timelineRows, error: timelineError } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('metadata')
+    .select('id, metadata')
     .eq('hero_api_id', heroApiId)
 
   if (timelineError) {
@@ -486,12 +486,14 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
 
   const issueById = new Map((heroIssueRows ?? []).map((row) => [row.id, row]))
   const timelineStageByGcdIssueId = new Map()
+  const timelineIssueIdByGcdIssueId = new Map()
   for (const row of timelineRows ?? []) {
     const metadata = row.metadata ?? {}
     const gcdIssueId = resolveGcdIssueIdFromMetadata(metadata)
     if (!gcdIssueId || timelineStageByGcdIssueId.has(gcdIssueId)) continue
     const stage = resolveStageIdentityFromMetadata(metadata, stageIdentityById)
     timelineStageByGcdIssueId.set(gcdIssueId, stage)
+    timelineIssueIdByGcdIssueId.set(gcdIssueId, row.id)
   }
 
   const linksByEditionId = new Map()
@@ -524,6 +526,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
         : issue.title ?? issue.series_name ?? `Issue ${issue.gcd_issue_id}`
 
       issues.push({
+        timelineIssueId: timelineIssueIdByGcdIssueId.get(issue.gcd_issue_id) ?? null,
         heroIssueId: issue.id,
         gcdIssueId: issue.gcd_issue_id,
         number: issueNumber,
