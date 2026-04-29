@@ -40,3 +40,6 @@ next-env.d.ts
 
 # codex
 .codex/
+
+# sql
+supabase/sql/*.sql
