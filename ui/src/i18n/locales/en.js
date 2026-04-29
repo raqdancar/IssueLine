@@ -83,6 +83,8 @@
     viewDetailsFor: 'View details for {{name}}',
     aka: 'aka {{name}}',
     independent: 'Independent',
+    noIssuesBadge: 'No issues',
+    noIssuesTooltip: 'This hero does not have any associated issues yet.',
     noStatValue: '--',
   },
   heroDetail: {

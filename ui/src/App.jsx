@@ -69,6 +69,24 @@ function App() {
       return
     }
 
+    const heroRows = heroesResult.data ?? []
+    const heroApiIds = heroRows.map((hero) => hero.api_id).filter(Boolean)
+    let heroesWithIssues = new Set()
+
+    if (heroApiIds.length) {
+      const { data: timelineRows, error: timelineError } = await supabase
+        .from('hero_timelines')
+        .select('hero_api_id')
+        .in('hero_api_id', heroApiIds)
+
+      if (timelineError) {
+        setHeroesStatus({ state: 'error', message: timelineError.message })
+        return
+      }
+
+      heroesWithIssues = new Set((timelineRows ?? []).map((row) => row.hero_api_id))
+    }
+
     const imagesByHero = (imagesResult.data ?? []).reduce((acc, image) => {
       if (!acc[image.hero_api_id]) {
         acc[image.hero_api_id] = []
@@ -77,9 +95,10 @@ function App() {
       return acc
     }, {})
 
-    const enrichedHeroes = (heroesResult.data ?? []).map((hero) => ({
+    const enrichedHeroes = heroRows.map((hero) => ({
       ...hero,
       heroImages: imagesByHero[hero.api_id] ?? [],
+      hasTimelineIssues: heroesWithIssues.has(hero.api_id),
     }))
 
     setHeroes(enrichedHeroes)

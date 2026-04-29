@@ -23,27 +23,39 @@ function HeroTab({ hero }) {
   const imageAlt = primaryImage?.alt ?? hero.name
   const displayName = hero.full_name || hero.biography?.['full-name'] || hero.name
   const stats = hero.powerstats ?? {}
+  const hasTimelineIssues = Boolean(hero.hasTimelineIssues)
 
-  const detailHref = hero.slug ? `/heroes/${hero.slug}` : null
+  const detailHref = hero.slug && hasTimelineIssues ? `/heroes/${hero.slug}` : null
 
   const portrait = (
     <img
       src={imageSrc}
       alt={imageAlt}
-      className="h-28 w-28 rounded-xl object-cover shadow transition duration-200 hover:scale-[1.02]"
+      className={cn(
+        'h-28 w-28 rounded-xl object-cover shadow transition duration-200',
+        hasTimelineIssues ? 'hover:scale-[1.02]' : 'cursor-not-allowed grayscale-[65%] opacity-80'
+      )}
       loading="lazy"
     />
   )
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg">
+    <article
+      aria-disabled={!hasTimelineIssues}
+      className={cn(
+        'flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200',
+        hasTimelineIssues
+          ? 'hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg'
+          : 'border-slate-200 bg-slate-100/70 text-slate-500'
+      )}
+    >
       <div className="flex items-start gap-4">
         {detailHref ? (
           <Link to={detailHref} aria-label={t('heroTab.viewDetailsFor', { name: hero.name })} className="inline-block focus:outline-none">
             {portrait}
           </Link>
         ) : (
-          portrait
+          <div title={t('heroTab.noIssuesTooltip')}>{portrait}</div>
         )}
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -56,6 +68,11 @@ function HeroTab({ hero }) {
                 )}
               >
                 {alignment}
+              </span>
+            ) : null}
+            {!hasTimelineIssues ? (
+              <span className="eyebrow rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-slate-600">
+                {t('heroTab.noIssuesBadge')}
               </span>
             ) : null}
           </div>

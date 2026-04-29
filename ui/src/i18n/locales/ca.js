@@ -82,6 +82,8 @@ const messages = {
       viewDetailsFor: 'Veure detalls de {{name}}',
       aka: 'àlies {{name}}',
       independent: 'Independent',
+      noIssuesBadge: 'Sense números',
+      noIssuesTooltip: 'Aquest heroi encara no té números associats.',
       noStatValue: '--',
     },
     heroDetail: {

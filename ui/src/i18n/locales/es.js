@@ -82,6 +82,8 @@ const messages = {
       viewDetailsFor: 'Ver detalles de {{name}}',
       aka: 'alias {{name}}',
       independent: 'Independiente',
+      noIssuesBadge: 'Sin issues',
+      noIssuesTooltip: 'Este héroe todavía no tiene issues asociadas.',
       noStatValue: '--',
     },
     heroDetail: {
