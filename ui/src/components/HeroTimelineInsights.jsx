@@ -19,14 +19,6 @@ const resolveStageSummary = (entry) => {
   return meta.stage_summary ?? meta.stageSummary ?? meta.stage?.short_summary ?? meta.stage?.summary ?? null
 }
 
-const resolveStageColor = (name) => {
-  if (!name) return 'bg-slate-100 text-slate-600'
-  if (/strange tales/i.test(name)) return 'bg-amber-50 text-amber-700'
-  if (/sorcerer supreme/i.test(name)) return 'bg-indigo-50 text-indigo-700'
-  if (/legacy/i.test(name)) return 'bg-emerald-50 text-emerald-700'
-  return 'bg-slate-100 text-slate-600'
-}
-
 const resolveStageKey = (entry) => {
   const meta = entry?.metadata ?? {}
   const name = meta.stage_name ?? meta.stageName ?? meta.stage?.name ?? meta.stage?.label ?? null
@@ -303,14 +295,23 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
           {repeatedIssues.map((issue, index) => {
             const issueKey = issue.heroIssueId ?? issue.gcdIssueId ?? issue.number ?? index
             const isDuplicatedToken = normalizedIssues.length > 1 && index >= normalizedIssues.length
+            const isSequenceEnd =
+              normalizedIssues.length > 0 && (index + 1) % normalizedIssues.length === 0
             return (
-              <span
-                key={`${editionId}-issue-${issueKey}-${isDuplicatedToken ? 'dup' : 'src'}-${index}`}
-                className="shrink-0 rounded-full border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-sm"
-                aria-hidden={isDuplicatedToken}
-              >
-                #{issue.number ?? issue.gcdIssueId}
-              </span>
+              <div key={`${editionId}-issue-${issueKey}-${isDuplicatedToken ? 'dup' : 'src'}-${index}`} className="inline-flex items-center gap-2 shrink-0">
+                <span
+                  className="shrink-0 rounded-full border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-sm"
+                  aria-hidden={isDuplicatedToken}
+                >
+                  #{issue.number ?? issue.gcdIssueId}
+                </span>
+                {isSequenceEnd ? (
+                  <span
+                    className="h-2.5 w-2.5 rounded-full bg-primary/40 ring-2 ring-card shadow-[0_0_0_1px_rgba(15,23,42,0.08)]"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
             )
           })}
         </div>
@@ -419,15 +420,12 @@ function StageAccordionItem({
     ? 'rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3 shadow-sm ring-1 ring-emerald-100'
     : 'rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm'
 
-  const badgeClasses = isComplete
-    ? 'inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700'
-    : `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${resolveStageColor(stage.name)}`
-
   const progressPanelClasses = isComplete
     ? 'flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-100/60 px-3 py-2 text-xs text-emerald-700'
     : 'flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-3 py-2 text-xs text-slate-600'
 
   const progressTextClasses = isComplete ? 'font-semibold text-emerald-800' : 'font-semibold text-slate-700'
+  const completeBadgeClass = 'inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700'
 
   return (
     <div className={containerClasses}>
@@ -440,7 +438,7 @@ function StageAccordionItem({
         </div>
         <span className="inline-flex items-center gap-2">
           <StageMiniProgress readCount={stage.readCount} issueCount={stage.issueCount} isComplete={isComplete} t={t} />
-          <span className={badgeClasses}>{isComplete ? t('timeline.stageComplete') : t('timeline.stage')}</span>
+          {isComplete ? <span className={completeBadgeClass}>{t('timeline.stageComplete')}</span> : null}
           <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
         </span>
       </button>
@@ -782,7 +780,12 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                         <div className="flex gap-3">
                           <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
                             {coverImage ? (
-                              <img src={coverImage} alt={edition.title ?? t('issueDetails.collected.placeholderTitle')} className="h-full w-full object-cover" loading="lazy" />
+                              <img
+                                src={coverImage}
+                                alt={edition.title ? `${edition.title} cover` : 'Collected edition cover'}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center bg-slate-100 px-1 text-center">
                                 <span className="body-xs text-slate-500">{t('timeline.noCover')}</span>

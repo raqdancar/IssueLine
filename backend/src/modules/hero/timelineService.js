@@ -75,6 +75,7 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   }
 
   const entries = data ?? []
+  let enrichedEntries = entries
   const gcdIssueIds = entries
     .map((entry) => {
       const metadata = entry.metadata ?? {}
@@ -93,28 +94,113 @@ export const getHeroTimelineEntries = async (heroApiId) => {
       console.warn(
         `[heroTimeline] cover enrichment skipped for hero ${heroApiId}: ${coverLookupError.message}`
       )
-      return entries
+      coverLookup = new Map()
     }
   }
 
-  if (!coverLookup.size) {
-    return entries
+  if (coverLookup.size) {
+    enrichedEntries = entries.map((entry) => {
+      const metadata = entry.metadata ?? null
+      if (!metadata) return entry
+      const gcdIssueId = metadata.gcdIssueId ?? metadata.gcd_issue_id
+      const coverPath = coverLookup.get(Number(gcdIssueId))
+      if (!coverPath) {
+        return entry
+      }
+      return {
+        ...entry,
+        metadata: {
+          ...metadata,
+          coverImagePath: coverPath,
+          cover_image_path: coverPath,
+        },
+      }
+    })
   }
 
-  return entries.map((entry) => {
-    const metadata = entry.metadata ?? null
+  const stageIds = Array.from(
+    new Set(
+      enrichedEntries
+        .map((entry) => {
+          const metadata = entry?.metadata ?? {}
+          const rawStageId = metadata.stage_id ?? metadata.stageId ?? null
+          const stageId = Number(rawStageId)
+          return Number.isSafeInteger(stageId) && stageId > 0 ? stageId : null
+        })
+        .filter(Boolean)
+    )
+  )
+
+  if (!stageIds.length) {
+    return enrichedEntries
+  }
+
+  const { data: stageRows, error: stageError } = await supabaseServiceClient
+    .from('hero_issue_stages')
+    .select('*')
+    .in('id', stageIds)
+
+  if (stageError) {
+    // Stage title syncing is optional. Keep timeline functional if the table/columns are not available yet.
+    console.warn(
+      `[heroTimeline] stage metadata overlay skipped for hero ${heroApiId}: ${stageError.message}`
+    )
+    return enrichedEntries
+  }
+
+  const stageMap = new Map(
+    (stageRows ?? [])
+      .map((row) => {
+        const stageId = Number(row?.id)
+        if (!Number.isSafeInteger(stageId) || stageId <= 0) return null
+        return [stageId, row]
+      })
+      .filter(Boolean)
+  )
+
+  if (!stageMap.size) {
+    return enrichedEntries
+  }
+
+  return enrichedEntries.map((entry) => {
+    const metadata = entry?.metadata ?? null
     if (!metadata) return entry
-    const gcdIssueId = metadata.gcdIssueId ?? metadata.gcd_issue_id
-    const coverPath = coverLookup.get(Number(gcdIssueId))
-    if (!coverPath) {
+    const stageId = Number(metadata.stage_id ?? metadata.stageId ?? 0)
+    if (!Number.isSafeInteger(stageId) || stageId <= 0) {
       return entry
     }
+    const stage = stageMap.get(stageId)
+    if (!stage) return entry
+
+    const stageName =
+      stage.title ??
+      stage.name ??
+      stage.label ??
+      stage.stage_name ??
+      stage.stageName ??
+      metadata.stage_name ??
+      metadata.stageName ??
+      metadata.stage?.name ??
+      metadata.stage?.label ??
+      null
+    const stageSummary =
+      stage.summary ??
+      stage.short_summary ??
+      stage.shortSummary ??
+      metadata.stage_summary ??
+      metadata.stageSummary ??
+      metadata.stage?.short_summary ??
+      metadata.stage?.summary ??
+      null
+
     return {
       ...entry,
       metadata: {
         ...metadata,
-        coverImagePath: coverPath,
-        cover_image_path: coverPath,
+        stage_name: stageName,
+        stageName: stageName,
+        stage_summary: stageSummary,
+        stageSummary: stageSummary,
       },
     }
   })
@@ -255,12 +341,24 @@ const loadCollectedEditionsForHeroIssue = async (heroIssueId) => {
   return (data ?? []).map(mapCollectedEditionRow).filter(Boolean)
 }
 
-const resolveStageIdentityFromMetadata = (metadata = {}) => {
-  const name = metadata.stage_name ?? metadata.stageName ?? metadata.stage?.name ?? metadata.stage?.label ?? null
-  if (!name) return null
-  const key = String(name).trim().toLowerCase()
-  if (!key) return null
-  return { key, name }
+const resolveStageIdentityFromMetadata = (metadata = {}, stageIdentityById = new Map()) => {
+  const rawStageId = metadata.stage_id ?? metadata.stageId ?? null
+  const stageId = Number(rawStageId)
+  const stageIdentityFromTable =
+    Number.isSafeInteger(stageId) && stageId > 0 ? stageIdentityById.get(stageId) ?? null : null
+
+  const resolvedName =
+    stageIdentityFromTable?.name ??
+    metadata.stage_name ??
+    metadata.stageName ??
+    metadata.stage?.name ??
+    metadata.stage?.label ??
+    null
+  if (!resolvedName) return null
+
+  const resolvedKey = stageIdentityFromTable?.key ?? String(resolvedName).trim().toLowerCase()
+  if (!resolvedKey) return null
+  return { key: resolvedKey, name: resolvedName }
 }
 
 const resolveGcdIssueIdFromMetadata = (metadata = {}) => {
@@ -350,13 +448,49 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
     throw new Error(`Failed to load timeline metadata for collected overview: ${timelineError.message}`)
   }
 
+  const stageIds = Array.from(
+    new Set(
+      (timelineRows ?? [])
+        .map((row) => {
+          const metadata = row?.metadata ?? {}
+          const stageId = Number(metadata.stage_id ?? metadata.stageId ?? 0)
+          return Number.isSafeInteger(stageId) && stageId > 0 ? stageId : null
+        })
+        .filter(Boolean)
+    )
+  )
+  const stageIdentityById = new Map()
+
+  if (stageIds.length) {
+    const { data: stageRows, error: stageError } = await supabaseServiceClient
+      .from('hero_issue_stages')
+      .select('*')
+      .in('id', stageIds)
+
+    if (!stageError) {
+      for (const stage of stageRows ?? []) {
+        const stageId = Number(stage?.id)
+        if (!Number.isSafeInteger(stageId) || stageId <= 0) continue
+        const stageName = stage.title ?? stage.name ?? stage.label ?? stage.stage_name ?? stage.stageName ?? null
+        if (!stageName) continue
+        const stageKey = String(stageName).trim().toLowerCase()
+        if (!stageKey) continue
+        stageIdentityById.set(stageId, { key: stageKey, name: stageName })
+      }
+    } else {
+      console.warn(
+        `[heroTimeline] stage metadata overlay skipped for collected overview of hero ${heroApiId}: ${stageError.message}`
+      )
+    }
+  }
+
   const issueById = new Map((heroIssueRows ?? []).map((row) => [row.id, row]))
   const timelineStageByGcdIssueId = new Map()
   for (const row of timelineRows ?? []) {
     const metadata = row.metadata ?? {}
     const gcdIssueId = resolveGcdIssueIdFromMetadata(metadata)
     if (!gcdIssueId || timelineStageByGcdIssueId.has(gcdIssueId)) continue
-    const stage = resolveStageIdentityFromMetadata(metadata)
+    const stage = resolveStageIdentityFromMetadata(metadata, stageIdentityById)
     timelineStageByGcdIssueId.set(gcdIssueId, stage)
   }
 

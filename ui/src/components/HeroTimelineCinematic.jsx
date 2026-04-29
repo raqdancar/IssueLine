@@ -169,7 +169,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
             <img
               src={timelineLogoSrc}
               alt={timelineLogoAlt ?? heroName}
-              className="mt-1 h-12 w-auto max-w-full object-contain sm:h-16 sm:max-w-[360px]"
+              className="mt-1 h-12 w-auto max-w-full object-contain sm:h-16 sm:max-w-90"
               loading="lazy"
               onError={() => setLogoVisible(false)}
             />
