@@ -333,7 +333,7 @@ function App() {
     <SessionProvider value={sessionContextValue}>
       <div
         style={shellThemeStyle}
-        className="theme-shell flex min-h-screen flex-col bg-slate-100 text-slate-900"
+        className="theme-shell flex min-h-screen flex-col overflow-x-hidden bg-slate-100 text-slate-900"
       >
         <AppHeader
           session={session}
@@ -345,7 +345,7 @@ function App() {
           languageLabel={locale.toUpperCase()}
         />
 
-        <main className="flex w-full flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+        <main className="flex w-full flex-1 flex-col gap-6 overflow-x-hidden px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
           <Routes>
             <Route
               path="/"

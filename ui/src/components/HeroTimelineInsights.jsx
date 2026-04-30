@@ -752,8 +752,8 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
       {state.status === 'success' ? (
         <div className="mt-6 space-y-6">
-          <div className="-mx-1 overflow-x-auto px-1">
-            <div role="tablist" aria-label={t('timeline.publishingResume')} className="flex min-w-max items-end gap-2 border-b border-border/80">
+          <div className="w-full overflow-x-auto">
+            <div role="tablist" aria-label={t('timeline.publishingResume')} className="inline-flex min-w-full items-end gap-2 border-b border-border/80">
               <button
                 type="button"
                 role="tab"
@@ -869,8 +869,8 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                             )}
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="body-sm font-semibold break-words text-slate-900">{edition.title}</p>
+                            <div className="flex min-w-0 items-start justify-between gap-2">
+                              <p className="min-w-0 body-sm font-semibold break-words text-slate-900">{edition.title}</p>
                               <button
                                 type="button"
                                 aria-pressed={isEditionOwned}
@@ -926,7 +926,10 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                             </div>
                             <div className="flex flex-wrap gap-1">
                               {(edition.stages ?? []).map((stage) => (
-                                <span key={`${edition.id}-stage-${stage.key}`} className="max-w-full rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold break-words text-indigo-700">
+                                <span
+                                  key={`${edition.id}-stage-${stage.key}`}
+                                  className="inline-flex max-w-full rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold leading-tight whitespace-normal break-words text-indigo-700"
+                                >
                                   {stage.name} ({stage.count})
                                 </span>
                               ))}
