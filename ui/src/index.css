@@ -221,4 +221,29 @@
     display: none;
   }
 
+  .stage-issues-timeline-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.25rem;
+  }
+
+  .stage-issues-timeline {
+    min-width: max-content;
+    padding: 0 0.25rem;
+  }
+
+  .stage-issues-timeline .p-timeline-event {
+    min-width: 120px;
+    max-width: 160px;
+  }
+
+  .stage-issues-timeline .p-timeline-event-separator {
+    margin: 0 0.15rem;
+  }
+
+  .stage-issues-timeline .p-timeline-event-opposite,
+  .stage-issues-timeline .p-timeline-event-content {
+    padding: 0.25rem 0.35rem;
+  }
+
 }

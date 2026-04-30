@@ -282,6 +282,7 @@
     allIssuesRead: 'All issues already marked as read.',
     readProgressUnavailable: 'Read progress unavailable',
     markStageAsRead: 'Mark stage as read',
+    viewStageDetails: 'View stage details',
     marking: 'Marking...',
     allRead: 'All read',
     unableMarkStageRead: 'Unable to mark this stage as read.',

@@ -3,9 +3,11 @@ import { CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
 import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
 import { Button } from '@/components/ui/button'
+import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
+import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
-import { buildPublicStorageUrl } from '@/lib/issueImages'
+import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 
@@ -396,6 +398,7 @@ function StageAccordionItem({
   stage,
   isOpen,
   onToggle,
+  onOpenStageDetail,
   canManageStates,
   onBulkRead,
   actionState,
@@ -458,6 +461,13 @@ function StageAccordionItem({
             <span className="font-semibold text-slate-600">{t('timeline.years')}</span> {stage.yearLabel}
             <span className="font-semibold text-slate-600">{t('timeline.issuesTracked')}</span> {stage.issueCount}
           </div>
+          {stage.issueItems.length ? (
+            <div>
+              <Button type="button" size="sm" variant="outline" onClick={() => onOpenStageDetail?.(stage)}>
+                {t('timeline.viewStageDetails')}
+              </Button>
+            </div>
+          ) : null}
           <div className="rounded-2xl border border-slate-100 bg-white/80 p-2">
             <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t('timeline.stageIssues')}</p>
             {stage.issueItems.length ? (
@@ -549,6 +559,8 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const [openStage, setOpenStage] = useState(null)
   const [insightTab, setInsightTab] = useState('progress')
   const [editionActionState, setEditionActionState] = useState({ pendingEditionId: null, error: null })
+  const [selectedStageKey, setSelectedStageKey] = useState(null)
+  const [selectedStageIssueId, setSelectedStageIssueId] = useState(null)
   const { isAuthenticated } = useSessionContext()
   const { statesByIssueId, canFetchStates, isFetching: issueStatesLoading } = useIssueStatesQuery(heroSlug, {
     enabled: Boolean(heroSlug),
@@ -600,6 +612,64 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const stageCoverageOrder = useMemo(
     () => stageGroups.map((stage) => ({ key: stage.key, name: stage.name })),
     [stageGroups],
+  )
+  const stageTimelineIssuesByKey = useMemo(() => {
+    const index = new Map()
+
+    state.entries.forEach((entry) => {
+      const stageKey = resolveStageKey(entry)
+      if (!stageKey) return
+
+      const metadata = entry?.metadata ?? {}
+      const issueId = entry?.id ?? metadata.issue_id ?? metadata.issueId ?? null
+      if (!issueId) return
+
+      if (!index.has(stageKey)) {
+        index.set(stageKey, [])
+      }
+
+      const issueNumber = metadata.number ?? entry.issue_code ?? null
+      const issueTimestamp = resolveEntryTimestamp(entry)
+
+      index.get(stageKey).push({
+        key: `${stageKey}-${issueId}`,
+        issueId,
+        issueLabel: resolveIssueQuickLabel(entry, t),
+        issueNumber,
+        publishedAt:
+          entry.issue_date ??
+          metadata.publication_date ??
+          metadata.publicationDate ??
+          metadata.key_date ??
+          metadata.keyDate ??
+          null,
+        timestamp: typeof issueTimestamp === 'number' ? issueTimestamp : Number.POSITIVE_INFINITY,
+        coverImage: resolveIssueCoverImage(metadata, null),
+      })
+    })
+
+    for (const [key, issues] of index.entries()) {
+      const sorted = [...issues].sort((a, b) => {
+        if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp
+        const aNumber = Number.parseFloat(String(a.issueNumber ?? ''))
+        const bNumber = Number.parseFloat(String(b.issueNumber ?? ''))
+        const safeA = Number.isFinite(aNumber) ? aNumber : Number.POSITIVE_INFINITY
+        const safeB = Number.isFinite(bNumber) ? bNumber : Number.POSITIVE_INFINITY
+        return safeA - safeB
+      })
+      index.set(key, sorted)
+    }
+
+    return index
+  }, [state.entries, t])
+
+  const selectedStage = useMemo(
+    () => stageGroups.find((stage) => stage.key === selectedStageKey) ?? null,
+    [stageGroups, selectedStageKey],
+  )
+  const selectedStageIssues = useMemo(
+    () => (selectedStageKey ? stageTimelineIssuesByKey.get(selectedStageKey) ?? [] : []),
+    [selectedStageKey, stageTimelineIssuesByKey],
   )
   const issueStatesArray = useMemo(() => Object.values(statesByIssueId ?? {}), [statesByIssueId])
   const haveItCount = issueStatesArray.filter((item) => item.haveIt).length
@@ -658,6 +728,25 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const handleIssueToggle = (issueId, field, nextValue) => {
     if (!issueId || !canFetchStates) return
     issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
+  }
+
+  const handleOpenStageDetail = (stage) => {
+    if (!stage?.key) return
+    setSelectedStageKey(stage.key)
+  }
+
+  const handleCloseStageDetail = () => {
+    setSelectedStageKey(null)
+    setSelectedStageIssueId(null)
+  }
+
+  const handleOpenIssueDetail = (issue) => {
+    if (!issue?.issueId) return
+    setSelectedStageIssueId(issue.issueId)
+  }
+
+  const handleCloseIssueDetail = () => {
+    setSelectedStageIssueId(null)
   }
 
   const getCollectedEditionTimelineIssueIds = (edition) =>
@@ -818,6 +907,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                       stage={stage}
                       isOpen={openStage === stage.key}
                       onToggle={() => setOpenStage((current) => (current === stage.key ? null : stage.key))}
+                      onOpenStageDetail={handleOpenStageDetail}
                       canManageStates={canFetchStates}
                       onBulkRead={() => handleStageBulkRead(stage)}
                       actionState={buildActionState(stage.key)}
@@ -952,6 +1042,28 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
       ) : state.status === 'loading' ? (
         <div className="mt-6 h-32 animate-pulse rounded-2xl bg-slate-100/70" />
       ) : null}
+      <StageDetailDialog
+        open={Boolean(selectedStage)}
+        onClose={handleCloseStageDetail}
+        stage={selectedStage}
+        issues={selectedStageIssues}
+        onIssueSelect={handleOpenIssueDetail}
+      />
+      <IssueDetailsDialog
+        open={Boolean(selectedStageIssueId)}
+        heroSlug={heroSlug}
+        issueId={selectedStageIssueId}
+        fallbackImage={null}
+        issueState={selectedStageIssueId ? statesByIssueId?.[selectedStageIssueId] : null}
+        canUseIssueStateActions={canFetchStates}
+        issueStatePending={pendingIssueId === selectedStageIssueId}
+        issueStateDisabled={!canFetchStates}
+        issueStateDisabledReason={canFetchStates ? undefined : t('timeline.signInToTrackCollection')}
+        onIssueStateToggle={(field, nextValue) =>
+          selectedStageIssueId ? handleIssueToggle(selectedStageIssueId, field, nextValue) : undefined
+        }
+        onClose={handleCloseIssueDetail}
+      />
     </section>
   )
 }

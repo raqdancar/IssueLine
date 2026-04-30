@@ -17,6 +17,8 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
     "lucide-react": "^0.577.0",
+    "primeicons": "^7.0.0",
+    "primereact": "^10.9.7",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -281,6 +281,7 @@ const messages = {
       allIssuesRead: 'Tots els números ja estan marcats com a llegits.',
       readProgressUnavailable: 'Progrés de lectura no disponible',
       markStageAsRead: 'Marcar etapa com a llegida',
+      viewStageDetails: "Veure detall de l'etapa",
       marking: 'Marcant...',
       allRead: 'Tot llegit',
       unableMarkStageRead: "No s'ha pogut marcar aquesta etapa com a llegida.",
