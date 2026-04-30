@@ -726,7 +726,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   }
 
   return (
-    <section className="rounded-[32px] border border-slate-100 bg-linear-to-br from-white via-slate-50 to-white p-6 shadow-sm">
+    <section className="overflow-x-hidden rounded-[32px] border border-slate-100 bg-linear-to-br from-white via-slate-50 to-white p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <p className="eyebrow text-indigo-500">{t('timeline.publishingResume')}</p>
@@ -870,7 +870,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex items-start justify-between gap-2">
-                              <p className="body-sm font-semibold text-slate-900 wrap-break-word">{edition.title}</p>
+                              <p className="body-sm font-semibold break-words text-slate-900">{edition.title}</p>
                               <button
                                 type="button"
                                 aria-pressed={isEditionOwned}
@@ -898,7 +898,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                                 )}
                               </button>
                             </div>
-                            {edition.subtitle ? <p className="body-xs text-slate-600 wrap-break-word">{edition.subtitle}</p> : null}
+                            {edition.subtitle ? <p className="body-xs break-words text-slate-600">{edition.subtitle}</p> : null}
                             <p className="body-xs text-slate-500">
                               {edition.format ?? 'unknown'}{edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
                             </p>
@@ -926,7 +926,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                             </div>
                             <div className="flex flex-wrap gap-1">
                               {(edition.stages ?? []).map((stage) => (
-                                <span key={`${edition.id}-stage-${stage.key}`} className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                                <span key={`${edition.id}-stage-${stage.key}`} className="max-w-full rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold break-words text-indigo-700">
                                   {stage.name} ({stage.count})
                                 </span>
                               ))}

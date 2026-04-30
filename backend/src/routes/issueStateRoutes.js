@@ -16,6 +16,7 @@ import {
   getHeroTimelineIssueIds,
   getUserIssueStatesByIssueIds,
   markStageIssuesAsRead,
+  toggleCollectedEditionOwnership,
 } from '../modules/issue-state/service.js'
 
 const parseIssueIds = (value) => {
@@ -62,6 +63,18 @@ const stageActionSchema = z
     heroSlug: z.string().min(1).max(120).optional(),
     heroApiId: z.coerce.number().int().positive().optional(),
     stageKey: z.string().min(1).max(200),
+  })
+  .refine((value) => value.heroSlug || value.heroApiId, {
+    message: 'Provide heroSlug or heroApiId.',
+    path: ['heroSlug'],
+  })
+
+const collectedEditionOwnershipSchema = z
+  .object({
+    heroSlug: z.string().min(1).max(120).optional(),
+    heroApiId: z.coerce.number().int().positive().optional(),
+    collectedEditionId: z.string().uuid(),
+    haveIt: z.boolean(),
   })
   .refine((value) => value.heroSlug || value.heroApiId, {
     message: 'Provide heroSlug or heroApiId.',
@@ -155,6 +168,32 @@ issueStatesRouter.post('/stages/read', async (req, res, next) => {
     if (error?.statusCode === 404) {
       return res.status(404).json({ error: error.message })
     }
+    return next(error)
+  }
+})
+
+issueStatesRouter.post('/collected-editions/ownership', async (req, res, next) => {
+  try {
+    const payload = collectedEditionOwnershipSchema.parse(req.body ?? {})
+    let heroApiId = payload.heroApiId
+
+    if (!heroApiId && payload.heroSlug) {
+      const hero = await getHeroBySlug(payload.heroSlug)
+      if (!hero) {
+        return res.status(404).json({ error: `Hero with slug "${payload.heroSlug}" was not found.` })
+      }
+      heroApiId = hero.api_id
+    }
+
+    const result = await toggleCollectedEditionOwnership({
+      userId: req.user.id,
+      heroApiId,
+      collectedEditionId: payload.collectedEditionId,
+      haveIt: payload.haveIt,
+    })
+
+    return res.json(result)
+  } catch (error) {
     return next(error)
   }
 })

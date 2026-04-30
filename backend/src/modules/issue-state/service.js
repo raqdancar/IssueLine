@@ -584,3 +584,148 @@ export const markStageIssuesAsRead = async ({ userId, heroApiId, stageKey }) => 
     ),
   }
 }
+
+/**
+ * Activa o desactiva la possessió d'un recopilatori per a totes les issues vinculades.
+ *
+ * Aquesta operació es fa en bloc al backend per evitar tempestes de peticions
+ * quan el frontend marca/desmarca omnibus amb moltes issues.
+ *
+ * @param {{ userId:string, heroApiId:number, collectedEditionId:string, haveIt:boolean }} params
+ * @returns {Promise<{collectedEditionId:string,haveIt:boolean,issueIds:string[],states:Array}>}
+ */
+export const toggleCollectedEditionOwnership = async ({ userId, heroApiId, collectedEditionId, haveIt }) => {
+  if (!userId) {
+    throw new Error('User is required to update collected-edition ownership.')
+  }
+  if (!heroApiId) {
+    throw new Error('heroApiId is required to update collected-edition ownership.')
+  }
+  if (!collectedEditionId) {
+    throw new Error('collectedEditionId is required to update collected-edition ownership.')
+  }
+
+  const { data: linksRows, error: linksError } = await supabaseServiceClient
+    .from('collected_edition_issue_links')
+    .select('hero_issue_id')
+    .eq('collected_edition_id', collectedEditionId)
+
+  if (linksError) {
+    throw new Error(`Failed to load collected-edition links: ${linksError.message}`)
+  }
+
+  const heroIssueIds = Array.from(new Set((linksRows ?? []).map((row) => row.hero_issue_id).filter(Boolean)))
+  if (!heroIssueIds.length) {
+    return { collectedEditionId, haveIt, issueIds: [], states: [] }
+  }
+
+  const timelineIssueIdByHeroIssueId = await mapHeroIssueIdsToTimelineIssueIds({ heroApiId, heroIssueIds })
+  const issueIds = Array.from(
+    new Set(
+      heroIssueIds
+        .map((heroIssueId) => timelineIssueIdByHeroIssueId.get(heroIssueId))
+        .filter(Boolean)
+    )
+  )
+
+  if (!issueIds.length) {
+    return { collectedEditionId, haveIt, issueIds: [], states: [] }
+  }
+
+  const currentStates = await getUserIssueStatesByIssueIds({ userId, issueIds })
+  const stateByIssueId = new Map(currentStates.map((state) => [state.issueId, state]))
+  const timestamp = new Date().toISOString()
+
+  if (haveIt) {
+    const statePayload = issueIds.map((issueId) => ({
+      user_id: userId,
+      issue_id: issueId,
+      have_it: true,
+      read_it: stateByIssueId.get(issueId)?.readIt ?? false,
+      updated_at: timestamp,
+    }))
+
+    const { error: upsertStatesError } = await supabaseServiceClient
+      .from(ISSUE_STATES_TABLE)
+      .upsert(statePayload, { onConflict: 'user_id,issue_id' })
+
+    if (upsertStatesError) {
+      throw new Error(`Failed to save ownership states for collected edition: ${upsertStatesError.message}`)
+    }
+
+    const ownershipPayload = issueIds.map((issueId) => ({
+      user_id: userId,
+      issue_id: issueId,
+      collected_edition_id: collectedEditionId,
+    }))
+
+    const { error: ownershipError } = await supabaseServiceClient
+      .from(ISSUE_COLLECTED_EDITIONS_TABLE)
+      .upsert(ownershipPayload, {
+        onConflict: 'user_id,issue_id,collected_edition_id',
+        ignoreDuplicates: true,
+      })
+
+    if (ownershipError && !isMissingRelationError(ownershipError)) {
+      throw new Error(`Failed to save collected-edition ownership links: ${ownershipError.message}`)
+    }
+  } else {
+    const { error: deleteOwnershipError } = await supabaseServiceClient
+      .from(ISSUE_COLLECTED_EDITIONS_TABLE)
+      .delete()
+      .eq('user_id', userId)
+      .eq('collected_edition_id', collectedEditionId)
+      .in('issue_id', issueIds)
+
+    if (deleteOwnershipError && !isMissingRelationError(deleteOwnershipError)) {
+      throw new Error(`Failed to remove collected-edition ownership links: ${deleteOwnershipError.message}`)
+    }
+
+    const remainingSelections = await getCollectedEditionSelectionsByIssueIds({ userId, issueIds })
+    const toDelete = []
+    const toUpsert = []
+
+    for (const issueId of issueIds) {
+      const existingState = stateByIssueId.get(issueId)
+      const nextHaveIt = (remainingSelections.get(issueId) ?? []).length > 0
+      const nextReadIt = existingState?.readIt ?? false
+
+      if (!nextHaveIt && !nextReadIt) {
+        toDelete.push(issueId)
+      } else {
+        toUpsert.push({
+          user_id: userId,
+          issue_id: issueId,
+          have_it: nextHaveIt,
+          read_it: nextReadIt,
+          updated_at: timestamp,
+        })
+      }
+    }
+
+    if (toDelete.length) {
+      const { error: deleteStatesError } = await supabaseServiceClient
+        .from(ISSUE_STATES_TABLE)
+        .delete()
+        .eq('user_id', userId)
+        .in('issue_id', toDelete)
+
+      if (deleteStatesError) {
+        throw new Error(`Failed to clear issue states for collected edition: ${deleteStatesError.message}`)
+      }
+    }
+
+    if (toUpsert.length) {
+      const { error: upsertStatesError } = await supabaseServiceClient
+        .from(ISSUE_STATES_TABLE)
+        .upsert(toUpsert, { onConflict: 'user_id,issue_id' })
+
+      if (upsertStatesError) {
+        throw new Error(`Failed to update issue states for collected edition: ${upsertStatesError.message}`)
+      }
+    }
+  }
+
+  const states = await getUserIssueStatesByIssueIds({ userId, issueIds })
+  return { collectedEditionId, haveIt, issueIds, states }
+}

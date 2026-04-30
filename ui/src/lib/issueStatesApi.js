@@ -84,3 +84,36 @@ export const markStageIssuesRead = async ({ heroSlug, heroApiId, stageKey, acces
 
   return handleResponse(response)
 }
+
+export const toggleCollectedEditionOwnership = async ({ heroSlug, heroApiId, collectedEditionId, haveIt, accessToken }) => {
+  if (!backendBaseUrl || !accessToken) {
+    throw new Error('Missing backend configuration or authentication.')
+  }
+  if (!collectedEditionId) {
+    throw new Error('Collected edition id is required.')
+  }
+  if (!heroSlug && !heroApiId) {
+    throw new Error('Provide a hero slug or identifier.')
+  }
+
+  const body = {
+    collectedEditionId,
+    haveIt: Boolean(haveIt),
+  }
+  if (heroSlug) {
+    body.heroSlug = heroSlug
+  } else if (heroApiId) {
+    body.heroApiId = heroApiId
+  }
+
+  const response = await fetch(`${backendBaseUrl}/issue-states/collected-editions/ownership`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+
+  return handleResponse(response)
+}
