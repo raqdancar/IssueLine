@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Minus, Plus } from 'lucide-react'
+import { BookOpen, CheckCircle2, Minus, Plus } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineHeader({
@@ -20,9 +20,8 @@ function TimelineHeader({
   publicationFilter = 'all',
   publicationFilterOptions = [],
   onPublicationFilterChange,
-  personalFilter = 'all',
-  personalFilterOptions = [],
-  onPersonalFilterChange,
+  collectionFilters = { ownedOnly: false, readOnly: false },
+  onCollectionFilterChange,
 }) {
   const { t } = useI18n()
   const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
@@ -135,31 +134,43 @@ function TimelineHeader({
             </div>
           </div>
         ) : null}
-        {personalFilterOptions.length ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="body-xs text-slate-500">{t('timeline.filterCollection')}</span>
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
-              {personalFilterOptions.map((option) => {
-                const isActive = personalFilter === option.value
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => onPersonalFilterChange?.(option.value)}
-                    className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
-                      isActive
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {t(option.labelKey)}
-                  </button>
-                )
-              })}
-            </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="body-xs text-slate-500">{t('timeline.filterCollection')}</span>
+          <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-0.5">
+            <button
+              type="button"
+              aria-pressed={Boolean(collectionFilters?.ownedOnly)}
+              aria-label={t('timeline.ownedOnly')}
+              disabled={!isAuthenticated}
+              title={!isAuthenticated ? t('timeline.signInToTrackIssues') : t('timeline.ownedOnly')}
+              onClick={() => onCollectionFilterChange?.('ownedOnly', !collectionFilters?.ownedOnly)}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                collectionFilters?.ownedOnly
+                  ? 'bg-emerald-100 text-emerald-800 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              } ${!isAuthenticated ? 'cursor-not-allowed opacity-60' : ''}`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('timeline.haveIt')}
+            </button>
+            <button
+              type="button"
+              aria-pressed={Boolean(collectionFilters?.readOnly)}
+              aria-label={t('timeline.readOnly')}
+              disabled={!isAuthenticated}
+              title={!isAuthenticated ? t('timeline.signInToTrackIssues') : t('timeline.readOnly')}
+              onClick={() => onCollectionFilterChange?.('readOnly', !collectionFilters?.readOnly)}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                collectionFilters?.readOnly
+                  ? 'bg-sky-100 text-sky-800 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              } ${!isAuthenticated ? 'cursor-not-allowed opacity-60' : ''}`}
+            >
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('timeline.readIt')}
+            </button>
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   )

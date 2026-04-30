@@ -21,7 +21,6 @@ import {
   ZOOM_STEP,
   indexModeOptions,
   severityVariants,
-  timelinePersonalFilterOptions,
   timelinePublicationFilterOptions,
   timelineSortOptions,
 } from './timeline/constants'
@@ -32,7 +31,10 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const [sortDirection, setSortDirection] = useState('desc')
   const [indexMode, setIndexMode] = useState('month')
   const [publicationFilter, setPublicationFilter] = useState('all')
-  const [personalFilter, setPersonalFilter] = useState('all')
+  const [collectionFilters, setCollectionFilters] = useState({
+    ownedOnly: false,
+    readOnly: false,
+  })
   const [activeAnchor, setActiveAnchor] = useState(null)
   const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
   const [zoomLevel, setZoomLevel] = useState(1)
@@ -108,7 +110,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
 
   useEffect(() => {
     setPublicationFilter('all')
-    setPersonalFilter('all')
+    setCollectionFilters({ ownedOnly: false, readOnly: false })
     setSelectedIssueId(null)
   }, [slug])
 
@@ -132,20 +134,17 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     }
 
     const personalFilterMatch = (entry) => {
-      if (personalFilter === 'all') return true
       const issueState = entry?.id ? issueStatesById?.[entry.id] : null
       const haveIt = Boolean(issueState?.haveIt)
       const readIt = Boolean(issueState?.readIt)
 
-      if (personalFilter === 'unread') return !readIt
-      if (personalFilter === 'unowned') return !haveIt
-      if (personalFilter === 'read') return readIt
-      if (personalFilter === 'owned') return haveIt
+      if (collectionFilters.ownedOnly && !haveIt) return false
+      if (collectionFilters.readOnly && !readIt) return false
       return true
     }
 
     return orderedEntries.filter((entry) => publicationFilterMatch(entry) && personalFilterMatch(entry))
-  }, [orderedEntries, personalFilter, publicationFilter, issueStatesById])
+  }, [orderedEntries, collectionFilters, publicationFilter, issueStatesById])
 
   const monthAnchors = useMemo(() => {
     const orderedKeys = []
@@ -495,9 +494,10 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         publicationFilter={publicationFilter}
         publicationFilterOptions={timelinePublicationFilterOptions}
         onPublicationFilterChange={setPublicationFilter}
-        personalFilter={personalFilter}
-        personalFilterOptions={timelinePersonalFilterOptions}
-        onPersonalFilterChange={setPersonalFilter}
+        collectionFilters={collectionFilters}
+        onCollectionFilterChange={(key, nextValue) =>
+          setCollectionFilters((current) => ({ ...current, [key]: nextValue }))
+        }
       />
       <div className="mt-6 space-y-4">
         {status === 'loading' ? (
@@ -508,7 +508,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
           <p className="body-sm text-slate-500">{t('timeline.noIssuesLogged')}</p>
         ) : filteredEntries.length === 0 ? (
           <p className="body-sm text-slate-500">
-            {publicationFilter === 'annuals' && personalFilter === 'all'
+            {publicationFilter === 'annuals' && !collectionFilters.ownedOnly && !collectionFilters.readOnly
               ? t('timeline.noAnnualIssues')
               : t('timeline.noIssuesForFilter')}
           </p>
