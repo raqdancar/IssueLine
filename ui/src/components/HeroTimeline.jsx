@@ -513,7 +513,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
               : t('timeline.noIssuesForFilter')}
           </p>
         ) : (
-          <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="flex flex-col gap-4 md:grid md:h-[calc(100vh-13rem)] md:min-h-[38rem] md:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] md:items-start md:overflow-hidden">
             {canShowNavigator && isNavigatorVisible ? (
               <TimelineNavigatorPanel
                 indexMode={indexMode}
@@ -525,7 +525,11 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
                 onToggleVisibility={() => setIsNavigatorVisible(false)}
               />
             ) : null}
-            <div className="flex-1">
+            <div
+              className={`min-w-0 flex-1 md:h-full md:overflow-y-auto md:pr-1 ${
+                !canShowNavigator || !isNavigatorVisible ? 'md:col-span-2' : ''
+              }`}
+            >
               {canShowNavigator && !isNavigatorVisible ? (
                 <TimelineNavigatorToggle onClick={() => setIsNavigatorVisible(true)} />
               ) : null}

@@ -5,7 +5,7 @@ function TimelineNavigatorToggle({ onClick }) {
   const { t } = useI18n()
 
   return (
-    <div className="mb-3 flex justify-start">
+    <div className="mb-3 flex justify-start md:sticky md:top-0 md:z-20 md:pb-2 md:pt-1 md:bg-linear-to-b md:from-white md:to-white/75">
       <button
         type="button"
         onClick={onClick}
