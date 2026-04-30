@@ -16,12 +16,12 @@ function TimelineNavigatorPanel({
   const isStageMode = indexMode === 'stage'
   const containerClasses = `${
     isPillMode
-      ? 'grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1 md:max-h-none md:grid-cols-3'
-      : 'flex max-h-72 flex-col gap-2 overflow-y-auto pr-1 md:max-h-none'
-  } no-scrollbar`
+      ? 'grid grid-cols-3 gap-2 md:grid-cols-3'
+      : 'flex flex-col gap-2'
+  }`
 
   return (
-    <aside className="flex w-full flex-col overflow-hidden rounded-3xl border border-slate-100/80 bg-linear-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur md:h-full md:self-start md:max-w-sm">
+    <aside className="flex w-full flex-col overflow-hidden rounded-3xl border border-slate-100/80 bg-linear-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur md:h-full md:min-h-0 md:self-start md:max-w-sm">
       <div className="flex items-center justify-between gap-2">
         <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">{t('timeline.jumpTo')}</p>
         <button
@@ -56,7 +56,7 @@ function TimelineNavigatorPanel({
           )
         })}
       </div>
-      <div className="mt-4 flex-1 overflow-hidden">
+      <div className="mt-4 max-h-72 flex-1 overflow-y-auto pr-1 no-scrollbar md:h-full md:max-h-none md:min-h-0">
         <div className={containerClasses}>
           {anchors.length ? (
             anchors.map((anchor) => {
