@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Annex - Manual d'usuari dels scripts CLI (IssueLine)</title>
+    <style>
+      :root {
+        --bg: #f7fafc;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --line: #e5e7eb;
+        --accent: #0f766e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
+        color: var(--text);
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        line-height: 1.55;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+      }
+      .cover {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      }
+      h1, h2, h3 {
+        margin: 0 0 0.75rem;
+        line-height: 1.25;
+      }
+      h1 { font-size: 1.8rem; }
+      h2 {
+        margin-top: 2rem;
+        font-size: 1.4rem;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 0.35rem;
+      }
+      h3 {
+        margin-top: 1.25rem;
+        font-size: 1.08rem;
+        color: var(--accent);
+      }
+      p { margin: 0.5rem 0 0.75rem; }
+      ul, ol { margin: 0.4rem 0 1rem 1.3rem; padding: 0; }
+      li { margin: 0.2rem 0; }
+      .muted { color: var(--muted); }
+      .toc {
+        background: #f8fafc;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 1rem;
+      }
+      .toc a { color: #0f172a; text-decoration: none; }
+      .toc a:hover { text-decoration: underline; }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 0.08rem 0.35rem;
+      }
+      pre {
+        margin: 0.5rem 0 1rem;
+        padding: 0.85rem;
+        border-radius: 10px;
+        overflow: auto;
+        border: 1px solid #dbeafe;
+        background: #0b1220;
+        color: #dbeafe;
+      }
+      pre code {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        padding: 0;
+      }
+      .box {
+        background: #ecfeff;
+        border: 1px solid #a5f3fc;
+        border-radius: 10px;
+        padding: 0.8rem 0.9rem;
+        margin: 0.5rem 0 1rem;
+      }
+      .warn {
+        background: #fffbeb;
+        border-color: #fde68a;
+      }
+      @media print {
+        body { background: #fff; }
+        .wrap { max-width: none; padding: 0; }
+        .cover, .toc {
+          box-shadow: none;
+          border-color: #cbd5e1;
+        }
+        a { color: inherit; text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="cover">
+        <h1>Annex - Manual d'usuari dels scripts CLI</h1>
+        <p class="muted">
+          Projecte: <strong>IssueLine</strong><br />
+          Idioma: Català<br />
+          Versió: 1.0<br />
+          Darrera actualització: 1 de maig de 2026<br />
+          Document elaborat amb l'ajuda del model Codex 5.3
+        </p>
+        <p>
+          Aquest annex unifica en un sol document l'ús operatiu dels scripts CLI del projecte:
+          ingestió de dades, importació des de GCD, enllaç de cobertes, scripts de recopilatoris i verificació de producció.
+        </p>
+      </section>
+
+      <section id="index">
+        <h2>Índex</h2>
+        <div class="toc">
+          <ol>
+            <li><a href="#requisits">Requisits previs</a></li>
+            <li><a href="#comandes">Índex ràpid de comandes</a></li>
+            <li><a href="#personatges">Scripts de dades de personatges</a></li>
+            <li><a href="#gcd">Scripts d'importació GCD</a></li>
+            <li><a href="#recopilatoris">Scripts de recopilatoris (collected editions)</a></li>
+            <li><a href="#avancats">Scripts avançats de sincronització</a></li>
+            <li><a href="#prod">Verificació de producció</a></li>
+            <li><a href="#supabase">Gestió Supabase local</a></li>
+            <li><a href="#errors">Errors habituals</a></li>
+            <li><a href="#bones-practiques">Bones pràctiques</a></li>
+          </ol>
+        </div>
+      </section>
+
+      <section id="requisits">
+        <h2>1. Requisits previs</h2>
+        <ul>
+          <li>Node.js <code>20</code>.</li>
+          <li>Dependències instal·lades: <code>npm install</code> (arrel), <code>npm --prefix backend install</code>.</li>
+          <li>Fitxer <code>.env</code> amb <code>SUPABASE_URL</code> i <code>SUPABASE_SERVICE_ROLE_KEY</code>.</li>
+          <li>Per scripts GCD: <code>GCD_BASE_URL</code> i opcionalment credencials (<code>GCD_USERNAME</code>/<code>GCD_PASSWORD</code> o <code>GCD_SESSIONID</code>).</li>
+          <li>Per <code>sync:gcd</code> manual: <code>GCD_ALLOW_MANUAL_SYNC=true</code>.</li>
+        </ul>
+      </section>
+
+      <section id="comandes">
+        <h2>2. Índex ràpid de comandes</h2>
+        <p>Des de l'arrel del repositori:</p>
+        <pre><code>npm run seed:superheroes
+npm run import:gcd
+npm run import:gcd:issue
+npm run import:collected-edition
+npm run link:collected-edition-issues
+npm run upload:collected-cover -- --collected-id=&lt;uuid&gt; --file=&lt;ruta&gt;
+npm run verify:prod
+npm run supabase:start
+npm run supabase:stop
+npm run supabase:status</code></pre>
+      </section>
+
+      <section id="personatges">
+        <h2>3. Scripts de dades de personatges</h2>
+
+        <h3>3.1 <code>seed:superheroes</code></h3>
+        <p>Sincronitza personatges de SuperHero API cap a <code>public.superheroes</code>.</p>
+        <pre><code>npm run seed:superheroes -- --ids=1,70,100
+npm run seed:superheroes -- --search=batman,ironman
+npm run seed:superheroes -- --names="Batman,Doctor Strange"</code></pre>
+        <p>Opcions:</p>
+        <ul>
+          <li><code>--ids=...</code> llista d'IDs.</li>
+          <li><code>--search=...</code> termes de cerca.</li>
+          <li><code>--names=...</code> cerca per nom.</li>
+          <li><code>-h</code>, <code>--help</code> ajuda.</li>
+        </ul>
+      </section>
+
+      <section id="gcd">
+        <h2>4. Scripts d'importació GCD</h2>
+
+        <h3>4.1 <code>import:gcd</code> (sèrie, interactiu)</h3>
+        <pre><code>npm run import:gcd
+npm run import:gcd -- --hero-slug=doctor-strange
+npm run import:gcd -- --hero-api-id=122</code></pre>
+        <p>Paràmetres:</p>
+        <ul>
+          <li><code>--hero-slug=&lt;slug&gt;</code></li>
+          <li><code>--hero-api-id=&lt;integer&gt;</code></li>
+        </ul>
+        <p>Flux interactiu: ID sèrie GCD, filtre de variants, cobertes disponibles i carpeta de cobertes.</p>
+
+        <h3>4.2 <code>import:gcd:issue</code> (issue única)</h3>
+        <pre><code>npm run import:gcd:issue
+npm run import:gcd:issue -- --hero-slug=doctor-strange --issue-id=29379 --timeline=y --covers=n</code></pre>
+        <p>Paràmetres:</p>
+        <ul>
+          <li><code>--hero-slug</code> o <code>--hero-api-id</code> (no tots dos).</li>
+          <li><code>--issue-id</code> (ID o URL <code>/issue/&lt;id&gt;/</code>).</li>
+          <li><code>--timeline=y|n</code></li>
+          <li><code>--covers=y|n</code></li>
+          <li><code>--covers-folder=&lt;carpeta&gt;</code></li>
+        </ul>
+      </section>
+
+      <section id="recopilatoris">
+        <h2>5. Scripts de recopilatoris (collected editions)</h2>
+
+        <h3>5.1 <code>import:collected-edition</code></h3>
+        <pre><code>npm run import:collected-edition</code></pre>
+        <p>Flux: demana issue GCD, mostra previsualització, detecta duplicats, permet triar heroi i confirma importació.</p>
+
+        <h3>5.2 <code>link:collected-edition-issues</code></h3>
+        <pre><code>npm run link:collected-edition-issues
+npm run link:collected-edition-issues -- --collected-id=&lt;uuid&gt; --mode=number --issues=110-111,114 --note="Arc principal"</code></pre>
+        <ul>
+          <li><code>--collected-id=&lt;uuid&gt;</code></li>
+          <li><code>--mode=gcd|number</code></li>
+          <li><code>--issues=10,11,20-25</code></li>
+          <li><code>--note="..."</code></li>
+        </ul>
+
+        <h3>5.3 <code>upload:collected-cover</code></h3>
+        <pre><code>npm run upload:collected-cover -- --collected-id=&lt;uuid&gt; --file=C:\covers\omnibus.jpg</code></pre>
+        <p>Opcions:</p>
+        <ul>
+          <li><code>--bucket=&lt;nom&gt;</code> (defecte: <code>collected-edition-images</code>)</li>
+          <li><code>--prefix=&lt;prefix&gt;</code> (defecte: <code>covers</code>)</li>
+          <li><code>--no-overwrite</code></li>
+        </ul>
+        <p>Formats admesos: <code>jpg</code>, <code>jpeg</code>, <code>png</code>, <code>webp</code>, <code>gif</code>. Límit: 10 MB.</p>
+      </section>
+
+      <section id="avancats">
+        <h2>6. Scripts avançats de sincronització</h2>
+
+        <h3>6.1 <code>sync:gcd</code> (batch manual)</h3>
+        <pre><code>npm --prefix backend run sync:gcd -- doctor-strange 824 --batch=12 --delay=65000</code></pre>
+        <p>Sintaxi:</p>
+        <pre><code>node ./scripts/gcd-series-sync.mjs &lt;hero-slug&gt; &lt;series-id&gt; [opcions]</code></pre>
+        <ul>
+          <li><code>--batch</code>, <code>--delay</code>, <code>--offset</code></li>
+          <li><code>--issue-start</code>, <code>--issue-end</code></li>
+          <li><code>--direct-only</code>, <code>--include-newsstand</code>, <code>--skip-newsstand</code></li>
+        </ul>
+        <div class="box warn">
+          Requereix <code>GCD_ALLOW_MANUAL_SYNC=true</code>.
+        </div>
+
+        <h3>6.2 <code>link:issue-covers</code></h3>
+        <pre><code>npm --prefix backend run link:issue-covers
+npm --prefix backend run link:issue-covers -- --apply --verbose</code></pre>
+        <p>Sense <code>--apply</code> és <em>dry-run</em>.</p>
+      </section>
+
+      <section id="prod">
+        <h2>7. Verificació de producció</h2>
+        <pre><code>PROD_FRONTEND_URL=https://&lt;frontend&gt; PROD_BACKEND_URL=https://&lt;backend&gt; npm run verify:prod</code></pre>
+        <p>Comprova: salut backend, CORS i HTML principal del frontend.</p>
+      </section>
+
+      <section id="supabase">
+        <h2>8. Gestió Supabase local</h2>
+        <pre><code>npm run supabase:start
+npm run supabase:stop
+npm run supabase:status</code></pre>
+      </section>
+
+      <section id="errors">
+        <h2>9. Errors habituals</h2>
+        <h3><code>Missing required environment variable</code></h3>
+        <p>Revisa el <code>.env</code> i executa les comandes des de l'arrel del repositori.</p>
+
+        <h3>Límit de peticions GCD</h3>
+        <ul>
+          <li>Augmenta <code>--delay</code>.</li>
+          <li>Redueix <code>--batch</code>.</li>
+          <li>Configura credencials/sessió GCD.</li>
+        </ul>
+
+        <h3><code>Use either --hero-slug or --hero-api-id, not both</code></h3>
+        <p>Passa només una de les dues opcions.</p>
+
+        <h3><code>Invalid --issues value</code></h3>
+        <p>Usa format vàlid: <code>10,11,20-25</code>.</p>
+      </section>
+
+      <section id="bones-practiques">
+        <h2>10. Bones pràctiques</h2>
+        <ul>
+          <li>Prova primer en <em>dry-run</em> quan sigui possible.</li>
+          <li>Guarda el log de consola en imports llargs.</li>
+          <li>Importa per trams (<code>--issue-start</code>/<code>--issue-end</code>) per facilitar reintents.</li>
+          <li>Després d'importar, valida l'endpoint <code>/hero-timelines/:slug</code> i la UI.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
