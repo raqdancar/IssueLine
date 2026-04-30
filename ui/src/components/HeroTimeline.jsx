@@ -168,6 +168,33 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   }, [filteredEntries])
 
   const stageAnchors = useMemo(() => {
+    const resolveIssueNumberRank = (entry) => {
+      const rawIssueNumber =
+        entry?.metadata?.number ??
+        entry?.metadata?.issue_number ??
+        entry?.metadata?.issueNumber ??
+        entry?.issue_code ??
+        ''
+      const match = String(rawIssueNumber).match(/\d+/)
+      return match ? Number(match[0]) : Number.POSITIVE_INFINITY
+    }
+
+    const resolveStageRank = (entry, index) => {
+      const parsedDate = new Date(entry?.issue_date ?? '').getTime()
+      return {
+        date: Number.isNaN(parsedDate) ? Number.POSITIVE_INFINITY : parsedDate,
+        issueNumber: resolveIssueNumberRank(entry),
+        index,
+      }
+    }
+
+    const isBetterStageStart = (candidate, current) => {
+      if (!current) return true
+      if (candidate.date !== current.date) return candidate.date < current.date
+      if (candidate.issueNumber !== current.issueNumber) return candidate.issueNumber < current.issueNumber
+      return candidate.index < current.index
+    }
+
     const orderedKeys = []
     const groups = new Map()
     filteredEntries.forEach((entry, index) => {
@@ -186,11 +213,22 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
             null,
           count: 0,
           targetId: getEntryDomId(entry, index),
+          _startRank: resolveStageRank(entry, index),
         })
       }
-      groups.get(stage.key).count += 1
+      const group = groups.get(stage.key)
+      group.count += 1
+
+      const candidateRank = resolveStageRank(entry, index)
+      if (isBetterStageStart(candidateRank, group._startRank)) {
+        group.targetId = getEntryDomId(entry, index)
+        group._startRank = candidateRank
+      }
     })
-    return orderedKeys.map((key) => groups.get(key))
+    return orderedKeys.map((key) => {
+      const { _startRank: _ignoredStartRank, ...group } = groups.get(key)
+      return group
+    })
   }, [filteredEntries])
 
   const yearAnchors = useMemo(() => {
