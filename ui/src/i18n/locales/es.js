@@ -261,6 +261,7 @@ const messages = {
         'Tenemos {{totalIssues}} números registrados entre {{rangeLabel}}. Explora cada etapa para entender el orden completo.',
       coverage: 'Cobertura',
       trackedIssues: '{{count}} números registrados',
+      collectedEditionsCount: '{{count}} recopilatorios',
       collectionProgress: 'Progreso de colección',
       signInForCharts: 'Inicia sesión para ver gráficos de progreso de colección.',
       signInToTrackOwnedRead: 'Inicia sesión para seguir lo que tienes y has terminado.',

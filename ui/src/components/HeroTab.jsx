@@ -25,6 +25,7 @@ function HeroTab({ hero }) {
   const stats = hero.powerstats ?? {}
   const hasTimelineIssues = Boolean(hero.hasTimelineIssues)
   const timelineCoverage = hero.timelineCoverage ?? { count: 0, startYear: null, endYear: null }
+  const collectedEditionsCount = Number(hero.collectedEditionsCount ?? 0)
   const coverageYearLabel =
     timelineCoverage.startYear && timelineCoverage.endYear
       ? timelineCoverage.startYear === timelineCoverage.endYear
@@ -41,7 +42,7 @@ function HeroTab({ hero }) {
       src={imageSrc}
       alt={imageAlt}
       className={cn(
-        'h-28 w-28 rounded-xl object-cover shadow transition duration-200',
+        'h-24 w-24 rounded-xl object-cover shadow transition duration-200 sm:h-28 sm:w-28',
         hasTimelineIssues ? 'hover:scale-[1.02]' : 'cursor-not-allowed grayscale-65 opacity-80'
       )}
       loading="lazy"
@@ -52,49 +53,54 @@ function HeroTab({ hero }) {
     <article
       aria-disabled={!hasTimelineIssues}
       className={cn(
-        'flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-200',
+        'flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 sm:p-5',
         hasTimelineIssues
           ? 'hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg'
           : 'border-slate-200 bg-slate-100/70 text-slate-500'
       )}
     >
-      <div className="flex items-start gap-4">
-        {detailHref ? (
-          <Link to={detailHref} aria-label={t('heroTab.viewDetailsFor', { name: hero.name })} className="inline-block focus:outline-none">
-            {portrait}
-          </Link>
-        ) : (
-          <div title={t('heroTab.noIssuesTooltip')}>{portrait}</div>
-        )}
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-balance title-sm">{hero.name}</h3>
-            {alignment ? (
-              <span
-                className={cn(
-                  'eyebrow rounded-full border px-2.5 py-0.5 tracking-normal',
-                  badgeClasses
-                )}
-              >
-                {alignment}
-              </span>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          {detailHref ? (
+            <Link to={detailHref} aria-label={t('heroTab.viewDetailsFor', { name: hero.name })} className="inline-block shrink-0 focus:outline-none">
+              {portrait}
+            </Link>
+          ) : (
+            <div className="shrink-0" title={t('heroTab.noIssuesTooltip')}>{portrait}</div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-balance title-sm">{hero.name}</h3>
+              {alignment ? (
+                <span
+                  className={cn(
+                    'eyebrow rounded-full border px-2.5 py-0.5 tracking-normal',
+                    badgeClasses
+                  )}
+                >
+                  {alignment}
+                </span>
+              ) : null}
+              {!hasTimelineIssues ? (
+                <span className="eyebrow rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-slate-600">
+                  {t('heroTab.noIssuesBadge')}
+                </span>
+              ) : null}
+            </div>
+            {displayName && displayName !== hero.name ? (
+              <p className="body-xs text-slate-500">{t('heroTab.aka', { name: displayName })}</p>
             ) : null}
-            {!hasTimelineIssues ? (
-              <span className="eyebrow rounded-full border border-slate-300 bg-slate-200 px-2 py-0.5 text-slate-600">
-                {t('heroTab.noIssuesBadge')}
-              </span>
-            ) : null}
+            <p className="eyebrow mt-2">{hero.publisher ?? t('heroTab.independent')}</p>
           </div>
-          {displayName && displayName !== hero.name ? (
-            <p className="body-xs text-slate-500">{t('heroTab.aka', { name: displayName })}</p>
-          ) : null}
-          <p className="eyebrow mt-2">{hero.publisher ?? t('heroTab.independent')}</p>
         </div>
         {hasTimelineIssues ? (
-          <div className="shrink-0 rounded-3xl border border-indigo-900/50 bg-linear-to-br from-indigo-950 via-indigo-900 to-indigo-800 px-4 py-3 text-center text-white shadow-inner">
+          <div className="w-full rounded-3xl border border-indigo-900/50 bg-linear-to-br from-indigo-950 via-indigo-900 to-indigo-800 px-4 py-3 text-center text-white shadow-inner sm:w-auto sm:min-w-[12rem]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/75">{t('timeline.coverage')}</p>
-            <p className="text-2xl font-black leading-none tracking-wide">{coverageYearLabel}</p>
+            <p className="text-xl font-black leading-tight tracking-wide sm:text-2xl">{coverageYearLabel}</p>
             <p className="mt-1 text-xs text-white/75">{t('timeline.trackedIssues', { count: timelineCoverage.count ?? 0 })}</p>
+            {collectedEditionsCount > 0 ? (
+              <p className="mt-0.5 text-[11px] text-white/70">{t('timeline.collectedEditionsCount', { count: collectedEditionsCount })}</p>
+            ) : null}
           </div>
         ) : null}
       </div>

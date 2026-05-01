@@ -74,18 +74,26 @@ function App() {
     let heroesWithIssues = new Set()
     const heroCoverageById = new Map()
 
-    if (heroApiIds.length) {
-      const { data: timelineRows, error: timelineError } = await supabase
-        .from('hero_timelines')
-        .select('hero_api_id, issue_date')
-        .in('hero_api_id', heroApiIds)
+    const collectedEditionsCountByHeroId = new Map()
 
-      if (timelineError) {
-        setHeroesStatus({ state: 'error', message: timelineError.message })
+    if (heroApiIds.length) {
+      const [timelineResult, collectedEditionsResult] = await Promise.all([
+        supabase
+          .from('hero_timelines')
+          .select('hero_api_id, issue_date')
+          .in('hero_api_id', heroApiIds),
+        supabase
+          .from('collected_editions')
+          .select('hero_api_id')
+          .in('hero_api_id', heroApiIds),
+      ])
+
+      if (timelineResult.error) {
+        setHeroesStatus({ state: 'error', message: timelineResult.error.message })
         return
       }
 
-      const rows = timelineRows ?? []
+      const rows = timelineResult.data ?? []
       heroesWithIssues = new Set(rows.map((row) => row.hero_api_id))
 
       rows.forEach((row) => {
@@ -110,6 +118,16 @@ function App() {
 
         heroCoverageById.set(row.hero_api_id, current)
       })
+
+      if (collectedEditionsResult.error) {
+        console.warn('Failed to load collected editions count for hero dashboard', collectedEditionsResult.error.message)
+      } else {
+        for (const row of collectedEditionsResult.data ?? []) {
+          if (!row?.hero_api_id) continue
+          const currentCount = collectedEditionsCountByHeroId.get(row.hero_api_id) ?? 0
+          collectedEditionsCountByHeroId.set(row.hero_api_id, currentCount + 1)
+        }
+      }
     }
 
     const imagesByHero = (imagesResult.data ?? []).reduce((acc, image) => {
@@ -125,6 +143,7 @@ function App() {
       heroImages: imagesByHero[hero.api_id] ?? [],
       hasTimelineIssues: heroesWithIssues.has(hero.api_id),
       timelineCoverage: heroCoverageById.get(hero.api_id) ?? { count: 0, startYear: null, endYear: null },
+      collectedEditionsCount: collectedEditionsCountByHeroId.get(hero.api_id) ?? 0,
     }))
 
     setHeroes(enrichedHeroes)

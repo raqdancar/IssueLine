@@ -263,6 +263,7 @@
       'We have {{totalIssues}} logged issues spanning {{rangeLabel}}. Explore every stage to understand the full reading order.',
     coverage: 'Coverage',
     trackedIssues: '{{count}} tracked issues',
+    collectedEditionsCount: '{{count}} collected editions',
     collectionProgress: 'Collection progress',
     signInForCharts: 'Sign in to view collection progress charts.',
     signInToTrackOwnedRead: 'Sign in to track what you own and have finished reading.',
