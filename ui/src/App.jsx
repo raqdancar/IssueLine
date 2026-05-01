@@ -1,17 +1,18 @@
 // Compose the main frontend application shell and route views.
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes, useMatch } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import AppHeader from '@/components/AppHeader'
 import HeroTab from '@/components/HeroTab'
 import Footer from '@/components/Footer'
-import HeroDetail from '@/pages/HeroDetail'
-import AccountSettings from '@/pages/AccountSettings'
 import AuthDialog from '@/components/AuthDialog'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
 import { resolveHeroThemeStyle } from '@/lib/heroThemes'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+
+const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
+const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
 
 const initialFormValues = {
   email: '',
@@ -348,6 +349,7 @@ function App() {
     () => resolveHeroThemeStyle(heroRouteMatch?.params?.slug),
     [heroRouteMatch?.params?.slug],
   )
+  const routeFallback = <p className="body-sm text-slate-500">{t('common.loading')}</p>
 
   return (
     <SessionProvider value={sessionContextValue}>
@@ -378,11 +380,20 @@ function App() {
                 />
               }
             />
-            <Route path="/heroes/:slug" element={<HeroDetail />} />
+            <Route
+              path="/heroes/:slug"
+              element={
+                <Suspense fallback={routeFallback}>
+                  <HeroDetail />
+                </Suspense>
+              }
+            />
             <Route
               path="/account"
               element={
-                <AccountSettings onRequireSignIn={openAuthDialog} />
+                <Suspense fallback={routeFallback}>
+                  <AccountSettings onRequireSignIn={openAuthDialog} />
+                </Suspense>
               }
             />
           </Routes>

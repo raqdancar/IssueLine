@@ -1,14 +1,15 @@
 // Render the HeroDetail page container.
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'
-import HeroTimelineCinematic from '@/components/HeroTimelineCinematic'
-import HeroTimelineInsights from '@/components/HeroTimelineInsights'
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { backendBaseUrl } from '@/utils/backend.js'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
+
+const HeroTimelineCinematic = lazy(() => import('@/components/HeroTimelineCinematic'))
+const HeroTimelineInsights = lazy(() => import('@/components/HeroTimelineInsights'))
 
 const statLabelKeys = ['intelligence', 'strength', 'speed', 'durability', 'power', 'combat']
 const fallbackImage =
@@ -299,7 +300,9 @@ function HeroDetail() {
                 </dl>
               </aside>
               <div className="space-y-5">
-                <HeroTimelineInsights heroSlug={hero.slug} heroName={hero.name} />
+                <Suspense fallback={<p className="body-sm text-slate-500">{t('timeline.loadingTimeline')}</p>}>
+                  <HeroTimelineInsights heroSlug={hero.slug} heroName={hero.name} />
+                </Suspense>
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-600 shadow-inner">
                   <div>
                     <p className="eyebrow text-slate-500">{t('heroDetail.timelineStyle')}</p>
@@ -335,13 +338,15 @@ function HeroDetail() {
                     />
                   )}
                   {timelineView === 'cinematic' && (
-                    <HeroTimelineCinematic
-                      slug={hero.slug}
-                      heroName={hero.name}
-                      fallbackImage={imageSrc}
-                      timelineLogoSrc={timelineLogoSrc}
-                      timelineLogoAlt={timelineLogoAlt}
-                    />
+                    <Suspense fallback={<p className="body-sm text-slate-500">{t('timeline.loadingTimeline')}</p>}>
+                      <HeroTimelineCinematic
+                        slug={hero.slug}
+                        heroName={hero.name}
+                        fallbackImage={imageSrc}
+                        timelineLogoSrc={timelineLogoSrc}
+                        timelineLogoAlt={timelineLogoAlt}
+                      />
+                    </Suspense>
                   )}
                 </div>
               </div>
