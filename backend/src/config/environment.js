@@ -1,3 +1,4 @@
+// Define environment runtime configuration helpers.
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'

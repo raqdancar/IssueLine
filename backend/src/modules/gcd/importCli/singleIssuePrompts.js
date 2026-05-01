@@ -1,3 +1,4 @@
+﻿// Collect and validate interactive answers for single-issue import scripts.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { searchHeroes } from './heroSelectionService.js'
@@ -26,6 +27,7 @@ const parseFolderName = (value) => {
 }
 
 const askUntilValid = async ({ rl, question, parser, errorMessage }) => {
+  // Re-prompt in place so import scripts do not continue with invalid input.
   while (true) {
     const answer = await rl.question(question)
     const parsed = parser(answer)

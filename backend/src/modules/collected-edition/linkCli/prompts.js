@@ -1,3 +1,4 @@
+﻿// Collect validated CLI input for collected-edition linking workflows.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { searchCollectedEditionsByTitle } from '../repository.js'
@@ -11,6 +12,7 @@ const parseMode = (value) => {
 }
 
 const askUntilValid = async ({ rl, question, parser, errorMessage }) => {
+  // Re-prompt until selector/mode syntax is valid.
   while (true) {
     const answer = await rl.question(question)
     const parsed = parser(answer)

@@ -1,3 +1,4 @@
+﻿// Render the medium-density timeline issue card layout.
 import { CalendarDays } from 'lucide-react'
 import IssueStateActions from './IssueStateActions'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
@@ -30,6 +31,7 @@ function TimelineIssueCardCompact({
   }
   const highlightClasses = isHighlighted ? 'ring-2 ring-indigo-400/70 shadow-lg shadow-indigo-200/50' : 'shadow-sm'
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/50' : ''
+  // Reuse the same highlight contract used by other density variants.
   const articleEmphasis = `${highlightClasses} ${flashClasses}`.trim()
   const stageLabelClasses =
     'mb-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-indigo-600'

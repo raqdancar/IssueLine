@@ -1,3 +1,4 @@
+﻿// Query and resolve heroes from Supabase by search text, slug, or API id.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 const DEFAULT_LIMIT = 20
@@ -15,6 +16,7 @@ export const searchHeroes = async ({ query = '', limit = DEFAULT_LIMIT } = {}) =
 
   const normalizedQuery = String(query ?? '').trim()
   if (normalizedQuery) {
+    // Supabase `or` parsing treats commas as separators, so sanitize them first.
     const escaped = normalizedQuery.replace(/,/g, '')
     statement = statement.or(`name.ilike.%${escaped}%,slug.ilike.%${escaped}%`)
   }

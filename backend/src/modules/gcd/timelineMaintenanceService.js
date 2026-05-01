@@ -1,4 +1,5 @@
-﻿import { gcdGet } from './client.js'
+﻿// Repair timeline cover metadata by refetching missing or malformed GCD covers.
+import { gcdGet } from './client.js'
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 import { normalizeCoverUrl } from './coverUtils.js'
 
@@ -46,6 +47,7 @@ export const refreshHeroTimelineCovers = async ({ heroApiId, limit = 25 }) => {
 
   const targets = []
   for (const row of data ?? []) {
+    // Refresh only entries with missing or malformed cover URLs.
     if (!row?.metadata || !needsCoverRefresh(row.metadata)) continue
     const gcdIssueId = extractGcdIssueId(row.metadata)
     if (!gcdIssueId) continue

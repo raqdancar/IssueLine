@@ -1,3 +1,4 @@
+﻿// Fetch GCD issues by series, id, or direct issue URL.
 import { gcdGet } from './client.js'
 
 const normalizeIssueUrls = (seriesResults) => {

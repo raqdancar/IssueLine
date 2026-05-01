@@ -1,3 +1,4 @@
+﻿// Manage hero image upload, bucket checks, quotas, and metadata persistence.
 import crypto from 'node:crypto'
 import path from 'node:path'
 import { promisify } from 'node:util'
@@ -15,6 +16,7 @@ export const ensureBucket = async () => {
 
   const exists = buckets.some((bucket) => bucket.name === environment.bucketName)
   if (!exists) {
+    // Create once and reuse; uploads depend on this bucket existing.
     const { error: bucketError } = await supabaseServiceClient.storage.createBucket(environment.bucketName, {
       public: true,
     })
@@ -53,6 +55,7 @@ export const enforceHeroQuota = async (heroApiId) => {
 }
 
 const buildStoragePath = async (heroApiId, originalName) => {
+  // Keep extension for downstream compatibility while randomizing the filename.
   const random = (await randomBytesAsync(8)).toString('hex')
   const extension = path.extname(originalName?.toLowerCase() ?? '') || '.jpg'
   return `hero-${heroApiId}/${Date.now()}-${random}${extension}`

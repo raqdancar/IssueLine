@@ -1,3 +1,4 @@
+﻿// Track GCD request quotas and warn or stop near configured limits.
 import { environment } from '../../config/environment.js'
 
 const minuteWindowMs = 60 * 1000
@@ -22,6 +23,7 @@ const ensureDayWindow = (now) => {
 
 export const registerGcdRequest = (label) => {
   const now = Date.now()
+  // Keep rolling windows in memory to enforce soft and hard API quotas.
   pruneMinuteWindow(now)
   perMinuteTimestamps.push(now)
   ensureDayWindow(now)

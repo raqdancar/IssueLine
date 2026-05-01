@@ -1,3 +1,4 @@
+// Render the HeroDetail page container.
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'

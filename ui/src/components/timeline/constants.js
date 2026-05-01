@@ -1,3 +1,4 @@
+﻿// Centralize timeline visual variants, filters, and zoom thresholds.
 export const severityVariants = {
   info: {
     dot: 'border-slate-300 bg-white',
@@ -46,6 +47,7 @@ export const indexModeOptions = [
   { labelKey: 'timeline.indexIssues', value: 'issue' },
 ]
 
+// Density thresholds keep card layout readable across zoom levels.
 export const MIN_ZOOM_LEVEL = 0.85
 export const MAX_ZOOM_LEVEL = 1.3
 export const ZOOM_STEP = 0.05

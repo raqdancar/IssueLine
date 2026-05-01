@@ -1,3 +1,4 @@
+﻿// Resolve legacy numbering from known series rules and issue notes.
 const legacySeriesRules = [
   {
     test: (row) => row.series_name === 'Doctor Strange (2018 series)',
@@ -16,6 +17,7 @@ const extractLegacyFromNotes = (notes) => {
   const normalized = notes.replace(/\s+/g, ' ').trim()
   const legacyPattern = /Legacy(?:\s+numbering)?/gi
   let match
+  // Scan every "Legacy" mention because notes can include multiple numbered references.
   while ((match = legacyPattern.exec(normalized))) {
     const snippet = normalized.slice(match.index + match[0].length, match.index + match[0].length + 80)
     const numberMatch = snippet.match(/(\d{1,4})/)

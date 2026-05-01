@@ -1,11 +1,4 @@
-/**
- * Rutes HTTP de cronologia de personatges.
- *
- * Aquest router exposa:
- * - lectura de cronologia completa per `slug`,
- * - lectura de detall d'una issue concreta dins la cronologia,
- * - creació d'entrades de cronologia (ús intern/admin).
- */
+﻿// Expose hero timeline read/detail/create endpoints for frontend and admin flows.
 
 import express from 'express'
 import { z } from 'zod'
@@ -48,8 +41,7 @@ const createSchema = z
 export const heroTimelineRouter = express.Router()
 
 heroTimelineRouter.get('/:slug/issues/:issueId', async (req, res, next) => {
-  // Aquest endpoint combina dades de personatge + detall d'issue en un únic payload,
-  // simplificant el consum des del diàleg de detall del frontend.
+  // Return hero identity and issue detail in one payload for the issue-details dialog.
   try {
     const { slug, issueId } = issueParamsSchema.parse(req.params)
     const hero = await getHeroBySlug(slug)
@@ -89,7 +81,7 @@ heroTimelineRouter.get('/:slug', async (req, res, next) => {
       return res.status(404).json({ error: `Hero with slug "${slug}" was not found.` })
     }
 
-    // Les dues consultes són independents i es resolen en paral·lel per reduir latència.
+    // Timeline rows and collected-edition overview are independent queries.
     const [entries, collectedEditionsOverview] = await Promise.all([
       getHeroTimelineEntries(hero.api_id),
       getHeroCollectedEditionsOverview(hero.api_id),
@@ -133,3 +125,4 @@ heroTimelineRouter.post('/', async (req, res, next) => {
     next(error)
   }
 })
+

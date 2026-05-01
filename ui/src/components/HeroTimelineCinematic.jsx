@@ -1,3 +1,4 @@
+﻿// Render the cinematic timeline grouped by year with rich issue cards.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
@@ -63,6 +64,7 @@ const groupEntriesByYear = (entries, direction = 'desc') => {
     .sort(sorter)
     .map(([year, yearEntries]) => ({
       year,
+      // Keep issue order consistent with selected global sort direction.
       entries: [...yearEntries].sort((a, b) => {
         const result = getIssueTime(a) - getIssueTime(b)
         if (result === 0) return 0
@@ -93,10 +95,12 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
   const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId ?? null : null
 
+  // Hide broken logo assets and fall back to hero name text.
   useEffect(() => {
     setLogoVisible(Boolean(timelineLogoSrc))
   }, [timelineLogoSrc])
 
+  // Load cinematic timeline entries for the active hero.
   useEffect(() => {
     if (!backendBaseUrl || !slug) return undefined
 
@@ -159,6 +163,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
 
       const isPastTimelineStart = rect.top <= -48
       const isBeforeTimelineEnd = rect.bottom >= window.innerHeight * 0.45
+      // Show floating return button only inside the timeline viewport.
       setShowBackToTop(isPastTimelineStart && isBeforeTimelineEnd)
     }
 

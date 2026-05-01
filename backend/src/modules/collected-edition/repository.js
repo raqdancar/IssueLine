@@ -1,3 +1,4 @@
+﻿// Read/write collected-edition records and edition-to-issue links in Supabase.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 const escapeIlike = (value) => String(value ?? '').replace(/[%_,]/g, '').trim()
@@ -34,6 +35,7 @@ export const findCollectedEditionDuplicate = async ({ sourceExternalId, isbn }) 
     return null
   }
 
+  // Prefer earliest match to keep duplicate handling deterministic in CLI flows.
   const { data, error } = await supabaseServiceClient
     .from('collected_editions')
     .select('id, hero_api_id, title, source, source_external_id, source_series_id, isbn, created_at')

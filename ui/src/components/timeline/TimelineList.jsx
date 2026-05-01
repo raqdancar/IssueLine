@@ -1,3 +1,4 @@
+﻿// Render timeline entries with density-aware cards and state wiring.
 import TimelineIssueCard from '../TimelineIssueCard'
 import { hasSpecialIssueCode } from './utils'
 
@@ -25,6 +26,7 @@ function TimelineList({
       <div className="timeline-zoom-content" style={{ zoom: zoomLevel }}>
         <ol className={`pt-4 ${listSpacingClass}`}>
           {entries.map((entry, index) => {
+            // Hide collection actions for annual/special placeholders to avoid invalid state updates.
             const hideIssueStateActions = hasSpecialIssueCode(entry)
             const showIssueStateActions =
               timelineDensity !== 'micro' && entry.id && canUseIssueStateActions && !hideIssueStateActions

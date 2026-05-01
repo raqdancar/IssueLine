@@ -1,4 +1,5 @@
-﻿import { Link } from 'react-router-dom'
+﻿// Render one hero card with stats, timeline coverage, and edition count summary.
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -26,6 +27,7 @@ function HeroTab({ hero }) {
   const hasTimelineIssues = Boolean(hero.hasTimelineIssues)
   const timelineCoverage = hero.timelineCoverage ?? { count: 0, startYear: null, endYear: null }
   const collectedEditionsCount = Number(hero.collectedEditionsCount ?? 0)
+  // Collapse timeline year range into a compact badge-friendly label.
   const coverageYearLabel =
     timelineCoverage.startYear && timelineCoverage.endYear
       ? timelineCoverage.startYear === timelineCoverage.endYear

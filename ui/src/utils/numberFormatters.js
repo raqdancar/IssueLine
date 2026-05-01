@@ -1,3 +1,4 @@
+// Provide the numberFormatters utility helpers.
 export const normalizeIntegerText = (value) => {
   if (value === null || value === undefined || value === '') {
     return null

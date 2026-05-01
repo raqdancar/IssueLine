@@ -1,3 +1,4 @@
+// Provide the timeline utility helpers.
 const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' })
 
 export const resolveMonthBucket = (entry) => {

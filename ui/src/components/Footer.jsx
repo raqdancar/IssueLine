@@ -1,4 +1,5 @@
-﻿import { footerLinks } from '@/lib/footerConfig'
+﻿// Render footer branding, legal copy, and localized external links.
+import { footerLinks } from '@/lib/footerConfig'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const linkBaseClasses =

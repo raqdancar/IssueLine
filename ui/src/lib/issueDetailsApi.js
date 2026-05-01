@@ -1,3 +1,4 @@
+// Provide the issueDetailsApi shared library helpers.
 import { backendBaseUrl } from '@/utils/backend.js'
 
 const parseResponse = async (response) => {

@@ -1,3 +1,4 @@
+﻿// Render the timeline index panel and anchor jump controls.
 import { EyeOff } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -12,6 +13,7 @@ function TimelineNavigatorPanel({
 }) {
   const { t } = useI18n()
   const anchors = anchorLookup[indexMode] ?? []
+  // Switch between grid pills and stacked rows depending on the active index mode.
   const isPillMode = indexMode === 'year' || indexMode === 'issue'
   const isStageMode = indexMode === 'stage'
   const containerClasses = `${

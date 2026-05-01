@@ -1,4 +1,5 @@
-﻿import { supabaseServiceClient } from '../../lib/supabaseClient.js'
+﻿// Normalize hero issues, upsert them, and map rows back into timeline entries.
+import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 import { normalizeCoverUrl } from '../gcd/coverUtils.js'
 import { coerceIsoDate, pickBestDate, mapIssueToTimelineEntry } from '../gcd/issueMapper.js'
 import { normalizeSeriesName } from '../../utils/seriesNameUtils.js'
@@ -54,6 +55,7 @@ const formatIssueRow = (heroApiId, issue) => {
   const issueDate = deriveIssueDate(issue)
   const normalizedNumber = coerceIssueNumber(issue.number)
   const normalizedPageCount = coerceIssueNumber(issue.page_count)
+  // Persist both normalized fields and raw payload for future remapping/debugging.
   return {
     hero_api_id: heroApiId,
     gcd_issue_id: resolveGcdIssueId(issue),
@@ -112,6 +114,7 @@ export const getHeroIssuesByNumberRange = async ({ heroApiId, startNumber, endNu
   const normalizedStart = startNumber ?? null
   const normalizedEnd = endNumber ?? null
 
+  // Filter and sort client-side because issue numbers may include non-numeric tokens.
   return (data ?? [])
     .filter((row) => {
       const numeric = coerceIssueNumber(row.number)
@@ -235,6 +238,7 @@ export const mapHeroIssueRowToTimelineEntry = (row) => {
     return attachLegacyMetadata(entry)
   }
 
+  // Fallback path for rows that cannot be normalized through GCD mapper rules.
   const fallbackIssueDate = row.issue_date ?? row.on_sale_date ?? row.key_date ?? row.publication_date
   const normalizedSeriesName = normalizeSeriesName(row.series_name) ?? row.series_name ?? null
   const timelineHeadline = buildIssueHeadline({

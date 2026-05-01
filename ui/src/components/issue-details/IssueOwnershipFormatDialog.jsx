@@ -29,6 +29,7 @@ const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLE
  * @returns {JSX.Element|null}
  */
 
+// Modal used to select which collected editions the user owns for one issue.
 function IssueOwnershipFormatDialog({
   open,
   issueTitle,
@@ -42,6 +43,7 @@ function IssueOwnershipFormatDialog({
   onConfirm,
 }) {
   const { t } = useI18n()
+  // Prevent accidental close from the same tap/click that opened the modal.
   const [canCloseBackdrop, setCanCloseBackdrop] = useState(false)
 
   useEffect(() => {

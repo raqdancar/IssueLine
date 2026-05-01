@@ -1,3 +1,4 @@
+﻿// Import a full GCD series into hero issues, timeline rows, and optional cover links.
 import { mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import {
@@ -40,6 +41,7 @@ const resolveHeroFromOverrides = async ({ heroSlugOverride, heroApiIdOverride })
   }
 
   if (heroApiIdOverride) {
+    // Allow deterministic imports by API id when slug matching is ambiguous.
     const numeric = Number(heroApiIdOverride)
     if (!Number.isSafeInteger(numeric) || numeric <= 0) {
       throw new Error('heroApiIdOverride must be a positive integer.')

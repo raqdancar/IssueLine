@@ -1,9 +1,11 @@
-﻿const BRITISH_REGEX = /\\[british]/i
+﻿// Sync filtered GCD series issues into hero issues and timeline rows.
+const BRITISH_REGEX = /\\[british]/i
 const DIRECT_REGEX = /direct/i
 const NEWSSTAND_REGEX = /(newsstand|newstand)/i
 
 const descriptorAllowed = (descriptor, { directOnly, skipNewsstand }) => {
   const label = descriptor ?? ''
+  // Skip known non-target variants before spending API/storage work.
   if (BRITISH_REGEX.test(label)) return false
   if (skipNewsstand && NEWSSTAND_REGEX.test(label)) return false
   if (directOnly) {
@@ -104,6 +106,7 @@ export const syncSeriesIssuesForHero = async ({
 
   const issuesBuffer = []
   const newTimelineEntries = []
+  // Deduplicate against existing rows and against duplicate ids in the same sync batch.
   const existingIds = await getExistingGcdIssueIds(hero.api_id)
 
   for (const issueUrl of issueUrls) {

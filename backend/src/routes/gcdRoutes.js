@@ -1,3 +1,4 @@
+// Expose GCD search/sync endpoints and timeline maintenance operations.
 import express from 'express'
 import { z } from 'zod'
 import { environment } from '../config/environment.js'
@@ -122,6 +123,7 @@ gcdRouter.post('/heroes/:slug/issues/sync', async (req, res, next) => {
     const { slug } = slugSchema.parse(req.params)
     const options = syncSchema.parse(req.body ?? {})
 
+    // Keep manual sync guarded so scheduled ingestion remains the source of truth.
     if (!environment.gcd.allowManualSync) {
       return res.status(423).json({
         error: 'Manual GCD syncs are disabled. Set GCD_ALLOW_MANUAL_SYNC=true once automated jobs are paused.',
@@ -196,6 +198,7 @@ gcdRouter.post('/heroes/:slug/timeline/from-cache', async (req, res, next) => {
 
     const existingIds = await getExistingGcdIssueIds(hero.api_id)
     const entries = issues.map(mapHeroIssueRowToTimelineEntry).filter(Boolean)
+    // Avoid re-inserting entries already present in hero_timelines.
     const newEntries = entries.filter((entry) => {
       const gcdIssueId = entry.metadata?.gcdIssueId
       return gcdIssueId ? !existingIds.has(gcdIssueId) : true

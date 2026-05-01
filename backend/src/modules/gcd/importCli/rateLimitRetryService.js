@@ -1,3 +1,4 @@
+﻿// Retry GCD requests on minute limits with configurable backoff and attempt caps.
 import { setTimeout as delay } from 'node:timers/promises'
 import { gcdGet } from '../client.js'
 
@@ -55,6 +56,7 @@ export const gcdGetWithRateLimitRetry = async (
         throw error
       }
 
+      // Stop retrying when callers hit their configured cap.
       if (attempts >= maxRetries) {
         throw new Error(
           `Rate-limit retry budget exhausted for ${label ?? path} after ${attempts} retries: ${error.message}`

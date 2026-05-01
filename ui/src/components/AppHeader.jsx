@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from 'react'
+﻿// Render the global app header with auth actions, locale switcher, and mobile nav.
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -24,6 +25,7 @@ function AppHeader({
     en: t('header.languageEnglish'),
   }
 
+  // Reset the mobile drawer when auth state changes to avoid stale menu state.
   useEffect(() => {
     setIsMobileMenuOpen(false)
   }, [session])
@@ -54,6 +56,7 @@ function AppHeader({
           {isMobileMenuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
         </button>
 
+        {/* Desktop navigation actions. */}
         <div className="hidden items-center justify-end gap-2 text-sm md:flex">
           <Popover>
             <PopoverTrigger asChild>
@@ -129,6 +132,7 @@ function AppHeader({
         </div>
       </div>
 
+      {/* Mobile drawer navigation. */}
       {isMobileMenuOpen ? (
         <div
           id="mobile-app-menu"

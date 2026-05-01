@@ -1,3 +1,4 @@
+﻿// Render a mobile-only fullscreen cover preview modal with escape/overlay close.
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
@@ -7,6 +8,7 @@ function CoverFullscreenViewer({ open, src, alt, onClose }) {
   const { t } = useI18n()
   const [failed, setFailed] = useState(false)
 
+  // Lock the background and support Escape close while viewer is active.
   useEffect(() => {
     if (!open) return undefined
 
@@ -28,6 +30,7 @@ function CoverFullscreenViewer({ open, src, alt, onClose }) {
   }, [open, onClose])
 
   useEffect(() => {
+    // Reset load-failure state when opening a different cover.
     setFailed(false)
   }, [src, open])
 

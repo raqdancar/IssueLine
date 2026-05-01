@@ -1,3 +1,4 @@
+﻿// Render the horizontal timeline of issues shown inside the stage modal.
 import { Timeline } from 'primereact/timeline'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -15,6 +16,7 @@ const resolveIssueNumberLabel = (issue, t) => {
   return issue?.issueLabel ?? t('timeline.issueFallback')
 }
 
+// Horizontal stage timeline used inside the stage-detail modal.
 function StageIssuesTimeline({ issues = [], onIssueSelect }) {
   const { t, locale } = useI18n()
 
@@ -32,6 +34,7 @@ function StageIssuesTimeline({ issues = [], onIssueSelect }) {
     </span>
   )
 
+  // Issue card renderer for each timeline event.
   const content = (issue) => {
     const label = resolveIssueNumberLabel(issue, t)
     return (

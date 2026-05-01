@@ -1,3 +1,4 @@
+﻿// Map raw GCD issue payloads into normalized timeline entry objects.
 import { normalizeCoverUrl } from './coverUtils.js'
 import { normalizeSeriesName } from '../../utils/seriesNameUtils.js'
 import { buildIssueHeadline } from '../../utils/issueHeadlineUtils.js'
@@ -5,6 +6,7 @@ import { buildIssueHeadline } from '../../utils/issueHeadlineUtils.js'
 export const coerceIsoDate = (raw) => {
   if (!raw) return null
   let value = raw.trim()
+  // Normalize partial dates from GCD so timeline sorting always has a valid ISO day.
   if (/^\d{4}-00-00$/.test(value)) {
     value = value.replace('-00-00', '-01-01')
   } else if (/^\d{4}-00-\d{2}$/.test(value)) {
@@ -60,6 +62,7 @@ export const mapIssueToTimelineEntry = (issue) => {
   const coverSmall = normalizeCoverUrl(issue.cover)
   const coverImagePath = issue.cover_image_path ?? issue.coverImagePath ?? null
   const normalizedSeriesName = normalizeSeriesName(issue.series_name) ?? issue.series_name ?? null
+  // Build a stable display headline while preserving legacy fields in metadata.
   const timelineHeadline = buildIssueHeadline({
     seriesName: normalizedSeriesName,
     number: issue.number,

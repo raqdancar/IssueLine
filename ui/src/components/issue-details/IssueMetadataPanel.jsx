@@ -1,3 +1,4 @@
+﻿// Render normalized issue metadata fields for the details modal.
 import { useMemo } from 'react'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
@@ -9,9 +10,11 @@ const formatDate = (value, locale) => {
   return parsed.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+// Normalizes and displays issue metadata pairs for the details dialog.
 function IssueMetadataPanel({ issue }) {
   const { t, locale } = useI18n()
 
+  // Build a compact list of non-empty metadata fields to keep the UI clean.
   const metadataItems = useMemo(() => {
     if (!issue) return []
 

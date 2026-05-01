@@ -1,3 +1,4 @@
+﻿// Collect validated CLI input for collected-edition import workflows.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { searchHeroes } from '../../hero/heroSelectionService.js'
@@ -11,6 +12,7 @@ const parseYesNo = (value) => {
 }
 
 const askUntilValid = async ({ rl, question, parser, errorMessage }) => {
+  // Keep asking until parser returns a valid value for the current prompt.
   while (true) {
     const answer = await rl.question(question)
     const parsed = parser(answer)

@@ -1,3 +1,4 @@
+// Provide supabaseClient backend shared client/helpers.
 import { createClient } from '@supabase/supabase-js'
 import { fetch, Headers, Request, Response } from 'undici'
 import { environment } from '../config/environment.js'

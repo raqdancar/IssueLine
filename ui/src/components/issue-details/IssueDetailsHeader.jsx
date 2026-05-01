@@ -1,6 +1,8 @@
+﻿// Render the issue-details modal header and quick have/read action controls.
 import { Loader2, X } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
+// Header area for the issue-details modal, including quick state-action buttons.
 function IssueDetailsHeader({
   issue,
   onClose,
@@ -23,6 +25,7 @@ function IssueDetailsHeader({
         {subtitle ? <p className="body-xs text-slate-500">{subtitle}</p> : null}
       </div>
       <div className="flex items-center gap-2">
+        {/* Action buttons (have/read) share disabled/pending state from the parent dialog. */}
         {actionButtons.map(({ key, active, icon: Icon, label, onClick }) => {
           const buttonDisabled = actionsDisabled || actionsPending
           const titleText = actionsPending

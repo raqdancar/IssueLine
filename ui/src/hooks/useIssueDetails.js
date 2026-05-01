@@ -1,3 +1,4 @@
+// Provide the useIssueDetails hook for shared state/query behavior.
 import { useQuery } from '@tanstack/react-query'
 import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
 import { isBackendConfigured } from '@/utils/backend.js'

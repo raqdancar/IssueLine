@@ -1,3 +1,4 @@
+﻿// Render the vertical stage label attached to detailed timeline cards.
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 const variantClasses = {

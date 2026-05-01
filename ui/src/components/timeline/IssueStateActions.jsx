@@ -1,3 +1,4 @@
+﻿// Render compact issue state toggle actions for list cards.
 import { BookOpen, CheckCircle2, Loader2 } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -20,6 +21,7 @@ function IssueStateActions({ issueState, disabled, disabledReason, pending, onTo
         const isContextDisabled = disabled
         const isPending = pending
         const buttonDisabled = isContextDisabled || isPending
+        // Keep feedback explicit when sync is pending or unavailable.
         const stateClasses = isPending
           ? 'cursor-progress opacity-80'
           : isContextDisabled

@@ -1,3 +1,4 @@
+﻿// Build the normalized view model consumed by all timeline issue card densities.
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { getEntryDomId, getStageKey } from '../../utils/timeline'
@@ -39,6 +40,7 @@ export function createIssueCardViewModel({
   t,
   locale,
 }) {
+  // Blend base severity with collection/read states so one card can show both contexts.
   const baseVariant = severityLookup[entry.severity] ?? severityLookup.info
   const hasHaveIt = Boolean(issueState?.haveIt)
   const hasReadIt = Boolean(issueState?.readIt)
@@ -63,6 +65,7 @@ export function createIssueCardViewModel({
   const isLast = index === totalEntries - 1
   const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? t('timeline.issueFallback')
   const meta = entry.metadata ?? {}
+  // Resolve cover from multiple metadata shapes used by old and new imports.
   const coverImage = resolveIssueCoverImage(meta, fallbackImage)
 
   const seriesName = meta.series_name ?? meta.seriesName ?? null

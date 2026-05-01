@@ -1,3 +1,4 @@
+﻿// Normalize GCD issue payloads into collected-edition records for persistence.
 import { normalizeCoverUrl } from '../gcd/coverUtils.js'
 import { coerceIsoDate } from '../gcd/issueMapper.js'
 
@@ -57,6 +58,7 @@ const resolveIsbn = (issue) => {
     issue?.identifiers?.isbn,
   ]
   for (const candidate of candidates) {
+    // Accept whichever identifier first matches ISBN10/ISBN13 shape.
     const normalized = parsePotentialIsbn(candidate)
     if (normalized) return normalized
   }

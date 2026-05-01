@@ -1,3 +1,4 @@
+// Expose hero image upload/list/update endpoints backed by Supabase Storage.
 import express from 'express'
 import multer from 'multer'
 import { z } from 'zod'
@@ -40,6 +41,7 @@ export const heroImagesRouter = express.Router()
 
 heroImagesRouter.post('/', upload.single('image'), async (req, res, next) => {
   try {
+    // Ensure storage target exists before validating/uploading incoming files.
     await ensureBucket()
     const { heroApiId, alt, variant } = createImageSchema.parse(req.body)
 
@@ -52,6 +54,7 @@ heroImagesRouter.post('/', upload.single('image'), async (req, res, next) => {
       return res.status(404).json({ error: `Hero ${heroApiId} was not found in the cache.` })
     }
 
+    // Enforce per-hero image caps to keep gallery size bounded.
     await enforceHeroQuota(heroApiId)
     const image = await uploadHeroImage({ file: req.file, heroApiId, alt, variant })
     res.status(201).json(image)

@@ -1,3 +1,4 @@
+﻿// Render timeline controls: title, sorting, zoom, and collection filters.
 import { useEffect, useState } from 'react'
 import { BookOpen, CheckCircle2, Minus, Plus } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
@@ -26,6 +27,7 @@ function TimelineHeader({
   const { t } = useI18n()
   const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
 
+  // Hide broken logo assets and fall back to the text title.
   useEffect(() => {
     setLogoVisible(Boolean(timelineLogoSrc))
   }, [timelineLogoSrc])

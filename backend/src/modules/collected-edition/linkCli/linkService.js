@@ -1,3 +1,4 @@
+﻿// Resolve target hero issues and create collected-edition link records.
 import {
   getCollectedEditionById,
   getExistingCollectedEditionLinks,
@@ -48,6 +49,7 @@ const resolveTargetsByNumber = async ({ heroApiId, selector }) => {
       missing.push(issueNumber)
       continue
     }
+    // Surface ambiguous number matches so operator can decide intentionally.
     if (matches.length > 1) {
       ambiguous.push({
         issueNumber,
@@ -95,6 +97,7 @@ export const linkCollectedEditionToIssues = async ({
     selector,
   })
 
+  // Deduplicate target rows before checking existing links and inserting new ones.
   const uniqueRows = new Map(resolution.resolvedRows.map((row) => [row.id, row]))
   const heroIssueIds = Array.from(uniqueRows.keys())
 

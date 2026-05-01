@@ -1,3 +1,4 @@
+// Provide the issueStatesApi shared library helpers.
 import { backendBaseUrl } from '@/utils/backend.js'
 
 const buildQueryString = (params) => {

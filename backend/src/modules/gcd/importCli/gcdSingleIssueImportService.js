@@ -1,3 +1,4 @@
+﻿// Import one GCD issue into hero issues and optionally into the hero timeline.
 import { mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import { upsertHeroTimelineEntriesByGcdIssueId } from '../../hero/timelineService.js'
@@ -46,6 +47,7 @@ export const importSingleGcdIssueIntoSupabase = async ({
     throw new Error('Valid hero selection is required.')
   }
 
+  // Accept plain ids or full GCD issue URLs from CLI input.
   const normalizedIssueId = normalizeGcdIssueIdInput(gcdIssueId)
   logger.log(`Loading GCD issue ${normalizedIssueId}...`)
   const issueFetch = await gcdGetWithRateLimitRetry(`issue/${normalizedIssueId}/`, {

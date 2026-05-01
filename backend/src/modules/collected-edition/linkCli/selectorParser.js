@@ -1,3 +1,4 @@
+﻿// Parse numeric selector expressions (lists/ranges) used by CLI link commands.
 const parsePositiveInteger = (value) => {
   const numeric = Number(value)
   if (!Number.isSafeInteger(numeric) || numeric <= 0) return null
@@ -29,6 +30,7 @@ export const parseNumericSelector = (value) => {
 
   for (const token of tokens) {
     if (token.includes('-')) {
+      // Expand numeric ranges like "10-14" into explicit ids.
       const [fromValue, toValue] = token.split('-').map((part) => part.trim())
       const rangeValues = expandRange(fromValue, toValue)
       if (!rangeValues) return null

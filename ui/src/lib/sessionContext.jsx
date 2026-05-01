@@ -1,3 +1,4 @@
+// Provide the sessionContext shared library helpers.
 import { createContext, useContext } from 'react'
 
 export const SessionContext = createContext({

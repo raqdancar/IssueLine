@@ -1,3 +1,4 @@
+﻿// Render the button that reveals the collapsed timeline index panel.
 import { Eye } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

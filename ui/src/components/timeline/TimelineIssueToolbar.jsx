@@ -1,3 +1,4 @@
+﻿// Render the detailed card toolbar for collection/read toggles.
 import { BookOpen, CheckCircle2, Loader2 } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -48,6 +49,7 @@ function TimelineIssueToolbar({
           const active = Boolean(issueState?.[key])
           const buttonDisabled = disabled || pending
           const activeClasses = key === 'haveIt' ? activeHaveClasses : activeReadClasses
+          // Expose disabled/pending reasons as tooltip text for quick troubleshooting.
           const titleText = pending ? t('timeline.savingUpdate') : disabled ? disabledReason ?? t('timeline.issueActionsUnavailable') : undefined
           const buttonLabel = pending ? t('timeline.saving') : t(labelKey)
 

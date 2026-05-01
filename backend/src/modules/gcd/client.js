@@ -1,3 +1,4 @@
+﻿// Configure the GCD HTTP client, auth headers, and guarded GET requests.
 import { Agent, fetch, Headers, Request, Response } from 'undici'
 import { environment } from '../../config/environment.js'
 import { registerGcdRequest } from './requestTracker.js'
@@ -38,6 +39,7 @@ const defaultHeaders = {
 }
 
 const buildAuthHeaders = () => {
+  // Prefer basic auth when credentials exist; otherwise use a session cookie.
   if (basicToken) {
     return { Authorization: `Basic ${basicToken}` }
   }
@@ -74,6 +76,7 @@ export const gcdGet = async (path, { search, headers, signal } = {}) => {
   registerGcdRequest(url.pathname)
   let response
   try {
+    // Keep one agent and shared defaults so ingestion scripts stay consistent.
     response = await fetch(url, {
       method: 'GET',
       headers: {

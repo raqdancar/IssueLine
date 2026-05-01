@@ -1,3 +1,4 @@
+﻿// Render the minimal timeline issue card for dense mobile views.
 import { CalendarDays } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -26,6 +27,7 @@ function TimelineIssueCardMicro({
   }
   const highlightClasses = isHighlighted ? 'ring-2 ring-indigo-400/60 shadow-lg shadow-indigo-200/40' : 'shadow-sm'
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/60' : ''
+  // Keep micro cards lightweight while preserving highlight discoverability.
   const borderGlow = `${highlightClasses} ${flashClasses}`.trim()
   const stageLabelClasses =
     'text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-indigo-500'

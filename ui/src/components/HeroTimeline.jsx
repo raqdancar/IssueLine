@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+﻿// Render the main timeline experience with filters, anchors, issue states, and details.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import TimelineHeader from './timeline/TimelineHeader'
 import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
@@ -78,6 +79,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const [showBackToTop, setShowBackToTop] = useState(false)
   const flashTimeoutRef = useRef(null)
 
+  // Load timeline entries for the current hero slug.
   useEffect(() => {
     if (!apiBaseUrl || !slug) return undefined
 
@@ -113,6 +115,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   }, [apiBaseUrl, slug])
 
   useEffect(() => {
+    // Reset filters and selected issue when switching heroes.
     setPublicationFilter('all')
     setCollectionFilters({ ownedOnly: false, readOnly: false })
     setSelectedIssueId(null)
@@ -131,6 +134,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     })
   }, [entries, sortDirection])
   const filteredEntries = useMemo(() => {
+    // Combine publication filters with user collection/read filters.
     const publicationFilterMatch = (entry) => {
       if (publicationFilter === 'all') return true
       if (publicationFilter === 'annuals') return isAnnualIssueEntry(entry)
@@ -201,6 +205,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
 
     const orderedKeys = []
     const groups = new Map()
+    // Choose one stable target issue per stage for index navigation.
     filteredEntries.forEach((entry, index) => {
       const stage = getStageKey(entry)
       if (!stage) return
@@ -294,6 +299,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     }
     const token = Date.now()
     setFlashState({ id: entryDomId, token })
+    // Ignore late timers from older flashes by checking the token.
     flashTimeoutRef.current = setTimeout(() => {
       setFlashState((current) => (current.token === token ? { id: null, token: 0 } : current))
       flashTimeoutRef.current = null
@@ -336,6 +342,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
 
       const isPastTimelineStart = rect.top <= -48
       const isBeforeTimelineEnd = rect.bottom >= window.innerHeight * 0.45
+      // Show the floating button only while the timeline section is in view.
       setShowBackToTop(isPastTimelineStart && isBeforeTimelineEnd)
     }
 
@@ -372,6 +379,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   }, [availableAnchors, triggerFlash])
 
   const handleAnchorClick = (anchor) => {
+    // Keep list state and index state aligned when jumping to an anchor.
     setActiveAnchor(anchor.key)
     if (anchor.targetId) {
       setHighlightedEntryDomId(anchor.targetId)
@@ -495,6 +503,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const handleIssueStateToggle = useCallback(
     (issueId, field, nextValue) => {
       if (!issueId || !isAuthenticated || !apiBaseUrl) return
+      // Opening the ownership dialog is required before enabling "have it".
       if (field === 'haveIt' && nextValue) {
         void openOwnershipDialog(issueId)
         return
@@ -680,6 +689,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       />
       {shouldShowBackToTop && typeof document !== 'undefined'
         ? createPortal(
+            // Portal keeps the floating button pinned to the viewport, not list flow.
             <button
               type="button"
               onClick={handleBackToTop}

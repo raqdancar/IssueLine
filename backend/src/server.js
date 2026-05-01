@@ -1,3 +1,4 @@
+// Bootstrap the backend HTTP server and register API routes.
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'

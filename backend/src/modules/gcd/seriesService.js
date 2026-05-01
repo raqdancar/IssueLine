@@ -1,3 +1,4 @@
+﻿// Search and cache GCD series matches for hero names.
 import { environment } from '../../config/environment.js'
 import { gcdGet } from './client.js'
 
@@ -8,6 +9,7 @@ const getNormalizedName = (value) => value?.trim().toLowerCase()
 const getCachedSeries = (normalizedName) => {
   const cached = seriesCache.get(normalizedName)
   if (!cached) return null
+  // Drop stale cache entries so updated GCD results can be fetched again.
   if (Date.now() - cached.cachedAt > environment.gcd.seriesCacheTtlMs) {
     seriesCache.delete(normalizedName)
     return null

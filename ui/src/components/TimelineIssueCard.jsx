@@ -1,3 +1,4 @@
+﻿// Select and render the timeline issue card variant for the active density mode.
 import { useMemo } from 'react'
 import TimelineIssueCardDetailed from './timeline/TimelineIssueCardDetailed'
 import TimelineIssueCardCompact from './timeline/TimelineIssueCardCompact'
@@ -27,6 +28,7 @@ function TimelineIssueCard(props) {
     ...rest
   } = props
 
+  // Normalize issue data once so all density components consume the same shape.
   const viewModel = useMemo(
     () =>
       createIssueCardViewModel({
@@ -42,6 +44,7 @@ function TimelineIssueCard(props) {
     [entry, index, totalEntries, severityLookup, fallbackImage, issueState, t, locale],
   )
 
+  // Fallback to detailed layout if an unknown density value is passed.
   const SelectedComponent = densityComponents[density] ?? TimelineIssueCardDetailed
 
   const isHighlighted = viewModel.entryDomId === highlightedEntryDomId

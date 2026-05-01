@@ -1,3 +1,4 @@
+// Provide the authenticate Express middleware behavior.
 import { supabaseServiceClient } from '../lib/supabaseClient.js'
 
 const parseBearerToken = (authorizationHeader = '') => {

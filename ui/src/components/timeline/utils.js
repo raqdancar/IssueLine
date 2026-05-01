@@ -1,3 +1,4 @@
+﻿// Provide helpers to detect annual and special issues from timeline entry metadata.
 const textIncludes = (value, keyword) => {
   if (typeof value !== 'string') return false
   return value.toLowerCase().includes(keyword)
@@ -24,6 +25,7 @@ const extractIssueTextCandidates = (entry) => {
 export const isAnnualIssueEntry = (entry) => {
   if (!entry) return false
   const metadata = entry.metadata ?? {}
+  // Prefer explicit metadata flags, then fall back to textual heuristics.
   if (metadata.issue_category === 'annual' || metadata.issueCategory === 'annual') return true
   if (metadata.special_issue_type === 'annual' || metadata.specialIssueType === 'annual') return true
   if (metadata.special_issue && metadata.issueLabel && isAnnualLike(metadata.issueLabel)) return true

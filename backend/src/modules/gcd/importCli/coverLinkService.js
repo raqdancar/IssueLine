@@ -1,3 +1,4 @@
+﻿// Match imported cover files to hero issues and persist cover paths in Supabase.
 import { supabaseServiceClient } from '../../../lib/supabaseClient.js'
 
 const DEFAULT_BUCKET = process.env.ISSUE_IMAGE_BUCKET ?? 'issue-images'
@@ -35,6 +36,7 @@ const extractFilenameKeys = (fileName) => {
   const gcdCandidate = longestDigitToken && longestDigitToken.length >= 4 ? String(Number(longestDigitToken)) : null
 
   const issueKeys = new Set()
+  // Index both compact text and numeric tokens to improve filename matching.
   const normalizedCompact = normalizeToken(compact)
   if (normalizedCompact) issueKeys.add(normalizedCompact)
   for (const token of allDigitTokens) {

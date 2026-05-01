@@ -1,3 +1,4 @@
+﻿// Render the full-detail timeline issue card with metadata and actions.
 import { CalendarDays } from 'lucide-react'
 import TimelineStageTab from './TimelineStageTab'
 import TimelineIssueToolbar from './TimelineIssueToolbar'
@@ -44,6 +45,7 @@ function TimelineIssueCardDetailed({
   }
   const highlightClasses = isHighlighted ? 'ring-2 ring-indigo-400/70 shadow-xl shadow-indigo-200/60' : 'shadow-sm'
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/60' : ''
+  // Merge persistent highlight and transient flash styles for "jump to issue" navigation.
   const articleEmphasis = `${highlightClasses} ${flashClasses}`.trim()
 
   return (

@@ -1,4 +1,5 @@
-﻿import { useEffect } from 'react'
+﻿// Render the auth modal with sign-in/sign-up flows and validation feedback.
+import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,7 @@ function AuthDialog({
 }) {
   const { t } = useI18n()
 
+  // Allow closing with Escape while the modal is open.
   useEffect(() => {
     if (!open) return undefined
     const handleKeyDown = (event) => {
@@ -38,6 +40,7 @@ function AuthDialog({
     'sign-up': t('authDialog.modeSignUp'),
   }
 
+  // Route submit to the active auth flow without duplicating form markup.
   const handleSubmit = (event) => {
     event.preventDefault()
     if (!isConfigured) return

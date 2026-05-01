@@ -1,3 +1,4 @@
+﻿// Render the issue details modal with metadata, actions, and collected editions.
 import { useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { BookOpen, CheckCircle2 } from 'lucide-react'
@@ -15,6 +16,7 @@ const resolveCoverImage = (issue, fallbackImage) => {
   return coverFromStorage ?? issue.images?.cover ?? issue.images?.coverOriginal ?? fallbackImage ?? null
 }
 
+// Fullscreen modal with issue metadata, ownership actions, and collected editions.
 function IssueDetailsDialog({
   open,
   heroSlug,
@@ -40,6 +42,7 @@ function IssueDetailsDialog({
   const coverImage = useMemo(() => resolveCoverImage(issue, fallbackImage), [issue, fallbackImage])
   const coverAlt = issue?.headline ?? issue?.issue?.title ?? t('common.issueCover')
 
+  // Lock page scroll while the dialog is open and allow closing with Escape.
   useEffect(() => {
     if (!open) return undefined
     const previousOverflow = document.body.style.overflow

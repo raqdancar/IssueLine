@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+// Compose the main frontend application shell and route views.
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes, useMatch } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import AppHeader from '@/components/AppHeader'

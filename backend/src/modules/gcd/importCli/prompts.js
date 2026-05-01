@@ -1,3 +1,4 @@
+﻿// Collect and validate interactive answers for batch GCD series import scripts.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 
@@ -44,6 +45,7 @@ const parseHeroSlug = (value) => {
 }
 
 const askUntilValid = async ({ rl, question, parser, errorMessage }) => {
+  // Keep prompting until parser confirms a safe/expected value.
   while (true) {
     const answer = await rl.question(question)
     const parsed = parser(answer)

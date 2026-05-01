@@ -1,3 +1,4 @@
+﻿// Normalize GCD cover URLs and enforce a consistent image size token.
 export const collapseExtraSlashes = (value) => {
   if (!value) return value
   return value.replace(/\/{2,}/g, '/').replace(/^\/+/, '/')

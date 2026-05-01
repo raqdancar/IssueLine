@@ -1,3 +1,4 @@
+// Build consistent issue headline labels from series and issue identifiers.
 import { normalizeSeriesName } from './seriesNameUtils.js'
 
 const stripHashPrefix = (value) => {
@@ -10,8 +11,10 @@ const stripHashPrefix = (value) => {
 export const buildIssueHeadline = ({ seriesName, issueCode, number, fallback }) => {
   const normalizedSeries = normalizeSeriesName(seriesName) ?? seriesName ?? ''
   const normalizedNumber = stripHashPrefix(number)
+  // Prefer explicit numeric issue fields, then fallback to generic issue codes.
   const normalizedCode = normalizedNumber || stripHashPrefix(issueCode)
 
+  // Keep timeline labels deterministic while gracefully degrading with missing data.
   if (normalizedSeries && normalizedCode) {
     return `${normalizedSeries} #${normalizedCode}`
   }

@@ -1,3 +1,4 @@
+// Provide the heroThemes shared library helpers.
 const doctorStrangeTheme = {
   '--color-slate-50': '#fff8e8',
   '--color-slate-100': '#fff8e8',

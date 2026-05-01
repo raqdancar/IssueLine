@@ -1,3 +1,4 @@
+﻿// Fetch one GCD issue and transform it into a collected-edition draft payload.
 import { getIssueById } from '../gcd/issueService.js'
 import { parseGcdIssueIdentifier } from '../gcd/importCli/issueIdentifierUtils.js'
 import { normalizeGcdCollectedEdition } from './gcdCollectedEditionMapper.js'
@@ -21,6 +22,7 @@ export const fetchCollectedEditionFromGcd = async (identifier) => {
     }
   }
 
+  // Return both raw and normalized payloads to support preview + persistence flows.
   return {
     gcdIssueId,
     rawIssue,

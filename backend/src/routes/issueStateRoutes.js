@@ -1,11 +1,4 @@
-/**
- * Rutes HTTP per gestionar l'estat d'issues de la col·lecció personal.
- *
- * Aquest router exposa operacions autenticades per:
- * - consultar estats d'issues per heroi o per llista d'IDs,
- * - actualitzar estats individuals (`en possessió` / `llegit`),
- * - marcar etapes completes com a llegides.
- */
+﻿// Expose authenticated endpoints for per-issue and per-stage collection state updates.
 
 import express from 'express'
 import { z } from 'zod'
@@ -86,8 +79,7 @@ export const issueStatesRouter = express.Router()
 issueStatesRouter.use(authenticateRequest)
 
 issueStatesRouter.get('/', async (req, res, next) => {
-  // Es construeix un conjunt únic d'issues per evitar duplicats quan coincideixen
-  // `issueIds` explícits amb els que venen de la cronologia de l'heroi.
+  // Merge explicit ids with hero timeline ids and deduplicate before querying states.
   try {
     const query = querySchema.parse({
       ...req.query,
@@ -197,3 +189,4 @@ issueStatesRouter.post('/collected-editions/ownership', async (req, res, next) =
     return next(error)
   }
 })
+

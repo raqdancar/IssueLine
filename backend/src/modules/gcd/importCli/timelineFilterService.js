@@ -1,3 +1,4 @@
+﻿// Build timeline inclusion plans that filter duplicate and variant-like issue entries.
 const VARIANT_TAG_REGEX =
   /\b(variant|cover\s*[b-z]|alt(\.|ernate)?\s*cover|2nd\s*print|3rd\s*print|printing|newsstand|direct\s*edition|incentive)\b/i
 
@@ -53,6 +54,7 @@ export const buildTimelineVisibilityPlan = ({ entries, excludeVariantsFromTimeli
   }
 
   const grouped = new Map()
+  // Group possible duplicates by canonical series/issue/date identity.
   for (const entry of normalizedEntries) {
     const key = buildCanonicalGroupKey(entry)
     if (!grouped.has(key)) {

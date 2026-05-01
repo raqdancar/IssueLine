@@ -1,9 +1,11 @@
-﻿import { useI18n } from '@/i18n/I18nProvider.jsx'
+﻿// Render collected-edition cards linked to the selected issue.
+import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl } from '@/lib/issueImages'
 import IssueCollectedEditionPlaceholderCard from './IssueCollectedEditionPlaceholderCard'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 
+// Renders linked collected editions for the current issue, or an empty-state grid.
 function IssueCollectedEditionsSection({ collectedEditions }) {
   const { t } = useI18n()
   const hasItems = Array.isArray(collectedEditions) && collectedEditions.length > 0
@@ -15,9 +17,11 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
         <p className="body-sm text-slate-600">{t('issueDetails.collected.description')}</p>
       </div>
 
+      {/* Real collected-edition items linked to this issue. */}
       {hasItems ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {collectedEditions.map((edition) => {
+            // Support either absolute URLs or storage paths from import pipelines.
             const resolvedCoverImage = buildPublicStorageUrl(edition.coverImageUrl, COLLECTED_EDITION_IMAGE_BUCKET)
 
             return (

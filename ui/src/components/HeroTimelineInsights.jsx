@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+﻿// Render stage/collection insight panels and progress actions for a hero timeline.
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
 import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
@@ -103,6 +104,7 @@ const buildStageGroups = (entries, stateIndex = {}, t, locale) => {
     const issueId = entry.id ?? entry.metadata?.issue_id ?? entry.metadata?.issueId ?? null
     const issueTimestamp = typeof timestamp === 'number' ? timestamp : Number.POSITIVE_INFINITY
 
+    // Keep quick-action rows lightweight but sortable by real timeline order.
     group.issueItems.push({
       key: `${issueId ?? 'unknown'}-${entry.issue_code ?? entry.headline ?? group.issueCount}`,
       issueId,
@@ -141,6 +143,7 @@ const buildStageGroups = (entries, stateIndex = {}, t, locale) => {
 
       return {
         ...group,
+        // Render issue chips in deterministic chronological order.
         issueItems: [...group.issueItems].sort((a, b) => a.timestamp - b.timestamp),
         startYear,
         endYear,
@@ -177,6 +180,7 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
   })
 
   const normalizedIssues = useMemo(() => issues.filter(Boolean), [issues])
+  // Duplicate sequence to create a seamless marquee loop.
   const repeatedIssues = normalizedIssues.length > 1 ? [...normalizedIssues, ...normalizedIssues] : normalizedIssues
 
   useEffect(() => {
@@ -194,6 +198,7 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
       lastFrameTime = frameTime
 
       const loopWidth = track.scrollWidth / 2
+      // Pause movement while the user is dragging or hovering the strip.
       if (!isInteractingRef.current && Number.isFinite(loopWidth) && loopWidth > viewport.clientWidth) {
         viewport.scrollLeft += speedPixelsPerSecond * deltaSeconds
         if (viewport.scrollLeft >= loopWidth) {
@@ -358,7 +363,7 @@ const GaugeCard = ({ label, count, total, accentClass, t }) => {
       </svg>
       <div>
         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{label}</p>
-        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || '—' })}</p>
+        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || 'â€”' })}</p>
       </div>
     </div>
   )
@@ -441,7 +446,7 @@ function StageAccordionItem({
         <div className="min-w-0">
           <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-slate-900'}`}>{stage.name}</p>
           <p className={`text-xs ${isComplete ? 'text-emerald-700' : 'text-slate-500'}`}>
-            {stage.yearLabel} • {stage.issueCount} {t('timeline.indexIssues').toLowerCase()} • {progressLabel}
+            {stage.yearLabel} â€¢ {stage.issueCount} {t('timeline.indexIssues').toLowerCase()} â€¢ {progressLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-2">
@@ -568,6 +573,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const issueStateMutation = useIssueStateMutation(heroSlug)
   const stageReadMutation = useStageReadMutation(heroSlug)
 
+  // Fetch timeline entries plus collected-edition coverage for insights tabs.
   useEffect(() => {
     if (!apiBaseUrl || !heroSlug) {
       setState({ status: 'disabled', entries: [], collectedEditions: [], error: null })
@@ -649,6 +655,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     })
 
     for (const [key, issues] of index.entries()) {
+      // Stable sort prevents reshuffling when two issues share the same date.
       const sorted = [...issues].sort((a, b) => {
         if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp
         const aNumber = Number.parseFloat(String(a.issueNumber ?? ''))
@@ -778,11 +785,13 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
     try {
       if (!currentlyOwned) {
+        // Attach ownership to one seed issue; backend sync expands state as needed.
         await issueStateMutation.mutateAsync({
           issueId: issueIds[0],
           patch: { haveIt: true, collectedEditionIds: [editionId] },
         })
       } else {
+        // Remove this edition id from every linked issue in the overview.
         for (const issueId of issueIds) {
           const issueState = statesByIssueId?.[issueId] ?? null
           if (!issueState?.haveIt && !Array.isArray(issueState?.collectedEditionIds)) continue

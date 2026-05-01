@@ -1,7 +1,9 @@
+﻿// Parse and validate GCD issue identifiers from ids or issue URLs.
 export const parseGcdIssueIdentifier = (value) => {
   const input = String(value ?? '').trim()
   if (!input) return null
 
+  // Support raw ids and direct GCD issue URLs from copy/paste workflows.
   if (/^\d+$/.test(input)) {
     const numeric = Number(input)
     return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null

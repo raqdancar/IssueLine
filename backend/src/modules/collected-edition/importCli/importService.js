@@ -1,3 +1,4 @@
+﻿// Prepare and persist collected-edition imports sourced from GCD identifiers.
 import { fetchCollectedEditionFromGcd } from '../gcdCollectedEditionService.js'
 import { findCollectedEditionDuplicate, insertCollectedEdition } from '../repository.js'
 
@@ -30,6 +31,7 @@ export const prepareCollectedEditionImportByGcdIdentifier = async ({ gcdIdentifi
   }
 
   const edition = lookup.normalizedEdition
+  // Check duplicates before any write so CLI can show a safe preview first.
   const duplicate = await findCollectedEditionDuplicate({
     sourceExternalId: edition.sourceExternalId,
     isbn: edition.isbn,
