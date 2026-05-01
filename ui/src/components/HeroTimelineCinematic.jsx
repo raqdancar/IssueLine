@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import TimelineStageTab from './timeline/TimelineStageTab'
@@ -72,10 +73,13 @@ const groupEntriesByYear = (entries, direction = 'desc') => {
 
 function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc = null, timelineLogoAlt = null }) {
   const { t, locale } = useI18n()
+  const sectionRef = useRef(null)
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
   const [sortDirection, setSortDirection] = useState('desc')
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
+  const [showBackToTop, setShowBackToTop] = useState(false)
   const { isAuthenticated } = useSessionContext()
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
@@ -127,6 +131,46 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
     return () => controller.abort()
   }, [backendBaseUrl, slug, t])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const syncViewport = () => {
+      setIsMobileViewport(window.matchMedia('(max-width: 767px)').matches)
+    }
+
+    syncViewport()
+    window.addEventListener('resize', syncViewport)
+    return () => window.removeEventListener('resize', syncViewport)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    if (!isMobileViewport) {
+      setShowBackToTop(false)
+      return undefined
+    }
+
+    const onScroll = () => {
+      const rect = sectionRef.current?.getBoundingClientRect()
+      if (!rect) {
+        setShowBackToTop(false)
+        return
+      }
+
+      const isPastTimelineStart = rect.top <= -48
+      const isBeforeTimelineEnd = rect.bottom >= window.innerHeight * 0.45
+      setShowBackToTop(isPastTimelineStart && isBeforeTimelineEnd)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [isMobileViewport])
+
   const openCoverViewer = (src, alt) => {
     if (!src || typeof window === 'undefined') return
     if (!window.matchMedia('(max-width: 767px)').matches) return
@@ -137,6 +181,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
     if (!issueId || !isAuthenticated || !backendBaseUrl) return
     issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
   }
+  const shouldShowBackToTop = isMobileViewport && showBackToTop
 
   const groupedEntries = useMemo(() => groupEntriesByYear(entries, sortDirection), [entries, sortDirection])
 
@@ -157,7 +202,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   }
 
   return (
-    <section className="relative mt-4 overflow-hidden rounded-3xl border border-slate-900/10 bg-slate-900 p-6 text-slate-100 shadow-2xl">
+    <section ref={sectionRef} className="relative mt-4 overflow-hidden rounded-3xl border border-slate-900/10 bg-slate-900 p-6 text-slate-100 shadow-2xl">
       <div className="pointer-events-none absolute inset-0 opacity-30" aria-hidden>
         <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-linear-to-b from-transparent via-indigo-500 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.35),transparent_55%)]" />
@@ -344,6 +389,19 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
         alt={coverViewer.alt}
         onClose={() => setCoverViewer({ open: false, src: null, alt: '' })}
       />
+      {shouldShowBackToTop && typeof document !== 'undefined'
+        ? createPortal(
+            <button
+              type="button"
+              onClick={() => sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              aria-label="Back to top"
+              className="fixed bottom-4 right-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/95 shadow-lg shadow-black/35 backdrop-blur transition hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:hidden"
+            >
+              <img src="/timeline-ui/back-to-filters.png" alt="" aria-hidden="true" className="h-9 w-9 object-contain" />
+            </button>,
+            document.body,
+          )
+        : null}
     </section>
   )
 }

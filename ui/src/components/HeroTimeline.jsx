@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import TimelineHeader from './timeline/TimelineHeader'
 import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './timeline/TimelineNavigatorToggle'
@@ -27,6 +28,7 @@ import {
 
 function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, timelineLogoAlt = null }) {
   const { t } = useI18n()
+  const sectionRef = useRef(null)
   const apiBaseUrl = backendBaseUrl
   const [sortDirection, setSortDirection] = useState('desc')
   const [indexMode, setIndexMode] = useState('month')
@@ -72,6 +74,8 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       : undefined
   const issueStateDisabled = !isAuthenticated || issueStatesQuery.isError
   const [flashState, setFlashState] = useState({ id: null, token: 0 })
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
+  const [showBackToTop, setShowBackToTop] = useState(false)
   const flashTimeoutRef = useRef(null)
 
   useEffect(() => {
@@ -304,6 +308,46 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const syncViewport = () => {
+      setIsMobileViewport(window.matchMedia('(max-width: 767px)').matches)
+    }
+
+    syncViewport()
+    window.addEventListener('resize', syncViewport)
+    return () => window.removeEventListener('resize', syncViewport)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    if (!isMobileViewport) {
+      setShowBackToTop(false)
+      return undefined
+    }
+
+    const onScroll = () => {
+      const rect = sectionRef.current?.getBoundingClientRect()
+      if (!rect) {
+        setShowBackToTop(false)
+        return
+      }
+
+      const isPastTimelineStart = rect.top <= -48
+      const isBeforeTimelineEnd = rect.bottom >= window.innerHeight * 0.45
+      setShowBackToTop(isPastTimelineStart && isBeforeTimelineEnd)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [isMobileViewport])
+
   const availableAnchors = anchorLookup[indexMode] ?? []
 
   useEffect(() => {
@@ -495,6 +539,10 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const navigatorHasContent =
     monthAnchors.length > 0 || stageAnchors.length > 0 || issueAnchors.length > 0
   const canShowNavigator = navigatorHasContent
+  const handleBackToTop = useCallback(() => {
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
+  const shouldShowBackToTop = isMobileViewport && showBackToTop
 
   if (!slug) {
     return (
@@ -513,7 +561,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   }
 
   return (
-    <section className="mt-8 w-full rounded-2xl border border-slate-100 bg-linear-to-br from-white to-slate-50 p-4">
+    <section ref={sectionRef} className="relative mt-8 w-full rounded-2xl border border-slate-100 bg-linear-to-br from-white to-slate-50 p-4">
       <TimelineHeader
         heroName={heroName}
         timelineLogoSrc={timelineLogoSrc}
@@ -630,11 +678,25 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         onConfirm={confirmOwnershipDialog}
         onClose={closeOwnershipDialog}
       />
+      {shouldShowBackToTop && typeof document !== 'undefined'
+        ? createPortal(
+            <button
+              type="button"
+              onClick={handleBackToTop}
+              aria-label="Back to top"
+              className="fixed bottom-4 right-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white/95 shadow-lg shadow-slate-900/20 backdrop-blur transition hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 md:hidden"
+            >
+              <img src="/timeline-ui/back-to-filters.png" alt="" aria-hidden="true" className="h-9 w-9 object-contain" />
+            </button>,
+            document.body,
+          )
+        : null}
     </section>
   )
 }
 
 export default HeroTimeline
+
 
 
 
