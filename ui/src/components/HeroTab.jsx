@@ -51,25 +51,19 @@ function HeroTab({ hero }) {
     />
   )
 
-  return (
+  const cardContent = (
     <article
       aria-disabled={!hasTimelineIssues}
       className={cn(
         'flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 sm:p-5',
         hasTimelineIssues
-          ? 'hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg'
+          ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg focus-within:-translate-y-1 focus-within:shadow-lg'
           : 'border-slate-200 bg-slate-100/70 text-slate-500'
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="flex min-w-0 flex-1 items-start gap-4">
-          {detailHref ? (
-            <Link to={detailHref} aria-label={t('heroTab.viewDetailsFor', { name: hero.name })} className="inline-block shrink-0 focus:outline-none">
-              {portrait}
-            </Link>
-          ) : (
-            <div className="shrink-0" title={t('heroTab.noIssuesTooltip')}>{portrait}</div>
-          )}
+          <div className="shrink-0" title={!detailHref ? t('heroTab.noIssuesTooltip') : undefined}>{portrait}</div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-balance title-sm">{hero.name}</h3>
@@ -137,6 +131,20 @@ function HeroTab({ hero }) {
         ))}
       </dl>
     </article>
+  )
+
+  if (!detailHref) {
+    return cardContent
+  }
+
+  return (
+    <Link
+      to={detailHref}
+      aria-label={t('heroTab.viewDetailsFor', { name: hero.name })}
+      className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70"
+    >
+      {cardContent}
+    </Link>
   )
 }
 
