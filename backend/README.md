@@ -13,16 +13,37 @@ This directory now follows a feature-first layout so related modules live togeth
 
 When adding new backend capabilities, prefer creating a module (or adding to an existing module) instead of dropping more files in the root. This keeps imports predictable (`src/modules/<domain>/<file>.js`) and avoids the previous services folder bloat.
 
-## Deploy on Koyeb (backend) + Vercel (frontend)
+## Run locally
 
-This backend is now ready for container deploys on Koyeb:
+From the repository root:
+
+```bash
+# Backend development mode (nodemon)
+npm run backend:dev
+
+# Backend start mode (plain node process)
+npm run backend:start
+```
+
+From inside `backend/`:
+
+```bash
+npm run dev
+npm run start
+```
+
+Use `npm run dev` while developing and `npm run start` to run the backend without auto-reload.
+
+## Deploy on Render (backend) + Vercel (frontend)
+
+This backend is ready for container deploys on Render:
 - `Dockerfile` builds a production image with `npm ci --omit=dev`.
-- The server listens on `PORT` automatically (Koyeb runtime port).
+- The server listens on `PORT` automatically (Render runtime port).
 - CORS supports exact origins and wildcard patterns for Vercel preview URLs.
 
 ### Required environment variables
 
-Set these in the Koyeb service:
+Set these in the Render service:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `GCD_BASE_URL` (default is `https://www.comics.org`, set it explicitly in production)
@@ -34,11 +55,11 @@ Set these in the Koyeb service:
 - `BACKEND_ALLOWED_ORIGIN_PATTERNS`
   Example: `https://*.vercel.app`
 - `PORT`
-  Koyeb injects this automatically.
+  Render injects this automatically.
 - `BACKEND_HOST`
   Leave default `0.0.0.0` unless you have a custom network setup.
 
-### Koyeb service settings
+### Render service settings
 
 - Runtime: Dockerfile (recommended)
 - Health check path: `/health`
@@ -48,7 +69,7 @@ Set these in the Koyeb service:
 ### Frontend (Vercel)
 
 In your Vercel project, set:
-- `VITE_BACKEND_URL=https://<your-koyeb-service-domain>`
+- `VITE_BACKEND_URL=https://<your-render-service-domain>`
 
 ## Internal GCD import CLI
 

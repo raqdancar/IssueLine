@@ -12,6 +12,32 @@ npm install
 npm run dev
 ```
 
+## Run locally
+
+Use these commands from the repository root:
+
+```bash
+# Development mode (frontend with HMR)
+npm run dev
+
+# Alias to start the app locally (currently maps to dev)
+npm run start
+```
+
+Current behavior of root scripts:
+- `npm run dev` runs the frontend dev server (`ui`).
+- `npm run start` is an alias of `npm run dev`.
+
+If you also want to run the backend locally:
+
+```bash
+# Backend with auto-reload (nodemon)
+npm run backend:dev
+
+# Backend without auto-reload (node)
+npm run backend:start
+```
+
 ## Deploy: Render (backend) + Vercel (frontend)
 
 This repo now includes:
