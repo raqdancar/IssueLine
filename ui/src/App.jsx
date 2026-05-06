@@ -6,19 +6,16 @@ import AppHeader from '@/components/AppHeader'
 import HeroTab from '@/components/HeroTab'
 import Footer from '@/components/Footer'
 import AuthDialog from '@/components/AuthDialog'
-import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
+import { isSupabaseConfigured } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
 import { resolveHeroThemeStyle } from '@/lib/heroThemes'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { useHeroesCatalog } from '@/hooks/useHeroesCatalog.js'
+import { useSupabaseSession } from '@/hooks/useSupabaseSession.js'
+import { useAuthActions } from '@/hooks/useAuthActions.js'
 
 const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
 const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
-
-const initialFormValues = {
-  email: '',
-  password: '',
-  confirmPassword: '',
-}
 
 const statusClasses = {
   idle: 'text-slate-500',
@@ -36,303 +33,25 @@ const formatSlugTitle = (slug) =>
 
 function App() {
   const { t, locale, setLocale } = useI18n()
-  const [formValues, setFormValues] = useState(initialFormValues)
-  const [status, setStatus] = useState({ state: 'idle', message: '' })
-  const [saving, setSaving] = useState(false)
-  const [session, setSession] = useState(null)
   const [authMode, setAuthMode] = useState('sign-in')
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false)
-  const [heroes, setHeroes] = useState([])
-  const [heroesStatus, setHeroesStatus] = useState({ state: 'idle', message: '' })
-  const [navAvatarUrl, setNavAvatarUrl] = useState(null)
+  const { session, navAvatarUrl } = useSupabaseSession()
+  const { heroes, heroesStatus, loadHeroes } = useHeroesCatalog({ t })
   const heroRouteMatch = useMatch('/heroes/:slug')
+  const heroSlug = heroRouteMatch?.params?.slug ?? null
   const isAccountRoute = Boolean(useMatch('/account'))
-
-  const loadHeroes = useCallback(async () => {
-    if (!supabase) {
-      setHeroes([])
-      setHeroesStatus({
-        state: 'idle',
-        message: t('app.configureSupabaseToLoadHeroes'),
-      })
-      return
-    }
-
-    setHeroesStatus({ state: 'loading', message: t('app.loadingHeroes') })
-
-    const [heroesResult, imagesResult] = await Promise.all([
-      supabase.from('superheroes').select('*').order('name', { ascending: true }),
-      supabase
-        .from('hero_images')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false }),
-    ])
-
-    if (heroesResult.error) {
-      setHeroesStatus({ state: 'error', message: heroesResult.error.message })
-      return
-    }
-
-    if (imagesResult.error) {
-      setHeroesStatus({ state: 'error', message: imagesResult.error.message })
-      return
-    }
-
-    const heroRows = heroesResult.data ?? []
-    const heroApiIds = heroRows.map((hero) => hero.api_id).filter(Boolean)
-    let heroesWithIssues = new Set()
-    const heroCoverageById = new Map()
-
-    const collectedEditionsCountByHeroId = new Map()
-
-    if (heroApiIds.length) {
-      const [timelineResult, collectedEditionsResult] = await Promise.all([
-        supabase
-          .from('hero_timelines')
-          .select('hero_api_id, issue_date')
-          .in('hero_api_id', heroApiIds),
-        supabase
-          .from('collected_editions')
-          .select('hero_api_id')
-          .in('hero_api_id', heroApiIds),
-      ])
-
-      if (timelineResult.error) {
-        setHeroesStatus({ state: 'error', message: timelineResult.error.message })
-        return
-      }
-
-      const rows = timelineResult.data ?? []
-      heroesWithIssues = new Set(rows.map((row) => row.hero_api_id))
-
-      rows.forEach((row) => {
-        if (!row?.hero_api_id) return
-        const current = heroCoverageById.get(row.hero_api_id) ?? {
-          count: 0,
-          startYear: null,
-          endYear: null,
-        }
-
-        current.count += 1
-        const parsedDate = row.issue_date ? new Date(row.issue_date) : null
-        if (parsedDate && !Number.isNaN(parsedDate.getTime())) {
-          const year = parsedDate.getUTCFullYear()
-          if (current.startYear === null || year < current.startYear) {
-            current.startYear = year
-          }
-          if (current.endYear === null || year > current.endYear) {
-            current.endYear = year
-          }
-        }
-
-        heroCoverageById.set(row.hero_api_id, current)
-      })
-
-      if (collectedEditionsResult.error) {
-        console.warn('Failed to load collected editions count for hero dashboard', collectedEditionsResult.error.message)
-      } else {
-        for (const row of collectedEditionsResult.data ?? []) {
-          if (!row?.hero_api_id) continue
-          const currentCount = collectedEditionsCountByHeroId.get(row.hero_api_id) ?? 0
-          collectedEditionsCountByHeroId.set(row.hero_api_id, currentCount + 1)
-        }
-      }
-    }
-
-    const imagesByHero = (imagesResult.data ?? []).reduce((acc, image) => {
-      if (!acc[image.hero_api_id]) {
-        acc[image.hero_api_id] = []
-      }
-      acc[image.hero_api_id].push(image)
-      return acc
-    }, {})
-
-    const enrichedHeroes = heroRows.map((hero) => ({
-      ...hero,
-      heroImages: imagesByHero[hero.api_id] ?? [],
-      hasTimelineIssues: heroesWithIssues.has(hero.api_id),
-      timelineCoverage: heroCoverageById.get(hero.api_id) ?? { count: 0, startYear: null, endYear: null },
-      collectedEditionsCount: collectedEditionsCountByHeroId.get(hero.api_id) ?? 0,
-    }))
-
-    setHeroes(enrichedHeroes)
-    setHeroesStatus({
-      state: 'success',
-      message: enrichedHeroes.length
-        ? t('app.loadedHeroes', { count: enrichedHeroes.length })
-        : t('app.noHeroesFound'),
-    })
-  }, [t])
-
-  useEffect(() => {
-    void loadHeroes()
-  }, [loadHeroes])
-
-  useEffect(() => {
-    if (!supabase) return undefined
-
-    let isMounted = true
-
-    const syncSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      if (isMounted) {
-        setSession(data.session ?? null)
-      }
-    }
-
-    void syncSession()
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (isMounted) {
-        setSession(nextSession)
-      }
-    })
-
-    return () => {
-      isMounted = false
-      authListener?.subscription.unsubscribe()
-    }
+  const handleSignedIn = useCallback(() => {
+    setAuthDialogOpen(false)
+    setAuthMode('sign-in')
   }, [])
-
-  useEffect(() => {
-    if (!supabase || !session?.user) {
-      setNavAvatarUrl(null)
-      return
-    }
-
-    const avatarPath = session.user.user_metadata?.avatar_path
-    const avatarBucket =
-      session.user.user_metadata?.avatar_bucket || import.meta.env.VITE_SUPABASE_AVATAR_BUCKET || 'avatars'
-
-    if (!avatarPath) {
-      setNavAvatarUrl(null)
-      return
-    }
-
-    let active = true
-
-    const loadAvatar = async () => {
-      const { data, error } = await supabase.storage.from(avatarBucket).createSignedUrl(avatarPath, 60 * 60 * 24)
-      if (!active) return
-      if (error) {
-        setNavAvatarUrl(null)
-        return
-      }
-      setNavAvatarUrl(data?.signedUrl ?? null)
-    }
-
-    void loadAvatar()
-
-    return () => {
-      active = false
-    }
-  }, [session])
-
-  const handleChange = (event) => {
-    const { name, value } = event.target
-    setFormValues((previous) => ({ ...previous, [name]: value }))
-  }
-
-  const recordLoginAudit = async (user) => {
-    const payload = {
-      user_id: user.id,
-      email: user.email,
-      source: 'web_app',
-      metadata: { last_sign_in: user.last_sign_in_at },
-    }
-
-    const { error } = await supabase.from('login_audit').insert([payload])
-
-    if (error) {
-      console.warn('Failed to record the access in login_audit', error.message)
-    }
-  }
-
-  const handleSignIn = async () => {
-    if (!supabase) return
-
-    if (!formValues.email.trim() || !formValues.password.trim()) {
-      setStatus({ state: 'error', message: t('app.emailPasswordRequired') })
-      return
-    }
-
-    setSaving(true)
-    setStatus({ state: 'loading', message: t('app.validatingCredentials') })
-
-    const credentials = {
-      email: formValues.email.trim().toLowerCase(),
-      password: formValues.password,
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword(credentials)
-
-    if (error) {
-      setStatus({ state: 'error', message: error.message })
-      setSaving(false)
-      return
-    }
-
-    if (data.user) {
-      setStatus({
-        state: 'success',
-        message: t('app.signedInAs', { email: data.user.email }),
-      })
-      setFormValues(initialFormValues)
-      await recordLoginAudit(data.user)
-      setAuthDialogOpen(false)
-      setAuthMode('sign-in')
-    }
-
-    setSaving(false)
-  }
-
-  const handleSignUp = async () => {
-    if (!supabase) return
-
-    if (!formValues.email.trim() || !formValues.password.trim()) {
-      setStatus({ state: 'error', message: t('app.emailPasswordRequired') })
-      return
-    }
-
-    if (formValues.password !== formValues.confirmPassword) {
-      setStatus({ state: 'error', message: t('app.passwordsDoNotMatch') })
-      return
-    }
-
-    setSaving(true)
-    setStatus({ state: 'loading', message: t('app.creatingAccount') })
-
-    const credentials = {
-      email: formValues.email.trim().toLowerCase(),
-      password: formValues.password,
-    }
-
-    const { data, error } = await supabase.auth.signUp(credentials)
-
-    if (error) {
-      setStatus({ state: 'error', message: error.message })
-      setSaving(false)
-      return
-    }
-
-    if (data?.user) {
-      setStatus({
-        state: 'success',
-        message: t('app.accountCreatedCheckInbox'),
-      })
-      setFormValues(initialFormValues)
-      setAuthMode('sign-in')
-    }
-
-    setSaving(false)
-  }
-
-  const handleSignOut = async () => {
-    if (!supabase) return
-    await supabase.auth.signOut()
-    setStatus({ state: 'idle', message: t('app.signedOut') })
-  }
+  const handleSignUpSuccess = useCallback(() => {
+    setAuthMode('sign-in')
+  }, [])
+  const { formValues, status, saving, handleChange, handleSignIn, handleSignUp, handleSignOut } = useAuthActions({
+    t,
+    onSignedIn: handleSignedIn,
+    onSignUpSuccess: handleSignUpSuccess,
+  })
 
   const openAuthDialog = useCallback(() => {
     setAuthMode('sign-in')
@@ -353,14 +72,8 @@ function App() {
     }),
     [session],
   )
-  const shellThemeStyle = useMemo(
-    () => resolveHeroThemeStyle(heroRouteMatch?.params?.slug),
-    [heroRouteMatch?.params?.slug],
-  )
-  const heroTitle = useMemo(
-    () => (heroRouteMatch?.params?.slug ? formatSlugTitle(heroRouteMatch.params.slug) : null),
-    [heroRouteMatch?.params?.slug],
-  )
+  const shellThemeStyle = useMemo(() => resolveHeroThemeStyle(heroSlug), [heroSlug])
+  const heroTitle = heroSlug ? formatSlugTitle(heroSlug) : null
   const documentTitle = useMemo(() => {
     const appName = t('common.appName')
     if (heroTitle) return `${appName} | ${heroTitle}`

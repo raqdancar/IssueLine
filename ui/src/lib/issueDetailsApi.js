@@ -1,16 +1,6 @@
 // Provide the issueDetailsApi shared library helpers.
 import { backendBaseUrl } from '@/utils/backend.js'
-
-const parseResponse = async (response) => {
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    const message = payload?.error || `Request failed with status ${response.status}`
-    const error = new Error(message)
-    error.status = response.status
-    throw error
-  }
-  return payload
-}
+import { parseJsonResponse } from '@/lib/httpClient.js'
 
 export const fetchIssueDetails = async ({ heroSlug, issueId, signal }) => {
   if (!backendBaseUrl || !heroSlug || !issueId) {
@@ -22,5 +12,5 @@ export const fetchIssueDetails = async ({ heroSlug, issueId, signal }) => {
     { signal }
   )
 
-  return parseResponse(response)
+  return parseJsonResponse(response)
 }

@@ -1,4 +1,5 @@
 // Provide the issueStatesApi shared library helpers.
+import { parseJsonResponse } from '@/lib/httpClient.js'
 import { backendBaseUrl } from '@/utils/backend.js'
 
 const buildQueryString = (params) => {
@@ -8,17 +9,6 @@ const buildQueryString = (params) => {
     search.set(key, value)
   })
   return search.toString()
-}
-
-const handleResponse = async (response) => {
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    const message = payload?.error || `Request failed with status ${response.status}`
-    const error = new Error(message)
-    error.status = response.status
-    throw error
-  }
-  return payload
 }
 
 export const fetchIssueStates = async ({ heroSlug, accessToken }) => {
@@ -33,7 +23,7 @@ export const fetchIssueStates = async ({ heroSlug, accessToken }) => {
     },
   })
 
-  const payload = await handleResponse(response)
+  const payload = await parseJsonResponse(response)
   return payload.states ?? []
 }
 
@@ -51,7 +41,7 @@ export const patchIssueState = async ({ issueId, patch, accessToken }) => {
     body: JSON.stringify(patch),
   })
 
-  return handleResponse(response)
+  return parseJsonResponse(response)
 }
 
 export const markStageIssuesRead = async ({ heroSlug, heroApiId, stageKey, accessToken }) => {
@@ -83,10 +73,16 @@ export const markStageIssuesRead = async ({ heroSlug, heroApiId, stageKey, acces
     body: JSON.stringify(body),
   })
 
-  return handleResponse(response)
+  return parseJsonResponse(response)
 }
 
-export const toggleCollectedEditionOwnership = async ({ heroSlug, heroApiId, collectedEditionId, haveIt, accessToken }) => {
+export const toggleCollectedEditionOwnership = async ({
+  heroSlug,
+  heroApiId,
+  collectedEditionId,
+  haveIt,
+  accessToken,
+}) => {
   if (!backendBaseUrl || !accessToken) {
     throw new Error('Missing backend configuration or authentication.')
   }
@@ -116,5 +112,5 @@ export const toggleCollectedEditionOwnership = async ({ heroSlug, heroApiId, col
     body: JSON.stringify(body),
   })
 
-  return handleResponse(response)
+  return parseJsonResponse(response)
 }

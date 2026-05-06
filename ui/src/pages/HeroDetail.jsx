@@ -8,6 +8,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { backendBaseUrl } from '@/utils/backend.js'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
+import { fetchHeroBySlugWithImages } from '@/lib/heroesApi.js'
 
 const HeroTimelineCinematic = lazy(() => import('@/components/HeroTimelineCinematic'))
 const HeroTimelineInsights = lazy(() => import('@/components/HeroTimelineInsights'))
@@ -62,38 +63,24 @@ function HeroDetail() {
 
     const loadHero = async () => {
       setState({ status: 'loading', hero: null, error: null })
-      const { data, error: heroError } = await supabase
-        .from('superheroes')
-        .select('*')
-        .eq('slug', slug.toLowerCase())
-        .order('api_id', { ascending: true })
-        .limit(1)
-        .maybeSingle()
+      try {
+        const heroData = await fetchHeroBySlugWithImages(supabase, slug)
+        if (!active) return
 
-      if (!active) return
+        if (!heroData) {
+          setState({ status: 'error', hero: null, error: t('heroDetail.heroNotFound', { slug }) })
+          return
+        }
 
-      if (heroError) {
-        setState({ status: 'error', hero: null, error: heroError.message })
-        return
+        setState({
+          status: 'success',
+          hero: heroData,
+          error: null,
+        })
+      } catch (error) {
+        if (!active) return
+        setState({ status: 'error', hero: null, error: error.message })
       }
-
-      if (!data) {
-        setState({ status: 'error', hero: null, error: t('heroDetail.heroNotFound', { slug }) })
-        return
-      }
-
-      const { data: heroImages } = await supabase
-        .from('hero_images')
-        .select('*')
-        .eq('hero_api_id', data.api_id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-
-      setState({
-        status: 'success',
-        hero: { ...data, heroImages: heroImages ?? [] },
-        error: null,
-      })
     }
 
     void loadHero()

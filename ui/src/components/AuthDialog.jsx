@@ -1,9 +1,9 @@
-﻿// Render the auth modal with sign-in/sign-up flows and validation feedback.
-import { useEffect } from 'react'
+// Render the auth modal with sign-in/sign-up flows and validation feedback.
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function AuthDialog({
@@ -20,18 +20,7 @@ function AuthDialog({
   isConfigured,
 }) {
   const { t } = useI18n()
-
-  // Allow closing with Escape while the modal is open.
-  useEffect(() => {
-    if (!open) return undefined
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
+  useModalLayer({ open, onClose, lockScroll: true, closeOnEscape: true })
 
   if (!open) return null
 
@@ -137,7 +126,10 @@ function AuthDialog({
                   : modeLabels[mode]}
               </Button>
               {status.message ? (
-                <p className={`text-sm ${status.state === 'error' ? 'text-red-600' : status.state === 'success' ? 'text-emerald-600' : 'text-slate-500'}`} role="status">
+                <p
+                  className={`text-sm ${status.state === 'error' ? 'text-red-600' : status.state === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}
+                  role="status"
+                >
                   {status.message}
                 </p>
               ) : null}

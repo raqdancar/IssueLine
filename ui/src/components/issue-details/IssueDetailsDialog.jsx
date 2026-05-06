@@ -1,9 +1,10 @@
-﻿// Render the issue details modal with metadata, actions, and collected editions.
-import { useEffect, useMemo } from 'react'
+// Render the issue details modal with metadata, actions, and collected editions.
+import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { BookOpen, CheckCircle2 } from 'lucide-react'
 import { buildIssueImageUrl } from '@/lib/issueImages'
 import { useIssueDetailsQuery } from '@/hooks/useIssueDetails.js'
+import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import IssueDetailsHeader from './IssueDetailsHeader'
@@ -42,22 +43,7 @@ function IssueDetailsDialog({
   const coverImage = useMemo(() => resolveCoverImage(issue, fallbackImage), [issue, fallbackImage])
   const coverAlt = issue?.headline ?? issue?.issue?.title ?? t('common.issueCover')
 
-  // Lock page scroll while the dialog is open and allow closing with Escape.
-  useEffect(() => {
-    if (!open) return undefined
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, onClose])
+  useModalLayer({ open, onClose, lockScroll: true, closeOnEscape: true })
 
   if (!open || typeof document === 'undefined') return null
 

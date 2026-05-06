@@ -1,33 +1,15 @@
-﻿// Render a mobile-only fullscreen cover preview modal with escape/overlay close.
+// Render a mobile-only fullscreen cover preview modal with escape/overlay close.
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function CoverFullscreenViewer({ open, src, alt, onClose }) {
   const { t } = useI18n()
   const [failed, setFailed] = useState(false)
 
-  // Lock the background and support Escape close while viewer is active.
-  useEffect(() => {
-    if (!open) return undefined
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [open, onClose])
+  useModalLayer({ open, onClose, lockScroll: true, closeOnEscape: true })
 
   useEffect(() => {
     // Reset load-failure state when opening a different cover.

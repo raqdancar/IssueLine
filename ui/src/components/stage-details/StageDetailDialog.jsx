@@ -1,30 +1,14 @@
-﻿// Render the stage details modal with summary and related issue strip.
-import { useEffect } from 'react'
+// Render the stage details modal with summary and related issue strip.
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import StageIssuesTimeline from './StageIssuesTimeline'
 
 // Modal dialog that shows one stage summary and its issue timeline strip.
 function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSelect }) {
   const { t } = useI18n()
-
-  // Lock page scroll while modal is open and support Escape to close.
-  useEffect(() => {
-    if (!open) return undefined
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, onClose])
+  useModalLayer({ open, onClose, lockScroll: true, closeOnEscape: true })
 
   if (!open || typeof document === 'undefined' || !stage) return null
 
@@ -40,7 +24,7 @@ function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSe
               <p className="eyebrow text-slate-500">{t('timeline.stage')}</p>
               <h3 className="title-sm text-slate-900">{stage.name}</h3>
               <p className="body-xs text-slate-500">
-                {stage.yearLabel} â€¢ {t('timeline.trackedIssues', { count: stage.issueCount ?? issues.length })}
+                {stage.yearLabel} - {t('timeline.trackedIssues', { count: stage.issueCount ?? issues.length })}
               </p>
               {stage.summary ? <p className="body-xs text-slate-600">{stage.summary}</p> : null}
             </div>
