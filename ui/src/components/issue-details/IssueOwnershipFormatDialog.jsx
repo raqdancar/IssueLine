@@ -5,6 +5,7 @@ import { Loader2, PackageCheck, X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { buildPublicStorageUrl } from '@/lib/issueImages'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 
@@ -111,10 +112,11 @@ function IssueOwnershipFormatDialog({
                       <p className="text-sm font-semibold text-slate-900 wrap-break-word">
                         {edition.title ?? t('issueDetails.collected.placeholderTitle')}
                       </p>
-                      <p className="text-xs text-slate-600">
-                        {edition.format ?? 'unknown'}
-                        {edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
-                      </p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+                        <span>{edition.format ?? 'unknown'}</span>
+                        <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
+                        {edition.publicationDate ? <span>{edition.publicationDate}</span> : null}
+                      </div>
                     </div>
                   </label>
                 )

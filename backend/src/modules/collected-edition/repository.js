@@ -8,6 +8,7 @@ const buildCollectedEditionPayload = ({ heroApiId, edition }) => ({
   title: edition.title,
   subtitle: edition.subtitle,
   series_title: edition.seriesTitle ?? null,
+  print_language: edition.printLanguage ?? null,
   publisher: edition.publisher,
   publication_date: edition.publicationDate,
   cover_date: edition.coverDate ?? null,
@@ -57,7 +58,7 @@ export const insertCollectedEdition = async ({ heroApiId, edition }) => {
     .from('collected_editions')
     .insert(payload)
     .select(
-      'id, hero_api_id, title, source, source_external_id, source_series_id, isbn, created_at'
+      'id, hero_api_id, title, print_language, source, source_external_id, source_series_id, isbn, created_at'
     )
     .single()
 
@@ -95,7 +96,7 @@ export const getCollectedEditionById = async (id) => {
 
   const { data, error } = await supabaseServiceClient
     .from('collected_editions')
-    .select('id, hero_api_id, title, source, source_external_id, source_series_id, isbn, cover_image_url, created_at')
+    .select('id, hero_api_id, title, print_language, source, source_external_id, source_series_id, isbn, cover_image_url, created_at')
     .eq('id', normalized)
     .maybeSingle()
 

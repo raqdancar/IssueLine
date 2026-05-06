@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
 import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
 import { TimelineInsightsSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
+import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
@@ -999,9 +1000,11 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                               </button>
                             </div>
                             {edition.subtitle ? <p className="body-xs break-words text-slate-600">{edition.subtitle}</p> : null}
-                            <p className="body-xs text-slate-500">
-                              {edition.format ?? 'unknown'}{edition.publicationDate ? ` - ${edition.publicationDate}` : ''}
-                            </p>
+                            <div className="body-xs flex flex-wrap items-center gap-1.5 text-slate-500">
+                              <span>{edition.format ?? 'unknown'}</span>
+                              <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
+                              {edition.publicationDate ? <span>{edition.publicationDate}</span> : null}
+                            </div>
                             <p className="body-xs text-slate-500">
                               {t('timeline.collectedIssuesCount', { count: edition.issueCount ?? 0 })}
                               {' - '}

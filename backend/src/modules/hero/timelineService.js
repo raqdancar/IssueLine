@@ -311,6 +311,7 @@ const mapCollectedEditionRow = (row) => {
     title: edition.title ?? null,
     subtitle: edition.subtitle ?? null,
     seriesTitle: edition.series_title ?? null,
+    printLanguage: edition.print_language ?? null,
     format: edition.format ?? 'unknown',
     coverImageUrl: edition.cover_image_url ?? null,
     publicationDate: edition.publication_date ?? null,
@@ -330,7 +331,7 @@ const loadCollectedEditionsForHeroIssue = async (heroIssueId) => {
   const { data, error } = await supabaseServiceClient
     .from('collected_edition_issue_links')
     .select(
-      'notes, collected_editions(id, title, subtitle, series_title, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn)'
+      'notes, collected_editions(id, title, subtitle, series_title, print_language, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn)'
     )
     .eq('hero_issue_id', heroIssueId)
 
@@ -385,7 +386,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
 
   const { data: editionRows, error: editionError } = await supabaseServiceClient
     .from('collected_editions')
-    .select('id, title, subtitle, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn')
+    .select('id, title, subtitle, print_language, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn')
     .eq('hero_api_id', heroApiId)
     .order('publication_date', { ascending: true, nullsFirst: false })
 
@@ -413,6 +414,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
       id: row.id,
       title: row.title,
       subtitle: row.subtitle,
+      printLanguage: row.print_language ?? null,
       publisher: row.publisher,
       publicationDate: row.publication_date ?? null,
       format: row.format ?? 'unknown',
@@ -544,6 +546,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
       id: edition.id,
       title: edition.title,
       subtitle: edition.subtitle,
+      printLanguage: edition.print_language ?? null,
       publisher: edition.publisher,
       publicationDate: edition.publication_date ?? null,
       format: edition.format ?? 'unknown',

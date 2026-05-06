@@ -1,6 +1,7 @@
 ﻿// Render collected-edition cards linked to the selected issue.
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl } from '@/lib/issueImages'
+import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 import IssueCollectedEditionPlaceholderCard from './IssueCollectedEditionPlaceholderCard'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
@@ -60,11 +61,12 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
                   <p className="body-sm font-semibold text-slate-800 break-words">
                     {edition.title ?? t('issueDetails.collected.placeholderTitle')}
                   </p>
-                  <p>
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
                       {edition.format ?? 'unknown'}
                     </span>
-                  </p>
+                    <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
+                  </div>
                   {edition.subtitle ? <p className="body-xs text-slate-600 break-words">{edition.subtitle}</p> : null}
                   <p className="body-xs text-slate-500">
                     {edition.publicationDate ?? '-'}
