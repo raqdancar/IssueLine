@@ -6,6 +6,7 @@ import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from
 import { Button } from '@/components/ui/button'
 import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
 import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
+import { TimelineInsightsSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
@@ -1049,7 +1050,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           ) : null}
         </div>
       ) : state.status === 'loading' ? (
-        <div className="mt-6 h-32 animate-pulse rounded-2xl bg-slate-100/70" />
+        <TimelineInsightsSkeleton />
       ) : null}
       <StageDetailDialog
         open={Boolean(selectedStage)}

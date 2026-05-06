@@ -6,6 +6,7 @@ import { normalizeIntegerText } from '@/utils/numberFormatters'
 import TimelineStageTab from './timeline/TimelineStageTab'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
 import TimelineIssueToolbar from './timeline/TimelineIssueToolbar'
+import { TimelineLoadingSkeleton } from './timeline/TimelineLoadingSkeleton'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
@@ -229,9 +230,6 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
           <p className="body-xs text-slate-400">{t('timeline.groupedByYear')}</p>
         </div>
         <div className="flex flex-col items-end gap-3 text-xs text-slate-300 sm:flex-row sm:items-center">
-          <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-200">
-            {status}
-          </span>
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('timeline.sort')}</span>
             <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
@@ -257,7 +255,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
       </div>
       <div className="relative mt-6 space-y-6">
         {status === 'loading' ? (
-          <p className="body-sm text-slate-300">{t('timeline.loadingTimeline')}</p>
+          <TimelineLoadingSkeleton variant="dark" showNavigator={false} cardCount={5} />
         ) : status === 'error' ? (
           <p className="body-sm text-rose-300">{error}</p>
         ) : groupedEntries.length === 0 ? (

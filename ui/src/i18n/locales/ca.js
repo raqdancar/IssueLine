@@ -148,7 +148,6 @@ const messages = {
       deletingAvatar: 'Eliminant...',
       noAvatar: 'Sense avatar',
       email: 'Email',
-      privateBucket: 'Bucket privat: {{bucket}}',
       password: 'Contrasenya',
       newPassword: 'Nova contrasenya',
       confirmNewPassword: 'Confirma nova contrasenya',

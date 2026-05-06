@@ -61,7 +61,7 @@ function HeroTab({ hero }) {
           : 'border-slate-200 bg-slate-100/70 text-slate-500'
       )}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 items-start gap-4">
           <div className="shrink-0" title={!detailHref ? t('heroTab.noIssuesTooltip') : undefined}>{portrait}</div>
           <div className="min-w-0 flex-1">
@@ -90,7 +90,7 @@ function HeroTab({ hero }) {
           </div>
         </div>
         {hasTimelineIssues ? (
-          <div className="w-full rounded-3xl border border-indigo-900/50 bg-linear-to-br from-indigo-950 via-indigo-900 to-indigo-800 px-4 py-3 text-center text-white shadow-inner sm:w-auto sm:min-w-[12rem]">
+          <div className="w-full self-start rounded-3xl border border-indigo-900/50 bg-linear-to-br from-indigo-950 via-indigo-900 to-indigo-800 px-4 py-3 text-center text-white shadow-inner lg:min-w-[12rem] lg:w-auto lg:shrink-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/75">{t('timeline.coverage')}</p>
             <p className="text-xl font-black leading-tight tracking-wide sm:text-2xl">{coverageYearLabel}</p>
             <p className="mt-1 text-xs text-white/75">{t('timeline.trackedIssues', { count: timelineCoverage.count ?? 0 })}</p>

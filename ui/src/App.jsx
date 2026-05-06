@@ -27,6 +27,13 @@ const statusClasses = {
   success: 'text-emerald-600',
 }
 
+const formatSlugTitle = (slug) =>
+  decodeURIComponent(slug)
+    .split('-')
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ')
+
 function App() {
   const { t, locale, setLocale } = useI18n()
   const [formValues, setFormValues] = useState(initialFormValues)
@@ -39,6 +46,7 @@ function App() {
   const [heroesStatus, setHeroesStatus] = useState({ state: 'idle', message: '' })
   const [navAvatarUrl, setNavAvatarUrl] = useState(null)
   const heroRouteMatch = useMatch('/heroes/:slug')
+  const isAccountRoute = Boolean(useMatch('/account'))
 
   const loadHeroes = useCallback(async () => {
     if (!supabase) {
@@ -349,7 +357,21 @@ function App() {
     () => resolveHeroThemeStyle(heroRouteMatch?.params?.slug),
     [heroRouteMatch?.params?.slug],
   )
+  const heroTitle = useMemo(
+    () => (heroRouteMatch?.params?.slug ? formatSlugTitle(heroRouteMatch.params.slug) : null),
+    [heroRouteMatch?.params?.slug],
+  )
+  const documentTitle = useMemo(() => {
+    const appName = t('common.appName')
+    if (heroTitle) return `${appName} | ${heroTitle}`
+    if (isAccountRoute) return `${appName} | ${t('common.account')}`
+    return `${appName} | ${t('app.heroVisualizer')}`
+  }, [heroTitle, isAccountRoute, t])
   const routeFallback = <p className="body-sm text-slate-500">{t('common.loading')}</p>
+
+  useEffect(() => {
+    document.title = documentTitle
+  }, [documentTitle])
 
   return (
     <SessionProvider value={sessionContextValue}>

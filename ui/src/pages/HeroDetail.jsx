@@ -2,6 +2,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'
+import { TimelineInsightsSkeleton, TimelineLoadingSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
@@ -300,7 +301,7 @@ function HeroDetail() {
                 </dl>
               </aside>
               <div className="space-y-5">
-                <Suspense fallback={<p className="body-sm text-slate-500">{t('timeline.loadingTimeline')}</p>}>
+                <Suspense fallback={<TimelineInsightsSkeleton />}>
                   <HeroTimelineInsights heroSlug={hero.slug} heroName={hero.name} />
                 </Suspense>
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-100 bg-white/70 p-4 text-sm text-slate-600 shadow-inner">
@@ -338,7 +339,7 @@ function HeroDetail() {
                     />
                   )}
                   {timelineView === 'cinematic' && (
-                    <Suspense fallback={<p className="body-sm text-slate-500">{t('timeline.loadingTimeline')}</p>}>
+                    <Suspense fallback={<TimelineLoadingSkeleton variant="dark" showNavigator={false} cardCount={4} />}>
                       <HeroTimelineCinematic
                         slug={hero.slug}
                         heroName={hero.name}

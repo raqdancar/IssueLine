@@ -5,6 +5,7 @@ import TimelineHeader from './timeline/TimelineHeader'
 import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './timeline/TimelineNavigatorToggle'
 import TimelineList from './timeline/TimelineList'
+import { TimelineLoadingSkeleton } from './timeline/TimelineLoadingSkeleton'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
 import IssueDetailsDialog from './issue-details/IssueDetailsDialog'
 import IssueOwnershipFormatDialog from './issue-details/IssueOwnershipFormatDialog'
@@ -259,25 +260,44 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     return orderedKeys.map((key) => groups.get(key))
   }, [filteredEntries])
 
-  const issueAnchors = useMemo(() => {
-    const orderedKeys = []
-    const groups = new Map()
+  const { issueAnchors, issueAnchorsByStage } = useMemo(() => {
+    const stageOrder = []
+    const stages = new Map()
+    const flattened = []
+
     filteredEntries.forEach((entry, index) => {
       const issue = getIssueKey(entry)
       if (!issue) return
-      if (!groups.has(issue.key)) {
-        orderedKeys.push(issue.key)
-        groups.set(issue.key, {
-          key: issue.key,
-          label: issue.label,
-          count: 0,
-          targetId: getEntryDomId(entry, index),
+
+      const stage = getStageKey(entry)
+      const stageKey = stage?.key ?? 'uncategorized-stage'
+      const stageLabel = stage?.label ?? t('timeline.uncategorizedStage')
+
+      if (!stages.has(stageKey)) {
+        stageOrder.push(stageKey)
+        stages.set(stageKey, {
+          key: stageKey,
+          label: stageLabel,
+          anchors: [],
         })
       }
-      groups.get(issue.key).count += 1
+
+      const anchor = {
+        key: entry?.id ? `issue-${entry.id}` : `issue-${issue.key}-${index}`,
+        label: issue.label,
+        count: 1,
+        targetId: getEntryDomId(entry, index),
+      }
+
+      stages.get(stageKey).anchors.push(anchor)
+      flattened.push(anchor)
     })
-    return orderedKeys.map((key) => groups.get(key))
-  }, [filteredEntries])
+
+    return {
+      issueAnchors: flattened,
+      issueAnchorsByStage: stageOrder.map((key) => stages.get(key)),
+    }
+  }, [filteredEntries, t])
 
   const anchorLookup = useMemo(() => {
     return {
@@ -596,7 +616,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       />
       <div className="mt-6 space-y-4">
         {status === 'loading' ? (
-          <p className="body-sm text-slate-500">{t('timeline.loadingTimeline')}</p>
+          <TimelineLoadingSkeleton variant="light" showNavigator cardCount={6} />
         ) : status === 'error' ? (
           <p className="body-sm text-rose-600">{error}</p>
         ) : orderedEntries.length === 0 ? (
@@ -615,6 +635,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
                 onIndexModeChange={setIndexMode}
                 indexOptions={indexModeOptions}
                 anchorLookup={anchorLookup}
+                issueAnchorsByStage={issueAnchorsByStage}
                 activeAnchor={activeAnchor}
                 onAnchorClick={handleAnchorClick}
                 onToggleVisibility={() => setIsNavigatorVisible(false)}

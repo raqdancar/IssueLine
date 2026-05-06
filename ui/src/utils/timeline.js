@@ -64,7 +64,9 @@ export const getIssueKey = (entry) => {
   const meta = entry.metadata ?? {}
   const number = meta.number ?? entry.issue_code
   if (!number) return null
-  const normalized = String(number).toLowerCase().replace(/[^0-9a-z]+/g, '')
+  const numberLabel = String(number).trim()
+  const normalized = numberLabel.toLowerCase().replace(/[^0-9a-z]+/g, '')
   if (!normalized) return null
-  return { key: normalized, label: `Issue #${number}` }
+  const shortLabel = numberLabel.startsWith('#') ? numberLabel : `#${numberLabel}`
+  return { key: normalized, label: shortLabel }
 }

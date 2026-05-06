@@ -33,6 +33,8 @@ const extensionFromFile = (file) => {
   return parts.length > 1 ? parts.at(-1).toLowerCase() : 'jpg'
 }
 
+const hasOwnMetadataField = (metadata, key) => Object.prototype.hasOwnProperty.call(metadata ?? {}, key)
+
 function AccountSettings({ onRequireSignIn }) {
   const { t } = useI18n()
   const { session, isAuthenticated } = useSessionContext()
@@ -56,14 +58,28 @@ function AccountSettings({ onRequireSignIn }) {
     setProfileForm({
       displayName: userMetadata.display_name ?? userMetadata.full_name ?? '',
     })
-    setAvatarPath(userMetadata.avatar_path ?? null)
-    setAvatarFile(null)
-    setAvatarPreviewUrl(null)
     setProfileStatus({ type: 'idle', message: '' })
-    setAvatarStatus({ type: 'idle', message: '' })
     setPasswordForm(initialPasswordForm)
     setPasswordStatus({ type: 'idle', message: '' })
-  }, [user?.id, userMetadata.display_name, userMetadata.full_name, userMetadata.avatar_path])
+  }, [user?.id, userMetadata.display_name, userMetadata.full_name])
+
+  useEffect(() => {
+    if (!user) {
+      setAvatarPath(null)
+      setAvatarFile(null)
+      setAvatarPreviewUrl(null)
+      setAvatarStatus({ type: 'idle', message: '' })
+      return
+    }
+
+    // Keep local avatar when profile-only updates return metadata without avatar fields.
+    if (hasOwnMetadataField(userMetadata, 'avatar_path')) {
+      setAvatarPath(userMetadata.avatar_path ?? null)
+    }
+
+    setAvatarFile(null)
+    setAvatarStatus({ type: 'idle', message: '' })
+  }, [user?.id, userMetadata, userMetadata.avatar_path])
 
   useEffect(() => {
     if (!supabase || !user || !avatarPath) {
@@ -115,13 +131,15 @@ function AccountSettings({ onRequireSignIn }) {
     setProfileStatus({ type: 'loading', message: t('account.savingProfileStatus') })
 
     const displayName = profileForm.displayName.trim()
+    const avatarPathToPersist = avatarPath ?? userMetadata.avatar_path ?? null
+    const avatarBucketToPersist = avatarPathToPersist ? userMetadata.avatar_bucket ?? AVATAR_BUCKET : null
     const { error } = await supabase.auth.updateUser({
       data: {
         ...userMetadata,
         display_name: displayName || null,
         full_name: displayName || null,
-        avatar_path: avatarPath || null,
-        avatar_bucket: avatarPath ? AVATAR_BUCKET : null,
+        avatar_path: avatarPathToPersist,
+        avatar_bucket: avatarBucketToPersist,
       },
     })
 
@@ -339,92 +357,97 @@ function AccountSettings({ onRequireSignIn }) {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <aside className="rounded-3xl border border-slate-100 bg-white/80 p-5 shadow-sm lg:col-span-4 xl:col-span-3 xl:sticky xl:top-24">
-          <div className="mx-auto h-36 w-36 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-            {avatarPreview ? (
-              <img src={avatarPreview} alt={t('account.avatarPreviewAlt')} className="h-full w-full object-cover" loading="lazy" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs font-semibold uppercase tracking-widest text-slate-400">
-                {t('account.noAvatar')}
+        <div className="space-y-6 lg:col-span-7 xl:col-span-8">
+          <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <h3 className="text-base font-semibold text-slate-900">{t('account.profile')}</h3>
+            <form className="mt-4 space-y-4" onSubmit={handleProfileSave}>
+              <div className="space-y-2">
+                <Label htmlFor="displayName">{t('account.displayName')}</Label>
+                <Input
+                  id="displayName"
+                  name="displayName"
+                  value={profileForm.displayName}
+                  onChange={handleProfileInputChange}
+                  placeholder={t('account.displayNamePlaceholder')}
+                />
               </div>
-            )}
-          </div>
-          <div className="mt-4 space-y-2 text-sm">
-            <p className="text-slate-500">{t('account.email')}</p>
-            <p className="font-medium text-slate-800">{user.email}</p>
-            <p className="text-xs text-slate-500">{t('account.privateBucket', { bucket: AVATAR_BUCKET })}</p>
+              {profileStatus.message ? (
+                <p className={`text-sm ${profileStatus.type === 'error' ? 'text-rose-600' : profileStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {profileStatus.message}
+                </p>
+              ) : null}
+              <div className="pt-2">
+                <div className="border-t border-slate-100 pt-4">
+                  <Button type="submit" disabled={isSavingProfile} className="w-full sm:w-auto">
+                    {isSavingProfile ? t('account.savingProfile') : t('account.saveProfile')}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </article>
+
+          <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+            <h3 className="text-base font-semibold text-slate-900">{t('account.password')}</h3>
+            <form className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handlePasswordSave}>
+              <div className="space-y-2">
+                <Label htmlFor="nextPassword">{t('account.newPassword')}</Label>
+                <Input id="nextPassword" name="nextPassword" type="password" value={passwordForm.nextPassword} onChange={handlePasswordInputChange} placeholder={t('account.passwordPlaceholder')} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">{t('account.confirmNewPassword')}</Label>
+                <Input id="confirmPassword" name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={handlePasswordInputChange} placeholder={t('account.repeatPasswordPlaceholder')} />
+              </div>
+              {passwordStatus.message ? (
+                <p className={`text-sm md:col-span-2 ${passwordStatus.type === 'error' ? 'text-rose-600' : passwordStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {passwordStatus.message}
+                </p>
+              ) : null}
+              <Button type="submit" disabled={isSavingPassword} className="md:col-span-2">
+                {isSavingPassword ? t('account.updatingPassword') : t('account.updatePassword')}
+              </Button>
+            </form>
+          </article>
+        </div>
+
+        <aside className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-5 xl:col-span-4">
+          <h3 className="text-base font-semibold text-slate-900">{t('account.avatarUpload')}</h3>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[auto,minmax(0,1fr)] sm:items-start">
+            <div className="mx-auto h-32 w-32 overflow-hidden rounded-full border border-slate-200 bg-slate-100 sm:mx-0">
+              {avatarPreview ? (
+                <img src={avatarPreview} alt={t('account.avatarPreviewAlt')} className="h-full w-full object-cover" loading="lazy" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-center text-xs font-semibold uppercase tracking-widest text-slate-400">
+                  {t('account.noAvatar')}
+                </div>
+              )}
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2 text-sm">
+                <p className="text-slate-500">{t('account.email')}</p>
+                <p className="font-medium break-all text-slate-800">{user.email}</p>
+                <p className="text-xs text-slate-500">{t('account.privateBucket', { bucket: AVATAR_BUCKET })}</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="avatarFile">{t('account.uploadFromDevice')}</Label>
+                <Input id="avatarFile" name="avatarFile" type="file" accept={ALLOWED_AVATAR_TYPES.join(',')} onChange={handleAvatarFileChange} />
+                <p className="text-xs text-slate-500">{t('account.avatarRules')}</p>
+              </div>
+              {avatarStatus.message ? (
+                <p className={`text-sm ${avatarStatus.type === 'error' ? 'text-rose-600' : avatarStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {avatarStatus.message}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" disabled={isSavingAvatar || isDeletingAvatar} onClick={() => void handleAvatarUpload()}>
+                  {isSavingAvatar ? t('account.uploadingAvatar') : t('account.uploadAvatar')}
+                </Button>
+                <Button type="button" variant="outline" className="border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-800" disabled={!avatarPath || isSavingAvatar || isDeletingAvatar} onClick={() => void handleAvatarDelete()}>
+                  {isDeletingAvatar ? t('account.deletingAvatar') : t('account.deleteAvatar')}
+                </Button>
+              </div>
+            </div>
           </div>
         </aside>
-
-        <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-8 xl:col-span-5">
-          <h3 className="text-base font-semibold text-slate-900">{t('account.profile')}</h3>
-          <form className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handleProfileSave}>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="displayName">{t('account.displayName')}</Label>
-              <Input
-                id="displayName"
-                name="displayName"
-                value={profileForm.displayName}
-                onChange={handleProfileInputChange}
-                placeholder={t('account.displayNamePlaceholder')}
-              />
-            </div>
-            {profileStatus.message ? (
-              <p className={`text-sm md:col-span-2 ${profileStatus.type === 'error' ? 'text-rose-600' : profileStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
-                {profileStatus.message}
-              </p>
-            ) : null}
-            <Button type="submit" disabled={isSavingProfile} className="md:col-span-2">
-              {isSavingProfile ? t('account.savingProfile') : t('account.saveProfile')}
-            </Button>
-          </form>
-        </article>
-
-        <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-6 xl:col-span-4">
-          <h3 className="text-base font-semibold text-slate-900">{t('account.avatarUpload')}</h3>
-          <div className="mt-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="avatarFile">{t('account.uploadFromDevice')}</Label>
-              <Input id="avatarFile" name="avatarFile" type="file" accept={ALLOWED_AVATAR_TYPES.join(',')} onChange={handleAvatarFileChange} />
-              <p className="text-xs text-slate-500">{t('account.avatarRules')}</p>
-            </div>
-            {avatarStatus.message ? (
-              <p className={`text-sm ${avatarStatus.type === 'error' ? 'text-rose-600' : avatarStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
-                {avatarStatus.message}
-              </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" disabled={isSavingAvatar || isDeletingAvatar} onClick={() => void handleAvatarUpload()}>
-                {isSavingAvatar ? t('account.uploadingAvatar') : t('account.uploadAvatar')}
-              </Button>
-              <Button type="button" variant="outline" className="border-rose-200 text-rose-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-800" disabled={!avatarPath || isSavingAvatar || isDeletingAvatar} onClick={() => void handleAvatarDelete()}>
-                {isDeletingAvatar ? t('account.deletingAvatar') : t('account.deleteAvatar')}
-              </Button>
-            </div>
-          </div>
-        </article>
-
-        <article className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-12">
-          <h3 className="text-base font-semibold text-slate-900">{t('account.password')}</h3>
-          <form className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handlePasswordSave}>
-            <div className="space-y-2">
-              <Label htmlFor="nextPassword">{t('account.newPassword')}</Label>
-              <Input id="nextPassword" name="nextPassword" type="password" value={passwordForm.nextPassword} onChange={handlePasswordInputChange} placeholder={t('account.passwordPlaceholder')} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{t('account.confirmNewPassword')}</Label>
-              <Input id="confirmPassword" name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={handlePasswordInputChange} placeholder={t('account.repeatPasswordPlaceholder')} />
-            </div>
-            {passwordStatus.message ? (
-              <p className={`text-sm md:col-span-2 ${passwordStatus.type === 'error' ? 'text-rose-600' : passwordStatus.type === 'success' ? 'text-emerald-600' : 'text-slate-500'}`}>
-                {passwordStatus.message}
-              </p>
-            ) : null}
-            <Button type="submit" disabled={isSavingPassword} className="md:col-span-2">
-              {isSavingPassword ? t('account.updatingPassword') : t('account.updatePassword')}
-            </Button>
-          </form>
-        </article>
       </div>
     </section>
   )

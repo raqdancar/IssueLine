@@ -7,6 +7,7 @@ function TimelineNavigatorPanel({
   onIndexModeChange,
   indexOptions,
   anchorLookup,
+  issueAnchorsByStage = [],
   activeAnchor,
   onAnchorClick,
   onToggleVisibility,
@@ -15,10 +16,13 @@ function TimelineNavigatorPanel({
   const anchors = anchorLookup[indexMode] ?? []
   // Switch between grid pills and stacked rows depending on the active index mode.
   const isPillMode = indexMode === 'year' || indexMode === 'issue'
+  const isIssueMode = indexMode === 'issue'
   const isStageMode = indexMode === 'stage'
   const containerClasses = `${
     isPillMode
-      ? 'grid grid-cols-3 gap-2 md:grid-cols-3'
+      ? isIssueMode
+        ? 'grid grid-cols-2 gap-2 sm:grid-cols-3'
+        : 'grid grid-cols-3 gap-2'
       : 'flex flex-col gap-2'
   }`
 
@@ -59,71 +63,104 @@ function TimelineNavigatorPanel({
         })}
       </div>
       <div className="mt-4 max-h-72 flex-1 overflow-y-auto pr-1 no-scrollbar md:h-full md:max-h-none md:min-h-0">
-        <div className={containerClasses}>
-          {anchors.length ? (
-            anchors.map((anchor) => {
-              const isActive = activeAnchor === anchor.key
-              const baseClasses = isPillMode
-                ? 'flex flex-col items-center justify-center text-center'
-                : isStageMode
-                  ? 'flex w-full items-start justify-between gap-3 text-left'
-                  : 'flex w-full items-center justify-between gap-2 text-left'
-              const activeClasses = isActive
-                ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/30'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-900/40 hover:bg-slate-50 hover:text-slate-900'
-              const countBadgeClasses = isActive
-                ? 'bg-white/30 text-white ring-1 ring-white/40'
-                : 'bg-slate-200 text-slate-900 ring-1 ring-slate-300'
-              const countBadgeSizeClasses = isStageMode
-                ? 'px-3 py-1 text-xs font-extrabold tracking-[0.12em]'
-                : 'px-2 py-0.5 text-[10px] font-bold tracking-[0.2em]'
-              const labelClasses = isPillMode
-                ? isActive
-                  ? 'text-sm font-semibold text-white'
-                  : 'text-sm font-semibold text-slate-700'
-                : isStageMode
-                  ? isActive
-                    ? 'text-base font-semibold leading-snug text-white'
-                    : 'text-base font-semibold leading-snug text-slate-800'
-                  : isActive
-                    ? 'text-sm font-semibold text-white'
-                    : 'text-sm font-semibold text-slate-800'
-              const summaryClasses = isActive ? 'text-white/80' : 'text-slate-500'
-              const buttonSizeClasses = isStageMode ? 'min-h-24 py-3' : isPillMode ? 'min-h-10 py-2' : 'min-h-9 py-2'
-              const labelContainerClasses = isPillMode
-                ? 'space-y-1'
-                : isStageMode
-                  ? 'min-w-0 flex-1 space-y-1.5'
-                  : 'min-w-0 flex-1'
-              const labelTextClasses = isStageMode ? `${labelClasses} block whitespace-normal break-words` : `${labelClasses} block truncate`
-              const countAlignClasses = isStageMode ? 'mt-0.5' : ''
-
-              return (
-                <button
-                  key={anchor.key}
-                  type="button"
-                  aria-current={isActive ? 'true' : undefined}
-                  onClick={() => onAnchorClick(anchor)}
-                  className={`group relative rounded-2xl border px-3 text-xs font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${baseClasses} ${activeClasses} ${buttonSizeClasses}`}
-                >
-                  <div className={labelContainerClasses}>
-                    <span className={labelTextClasses}>{anchor.label}</span>
-                    {!isPillMode && isStageMode && anchor.summary ? (
-                      <p className={`mt-1 text-[11px] font-normal leading-snug ${summaryClasses}`}>
-                        {anchor.summary}
-                      </p>
-                    ) : null}
+        {isIssueMode ? (
+          issueAnchorsByStage.length ? (
+            <div className="space-y-4">
+              {issueAnchorsByStage.map((stageSection) => (
+                <section key={stageSection.key} className="space-y-2">
+                  <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {stageSection.label}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {stageSection.anchors.map((anchor) => {
+                      const isActive = activeAnchor === anchor.key
+                      const activeClasses = isActive
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/30'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-900/40 hover:bg-slate-50 hover:text-slate-900'
+                      return (
+                        <button
+                          key={anchor.key}
+                          type="button"
+                          aria-current={isActive ? 'true' : undefined}
+                          onClick={() => onAnchorClick(anchor)}
+                          className={`group relative flex min-h-11 items-center justify-center rounded-2xl border px-3 py-2 text-xs font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${activeClasses}`}
+                        >
+                          <span className={`block w-full truncate text-sm font-semibold ${isActive ? 'text-white' : 'text-slate-700'}`}>
+                            {anchor.label}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
-                  <span className={`shrink-0 rounded-full uppercase ${countBadgeSizeClasses} ${countBadgeClasses} ${countAlignClasses}`}>
-                    {anchor.count}
-                  </span>
-                </button>
-              )
-            })
+                </section>
+              ))}
+            </div>
           ) : (
             <p className="text-[11px] text-slate-400">{t('timeline.noAnchorsForView')}</p>
-          )}
-        </div>
+          )
+        ) : (
+          <div className={containerClasses}>
+            {anchors.length ? (
+              anchors.map((anchor) => {
+                const isActive = activeAnchor === anchor.key
+                const baseClasses = isPillMode
+                  ? 'flex flex-col items-center justify-center text-center'
+                  : isStageMode
+                    ? 'flex w-full items-start justify-between gap-3 text-left'
+                    : 'flex w-full items-center justify-between gap-2 text-left'
+                const activeClasses = isActive
+                  ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/30'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-900/40 hover:bg-slate-50 hover:text-slate-900'
+                const countBadgeClasses = isActive
+                  ? 'bg-white/30 text-white ring-1 ring-white/40'
+                  : 'bg-slate-200 text-slate-900 ring-1 ring-slate-300'
+                const countBadgeSizeClasses = isStageMode
+                  ? 'px-3 py-1 text-xs font-extrabold tracking-[0.12em]'
+                  : 'px-2 py-0.5 text-[10px] font-bold tracking-[0.2em]'
+                const labelClasses = isPillMode
+                  ? isActive
+                    ? 'text-sm font-semibold text-white'
+                    : 'text-sm font-semibold text-slate-700'
+                  : isStageMode
+                    ? isActive
+                      ? 'text-base font-semibold leading-snug text-white'
+                      : 'text-base font-semibold leading-snug text-slate-800'
+                    : isActive
+                      ? 'text-sm font-semibold text-white'
+                      : 'text-sm font-semibold text-slate-800'
+                const summaryClasses = isActive ? 'text-white/80' : 'text-slate-500'
+                const buttonSizeClasses = isStageMode ? 'min-h-24 py-3' : isPillMode ? 'min-h-10 py-2' : 'min-h-9 py-2'
+                const labelContainerClasses = isPillMode ? 'space-y-1' : isStageMode ? 'min-w-0 flex-1 space-y-1.5' : 'min-w-0 flex-1'
+                const labelTextClasses = isStageMode ? `${labelClasses} block whitespace-normal break-words` : `${labelClasses} block truncate`
+                const countAlignClasses = isStageMode ? 'mt-0.5' : ''
+
+                return (
+                  <button
+                    key={anchor.key}
+                    type="button"
+                    aria-current={isActive ? 'true' : undefined}
+                    onClick={() => onAnchorClick(anchor)}
+                    className={`group relative rounded-2xl border px-3 text-xs font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-1 focus-visible:ring-offset-white ${baseClasses} ${activeClasses} ${buttonSizeClasses}`}
+                  >
+                    <div className={labelContainerClasses}>
+                      <span className={labelTextClasses}>{anchor.label}</span>
+                      {!isPillMode && isStageMode && anchor.summary ? (
+                        <p className={`mt-1 text-[11px] font-normal leading-snug ${summaryClasses}`}>
+                          {anchor.summary}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className={`shrink-0 rounded-full uppercase ${countBadgeSizeClasses} ${countBadgeClasses} ${countAlignClasses}`}>
+                      {anchor.count}
+                    </span>
+                  </button>
+                )
+              })
+            ) : (
+              <p className="text-[11px] text-slate-400">{t('timeline.noAnchorsForView')}</p>
+            )}
+          </div>
+        )}
       </div>
     </aside>
   )

@@ -149,7 +149,6 @@
     deletingAvatar: 'Deleting...',
     noAvatar: 'No avatar',
     email: 'Email',
-    privateBucket: 'Private bucket: {{bucket}}',
     password: 'Password',
     newPassword: 'New password',
     confirmNewPassword: 'Confirm new password',
