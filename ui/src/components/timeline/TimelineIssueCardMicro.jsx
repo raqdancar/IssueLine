@@ -34,9 +34,12 @@ function TimelineIssueCardMicro({
 
   return (
     <li id={entryDomId} className="relative pl-6">
-      <span className={`absolute left-0 top-1 h-2.5 w-2.5 rounded-full border ${severityVariant.dot}`} aria-hidden="true" />
+      <span
+        className={`absolute left-0 top-1 h-3 w-3 rounded-full border shadow-[0_0_0_1.5px_rgba(255,255,255,0.95),0_0_0.5rem_rgba(99,102,241,0.24)] ${severityVariant.dot}`}
+        aria-hidden="true"
+      />
       {!isLast ? (
-        <span className="absolute left-[0.4rem] top-4 block h-full w-px bg-gradient-to-b from-slate-200 to-transparent" />
+        <span className="absolute left-[0.42rem] top-4 block h-full w-[2px] rounded-full bg-gradient-to-b from-indigo-300 via-slate-300/95 to-transparent shadow-[0_0_0.35rem_rgba(99,102,241,0.2)]" />
       ) : null}
       <article
         role="button"

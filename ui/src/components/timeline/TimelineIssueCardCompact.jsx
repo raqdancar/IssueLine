@@ -38,9 +38,12 @@ function TimelineIssueCardCompact({
 
   return (
     <li id={entryDomId} className="relative pl-7">
-      <span className={`absolute left-0 top-1.5 h-3 w-3 rounded-full border-2 ${severityVariant.dot}`} aria-hidden="true" />
+      <span
+        className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 shadow-[0_0_0_2px_rgba(255,255,255,0.95),0_0_0.65rem_rgba(99,102,241,0.28)] ${severityVariant.dot}`}
+        aria-hidden="true"
+      />
       {!isLast ? (
-        <span className="absolute left-1.5 top-5 block h-full w-px bg-gradient-to-b from-slate-200 to-transparent" />
+        <span className="absolute left-[0.44rem] top-5 block h-full w-[2px] rounded-full bg-gradient-to-b from-indigo-400 via-slate-300/95 to-transparent shadow-[0_0_0.4rem_rgba(99,102,241,0.24)]" />
       ) : null}
       <article
         role="button"

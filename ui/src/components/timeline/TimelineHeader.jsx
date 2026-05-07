@@ -1,6 +1,6 @@
 ﻿// Render timeline controls: title, sorting, zoom, and collection filters.
 import { useEffect, useState } from 'react'
-import { BookOpen, CheckCircle2, Minus, Plus } from 'lucide-react'
+import { BookOpen, CheckCircle2, Maximize2, Minimize2, Minus, Plus } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 function TimelineHeader({
@@ -23,6 +23,10 @@ function TimelineHeader({
   onPublicationFilterChange,
   collectionFilters = { ownedOnly: false, readOnly: false },
   onCollectionFilterChange,
+  fullscreenEnabled = false,
+  isFullscreen = false,
+  onToggleFullscreen,
+  showcaseMode = false,
 }) {
   const { t } = useI18n()
   const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
@@ -33,8 +37,15 @@ function TimelineHeader({
   }, [timelineLogoSrc])
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+    <div
+      className={`flex flex-wrap items-center justify-between gap-3 pb-4 ${
+        showcaseMode ? 'rounded-2xl border border-white/55 bg-white/75 px-4 pt-4 shadow-xl backdrop-blur' : 'border-b border-slate-100'
+      }`}
+    >
       <div>
+        {showcaseMode ? (
+          <p className="mb-1 text-[10px] font-black uppercase tracking-[0.35em] text-indigo-500">{t('timeline.showcaseMode')}</p>
+        ) : null}
         {timelineLogoSrc && logoVisible ? (
           <img
             src={timelineLogoSrc}
@@ -46,7 +57,6 @@ function TimelineHeader({
         ) : (
           <p className="title-xs">{t('timeline.heroTimelineTitle', { heroName })}</p>
         )}
-        <p className="body-xs text-slate-500">{t('timeline.eventsSyncFromBackend')}</p>
         {!isAuthenticated ? (
           <p className="body-xs text-slate-400">{t('timeline.signInToTrackIssues')}</p>
         ) : null}
@@ -57,7 +67,19 @@ function TimelineHeader({
           <p className="body-xs text-rose-500">{t('timeline.issueStateSyncError')}</p>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-4">
+      <div className={`flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end md:gap-4 ${showcaseMode ? 'pt-1' : ''}`}>
+        {fullscreenEnabled ? (
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-pressed={isFullscreen}
+            aria-label={isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+          >
+            {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
+            {isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
+          </button>
+        ) : null}
         <div className="flex flex-wrap items-center gap-2">
           <span className="body-xs text-slate-500">{t('timeline.sortByDate')}</span>
           <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
@@ -112,7 +134,7 @@ function TimelineHeader({
           </div>
         </div>
         {publicationFilterOptions.length ? (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <span className="body-xs text-slate-500">{t('timeline.filterPublication')}</span>
             <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
               {publicationFilterOptions.map((option) => {
@@ -136,7 +158,7 @@ function TimelineHeader({
             </div>
           </div>
         ) : null}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <span className="body-xs text-slate-500">{t('timeline.filterCollection')}</span>
           <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-0.5">
             <button

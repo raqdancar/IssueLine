@@ -22,6 +22,8 @@ function TimelineIssueCard(props) {
     severityLookup,
     issueState,
     density = 'detailed',
+    showcaseMode = false,
+    showcaseSide = 'left',
     highlightedEntryDomId = null,
     flashEntryDomId = null,
     onEntryHighlight,
@@ -52,6 +54,7 @@ function TimelineIssueCard(props) {
         {...rest}
         viewModel={viewModel}
         density={density}
+        showcaseMode={showcaseMode}
         isHighlighted={isHighlighted}
         isFlashing={isFlashing}
         onEntryHighlight={onEntryHighlight}
@@ -67,6 +70,8 @@ function TimelineIssueCard(props) {
       {...rest}
       issueState={issueState}
       viewModel={viewModel}
+      showcaseMode={showcaseMode}
+      showcaseSide={showcaseSide}
       isHighlighted={isHighlighted}
       isFlashing={isFlashing}
       onEntryHighlight={onEntryHighlight}

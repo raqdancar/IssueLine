@@ -7,6 +7,7 @@ function TimelineList({
   zoomLevel,
   listSpacingClass,
   timelineDensity,
+  showcaseMode = false,
   severityLookup,
   issueStatesById,
   canUseIssueStateActions,
@@ -20,10 +21,18 @@ function TimelineList({
   onCoverPreview,
   onIssueSelect,
 }) {
+  const useAlternatingShowcase = showcaseMode && timelineDensity === 'detailed'
+
   return (
     <div className="timeline-zoom-container overflow-x-auto">
       <div className="timeline-zoom-content" style={{ zoom: zoomLevel }}>
-        <ol className={`pt-4 ${listSpacingClass}`}>
+        <ol className={`relative pt-4 ${listSpacingClass} ${useAlternatingShowcase ? 'md:space-y-7' : ''}`}>
+          {useAlternatingShowcase ? (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-0 hidden h-full w-[3px] -translate-x-1/2 rounded-full bg-linear-to-b from-indigo-500/35 via-fuchsia-400/80 to-cyan-400/45 shadow-[0_0_1.1rem_rgba(99,102,241,0.45)] md:block"
+            />
+          ) : null}
           {entries.map((entry, index) => {
             // Hide collection actions for annual/special placeholders to avoid invalid state updates.
             const hideIssueStateActions = hasSpecialIssueCode(entry)
@@ -44,6 +53,8 @@ function TimelineList({
                 issueStateDisabledReason={issueStateDisabledReason}
                 issueStatePending={pendingIssueId === entry.id}
                 density={timelineDensity}
+                showcaseMode={useAlternatingShowcase}
+                showcaseSide={index % 2 === 0 ? 'left' : 'right'}
                 highlightedEntryDomId={highlightedEntryDomId}
                 flashEntryDomId={flashEntryDomId}
                 onEntryHighlight={onEntryHighlight}

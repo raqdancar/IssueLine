@@ -5,6 +5,7 @@ import TimelineHeader from './timeline/TimelineHeader'
 import TimelineNavigatorPanel from './timeline/TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './timeline/TimelineNavigatorToggle'
 import TimelineList from './timeline/TimelineList'
+import TimelineFullscreenShowcase from './timeline/TimelineFullscreenShowcase'
 import { TimelineLoadingSkeleton } from './timeline/TimelineLoadingSkeleton'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
 import IssueDetailsDialog from './issue-details/IssueDetailsDialog'
@@ -14,6 +15,7 @@ import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket, resolveYea
 import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
+import { useTimelineFullscreen } from '@/hooks/useTimelineFullscreen.js'
 import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
 import { parseJsonResponse } from '@/lib/httpClient.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
@@ -80,6 +82,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const flashTimeoutRef = useRef(null)
+  const { isFullscreen, fullscreenEnabled, toggleFullscreen } = useTimelineFullscreen(sectionRef)
 
   // Load timeline entries for the current hero slug.
   useEffect(() => {
@@ -585,7 +588,14 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   }
 
   return (
-    <section ref={sectionRef} className="relative mt-8 w-full rounded-2xl border border-slate-100 bg-linear-to-br from-white to-slate-50 p-4">
+    <section
+      ref={sectionRef}
+      className={`relative mt-8 w-full border p-4 transition ${
+        isFullscreen
+          ? 'h-full min-h-screen overflow-auto rounded-none border-slate-900/20 bg-[radial-gradient(circle_at_20%_0%,rgba(99,102,241,0.22),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.14),transparent_34%),linear-gradient(155deg,rgba(248,250,252,0.96)_0%,rgba(241,245,249,0.94)_38%,rgba(255,255,255,0.98)_100%)] shadow-2xl'
+          : 'rounded-2xl border-slate-100 bg-linear-to-br from-white to-slate-50'
+      }`}
+    >
       <TimelineHeader
         heroName={heroName}
         timelineLogoSrc={timelineLogoSrc}
@@ -608,6 +618,10 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         onCollectionFilterChange={(key, nextValue) =>
           setCollectionFilters((current) => ({ ...current, [key]: nextValue }))
         }
+        fullscreenEnabled={fullscreenEnabled}
+        isFullscreen={isFullscreen}
+        onToggleFullscreen={toggleFullscreen}
+        showcaseMode={isFullscreen}
       />
       <div className="mt-6 space-y-4">
         {status === 'loading' ? (
@@ -623,50 +637,85 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
               : t('timeline.noIssuesForFilter')}
           </p>
         ) : (
-          <div className="flex flex-col gap-4 md:grid md:h-[calc(100vh-13rem)] md:min-h-[38rem] md:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] md:items-start md:overflow-hidden">
-            {canShowNavigator && isNavigatorVisible ? (
-              <TimelineNavigatorPanel
-                indexMode={indexMode}
-                onIndexModeChange={setIndexMode}
-                indexOptions={indexModeOptions}
-                anchorLookup={anchorLookup}
-                issueAnchorsByStage={issueAnchorsByStage}
-                activeAnchor={activeAnchor}
-                onAnchorClick={handleAnchorClick}
-                onToggleVisibility={() => setIsNavigatorVisible(false)}
-              />
-            ) : null}
-            <div
-              className={`min-w-0 flex-1 md:h-full md:overflow-y-auto md:pr-1 ${
-                !canShowNavigator || !isNavigatorVisible ? 'md:col-span-2' : ''
-              }`}
-            >
-              {canShowNavigator && !isNavigatorVisible ? (
-                <TimelineNavigatorToggle onClick={() => setIsNavigatorVisible(true)} />
+          isFullscreen ? (
+            <TimelineFullscreenShowcase
+              canShowNavigator={canShowNavigator}
+              isNavigatorVisible={isNavigatorVisible}
+              indexMode={indexMode}
+              onIndexModeChange={setIndexMode}
+              indexOptions={indexModeOptions}
+              anchorLookup={anchorLookup}
+              issueAnchorsByStage={issueAnchorsByStage}
+              activeAnchor={activeAnchor}
+              onAnchorClick={handleAnchorClick}
+              onHideNavigator={() => setIsNavigatorVisible(false)}
+              onShowNavigator={() => setIsNavigatorVisible(true)}
+              entries={filteredEntries}
+              zoomLevel={zoomLevel}
+              listSpacingClass={timelineListSpacing}
+              timelineDensity={timelineDensity}
+              severityLookup={severityLookup}
+              issueStatesById={issueStatesById}
+              canUseIssueStateActions={canUseIssueStateActions}
+              issueStateDisabled={issueStateDisabled}
+              issueStateDisabledReason={issueStateDisabledReason}
+              pendingIssueId={pendingIssueId}
+              highlightedEntryDomId={highlightedEntryDomId}
+              flashEntryDomId={flashState.id}
+              onEntryHighlight={(entryDomId) => {
+                setHighlightedEntryDomId(entryDomId)
+                triggerFlash(entryDomId)
+              }}
+              onCoverPreview={openCoverViewer}
+              onIssueSelect={openIssueDetails}
+              onIssueStateToggle={handleIssueStateToggle}
+            />
+          ) : (
+            <div className="flex flex-col gap-4 md:grid md:h-[calc(100vh-13rem)] md:min-h-[38rem] md:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] md:items-start md:overflow-hidden">
+              {canShowNavigator && isNavigatorVisible ? (
+                <TimelineNavigatorPanel
+                  indexMode={indexMode}
+                  onIndexModeChange={setIndexMode}
+                  indexOptions={indexModeOptions}
+                  anchorLookup={anchorLookup}
+                  issueAnchorsByStage={issueAnchorsByStage}
+                  activeAnchor={activeAnchor}
+                  onAnchorClick={handleAnchorClick}
+                  onToggleVisibility={() => setIsNavigatorVisible(false)}
+                />
               ) : null}
-              <TimelineList
-                entries={filteredEntries}
-                zoomLevel={zoomLevel}
-                listSpacingClass={timelineListSpacing}
-                timelineDensity={timelineDensity}
-                severityLookup={severityLookup}
-                issueStatesById={issueStatesById}
-                canUseIssueStateActions={canUseIssueStateActions}
-                issueStateDisabled={issueStateDisabled}
-                issueStateDisabledReason={issueStateDisabledReason}
-                pendingIssueId={pendingIssueId}
-                highlightedEntryDomId={highlightedEntryDomId}
-                flashEntryDomId={flashState.id}
-                onEntryHighlight={(entryDomId) => {
-                  setHighlightedEntryDomId(entryDomId)
-                  triggerFlash(entryDomId)
-                }}
-                onCoverPreview={openCoverViewer}
-                onIssueSelect={openIssueDetails}
-                onIssueStateToggle={handleIssueStateToggle}
-              />
+              <div
+                className={`min-w-0 flex-1 md:h-full md:overflow-y-auto md:pr-1 ${
+                  !canShowNavigator || !isNavigatorVisible ? 'md:col-span-2' : ''
+                }`}
+              >
+                {canShowNavigator && !isNavigatorVisible ? (
+                  <TimelineNavigatorToggle onClick={() => setIsNavigatorVisible(true)} />
+                ) : null}
+                <TimelineList
+                  entries={filteredEntries}
+                  zoomLevel={zoomLevel}
+                  listSpacingClass={timelineListSpacing}
+                  timelineDensity={timelineDensity}
+                  severityLookup={severityLookup}
+                  issueStatesById={issueStatesById}
+                  canUseIssueStateActions={canUseIssueStateActions}
+                  issueStateDisabled={issueStateDisabled}
+                  issueStateDisabledReason={issueStateDisabledReason}
+                  pendingIssueId={pendingIssueId}
+                  highlightedEntryDomId={highlightedEntryDomId}
+                  flashEntryDomId={flashState.id}
+                  onEntryHighlight={(entryDomId) => {
+                    setHighlightedEntryDomId(entryDomId)
+                    triggerFlash(entryDomId)
+                  }}
+                  onCoverPreview={openCoverViewer}
+                  onIssueSelect={openIssueDetails}
+                  onIssueStateToggle={handleIssueStateToggle}
+                />
+              </div>
             </div>
-          </div>
+          )
         )}
       </div>
       <CoverFullscreenViewer

@@ -8,6 +8,8 @@ import { useI18n } from '@/i18n/I18nProvider.jsx'
 function TimelineIssueCardDetailed({
   viewModel,
   issueState,
+  showcaseMode = false,
+  showcaseSide = 'left',
   showIssueStateActions = false,
   issueStateDisabled = false,
   issueStateDisabledReason,
@@ -56,12 +58,33 @@ function TimelineIssueCardDetailed({
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-indigo-300/60' : ''
   // Merge persistent highlight and transient flash styles for "jump to issue" navigation.
   const articleEmphasis = `${highlightClasses} ${flashClasses}`.trim()
+  const isShowcaseLeft = showcaseMode && showcaseSide === 'left'
+  const isShowcaseRight = showcaseMode && showcaseSide === 'right'
+  const rootClasses = showcaseMode
+    ? `relative w-full pl-9 md:w-[calc(50%-1.25rem)] md:pl-0 ${isShowcaseLeft ? 'md:mr-auto md:pr-7' : ''} ${isShowcaseRight ? 'md:ml-auto md:pl-7' : ''}`.trim()
+    : 'relative pl-9'
+  const dotClasses = showcaseMode
+    ? `${isShowcaseLeft ? 'absolute left-0 top-2 h-3.5 w-3.5 rounded-full border-2 shadow-[0_0_0_2px_rgba(255,255,255,0.92),0_0_0.85rem_rgba(99,102,241,0.45)] md:left-auto md:right-0 md:top-5 md:translate-x-1/2' : ''} ${isShowcaseRight ? 'absolute left-0 top-2 h-3.5 w-3.5 rounded-full border-2 shadow-[0_0_0_2px_rgba(255,255,255,0.92),0_0_0.85rem_rgba(99,102,241,0.45)] md:top-5 md:-translate-x-1/2' : ''} ${severityVariant.dot}`.trim()
+    : `absolute left-0 top-2 h-3.5 w-3.5 rounded-full border-2 shadow-[0_0_0_2px_rgba(255,255,255,0.95),0_0_0.65rem_rgba(99,102,241,0.3)] ${severityVariant.dot}`
+  const showcaseDateClasses = isShowcaseLeft
+    ? 'pointer-events-none absolute left-0 top-0 translate-x-[calc(100%+0.45rem)] text-left md:left-auto md:right-0 md:top-3 md:translate-x-[calc(100%+0.8rem)]'
+    : 'pointer-events-none absolute left-0 top-0 translate-x-[calc(100%+0.45rem)] text-left md:top-3 md:-translate-x-[calc(100%+0.8rem)] md:text-right'
 
   return (
-    <li id={entryDomId} className="relative pl-9">
-      <span className={`absolute left-0 top-2 h-3 w-3 rounded-full border-2 ${severityVariant.dot}`} aria-hidden="true" />
-      {!isLast ? (
-        <span className="absolute left-1.5 top-6 block h-full w-px bg-linear-to-b from-slate-200 to-transparent" />
+    <li id={entryDomId} className={rootClasses}>
+      <span className={dotClasses} aria-hidden="true" />
+      {showcaseMode ? (
+        <span className={showcaseDateClasses}>
+          <span className="inline-flex rounded-full border border-indigo-300/80 bg-white/94 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-[0.12em] text-indigo-900 shadow-[0_0_0.65rem_rgba(99,102,241,0.2)] md:px-3 md:py-1 md:text-[13px]">
+            {issueDateLabel}
+          </span>
+        </span>
+      ) : null}
+      {showcaseMode && !isLast ? (
+        <span className="absolute left-[0.44rem] top-6 block h-full w-[2px] rounded-full bg-linear-to-b from-indigo-500/80 via-indigo-300/95 to-transparent shadow-[0_0_0.45rem_rgba(99,102,241,0.35)] md:hidden" />
+      ) : null}
+      {!showcaseMode && !isLast ? (
+        <span className="absolute left-[0.44rem] top-6 block h-full w-[2px] rounded-full bg-linear-to-b from-indigo-400 via-slate-300/95 to-transparent shadow-[0_0_0.45rem_rgba(99,102,241,0.28)]" />
       ) : null}
       <article
         role="button"
@@ -75,7 +98,7 @@ function TimelineIssueCardDetailed({
           {stageName ? <TimelineStageTab label={stageName} /> : null}
           <div className="flex-1 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
+              <span className={`inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm ${showcaseMode ? 'hidden md:inline-flex' : ''}`}>
                 <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
                 {issueDateLabel}
               </span>

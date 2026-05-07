@@ -1,6 +1,7 @@
 ﻿// Render the cinematic timeline grouped by year with rich issue cards.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import TimelineStageTab from './timeline/TimelineStageTab'
@@ -11,6 +12,7 @@ import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { parseJsonResponse } from '@/lib/httpClient.js'
+import { canUseFullscreen, exitDocumentFullscreen, isElementFullscreen, requestElementFullscreen } from '@/lib/fullscreen.js'
 
 const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
 
@@ -84,6 +86,8 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [fullscreenEnabled, setFullscreenEnabled] = useState(false)
   const { isAuthenticated } = useSessionContext()
   const [{ status, entries, error }, setState] = useState({
     status: backendBaseUrl ? 'idle' : 'disabled',
@@ -172,6 +176,24 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
     }
   }, [isMobileViewport])
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined
+
+    const syncFullscreenState = () => {
+      const element = sectionRef.current
+      setIsFullscreen(isElementFullscreen(element, document))
+      setFullscreenEnabled(canUseFullscreen(element))
+    }
+
+    syncFullscreenState()
+    document.addEventListener('fullscreenchange', syncFullscreenState)
+    document.addEventListener('webkitfullscreenchange', syncFullscreenState)
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState)
+      document.removeEventListener('webkitfullscreenchange', syncFullscreenState)
+    }
+  }, [])
+
   const openCoverViewer = (src, alt) => {
     if (!src || typeof window === 'undefined') return
     if (!window.matchMedia('(max-width: 767px)').matches) return
@@ -181,6 +203,16 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   const handleIssueStateToggle = (issueId, field, nextValue) => {
     if (!issueId || !isAuthenticated || !backendBaseUrl) return
     issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
+  }
+  const handleToggleFullscreen = async () => {
+    const element = sectionRef.current
+    if (!element) return
+
+    if (isElementFullscreen(element, document)) {
+      await exitDocumentFullscreen(document)
+      return
+    }
+    await requestElementFullscreen(element)
   }
   const shouldShowBackToTop = isMobileViewport && showBackToTop
 
@@ -203,13 +235,30 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   }
 
   return (
-    <section ref={sectionRef} className="relative mt-4 overflow-hidden rounded-3xl border border-slate-900/10 bg-slate-900 p-6 text-slate-100 shadow-2xl">
+    <section
+      ref={sectionRef}
+      className={`relative mt-4 overflow-hidden border bg-slate-900 p-6 text-slate-100 shadow-2xl transition ${
+        isFullscreen
+          ? 'h-full min-h-screen rounded-none border-slate-700/60 bg-[radial-gradient(circle_at_15%_0%,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_88%_8%,rgba(56,189,248,0.16),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.98)_0%,rgba(15,23,42,0.98)_40%,rgba(2,6,23,0.98)_100%)]'
+          : 'rounded-3xl border-slate-900/10'
+      }`}
+    >
       <div className="pointer-events-none absolute inset-0 opacity-30" aria-hidden>
         <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-linear-to-b from-transparent via-indigo-500 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.35),transparent_55%)]" />
       </div>
+      {isFullscreen ? (
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div className="absolute left-10 top-12 h-36 w-36 rounded-full bg-indigo-400/20 blur-3xl" />
+          <div className="absolute right-8 top-24 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-36 bg-linear-to-b from-indigo-200/10 via-sky-200/5 to-transparent" />
+        </div>
+      ) : null}
       <div className="relative flex flex-wrap items-baseline justify-between gap-3">
         <div>
+          {isFullscreen ? (
+            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.35em] text-indigo-200">{t('timeline.showcaseMode')}</p>
+          ) : null}
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('timeline.cinematicTimeline')}</p>
           {timelineLogoSrc && logoVisible ? (
             <img
@@ -225,6 +274,18 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
           <p className="body-xs text-slate-400">{t('timeline.groupedByYear')}</p>
         </div>
         <div className="flex flex-col items-end gap-3 text-xs text-slate-300 sm:flex-row sm:items-center">
+          {fullscreenEnabled ? (
+            <button
+              type="button"
+              onClick={handleToggleFullscreen}
+              aria-pressed={isFullscreen}
+              aria-label={isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            >
+              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
+              {isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
+            </button>
+          ) : null}
           <div className="flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('timeline.sort')}</span>
             <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
