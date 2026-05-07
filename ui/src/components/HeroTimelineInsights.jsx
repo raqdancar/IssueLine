@@ -11,6 +11,7 @@ import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
+import { parseJsonResponse } from '@/lib/httpClient.js'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 
@@ -365,7 +366,7 @@ const GaugeCard = ({ label, count, total, accentClass, t }) => {
       </svg>
       <div>
         <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{label}</p>
-        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || 'â€”' })}</p>
+        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || '\u2014' })}</p>
       </div>
     </div>
   )
@@ -448,7 +449,7 @@ function StageAccordionItem({
         <div className="min-w-0">
           <p className={`text-sm font-semibold ${isComplete ? 'text-emerald-800' : 'text-slate-900'}`}>{stage.name}</p>
           <p className={`text-xs ${isComplete ? 'text-emerald-700' : 'text-slate-500'}`}>
-            {stage.yearLabel} â€¢ {stage.issueCount} {t('timeline.indexIssues').toLowerCase()} â€¢ {progressLabel}
+            {stage.yearLabel} {'\u2022'} {stage.issueCount} {t('timeline.indexIssues').toLowerCase()} {'\u2022'} {progressLabel}
           </p>
         </div>
         <span className="inline-flex items-center gap-2">
@@ -590,11 +591,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
         const response = await fetch(`${apiBaseUrl}/hero-timelines/${encodeURIComponent(heroSlug)}`, {
           signal: controller.signal,
         })
-        if (!response.ok) {
-          const payload = await response.json().catch(() => null)
-          throw new Error(payload?.error ?? `Request failed with status ${response.status}`)
-        }
-        const payload = await response.json()
+        const payload = await parseJsonResponse(response)
         setState({
           status: 'success',
           entries: payload.entries ?? [],

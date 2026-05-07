@@ -221,6 +221,8 @@ const messages = {
       have: 'Tengo',
       read: 'Leído',
       legacy: 'Legacy',
+      specialEventMarker: 'Evento especial',
+      specialEventFallbackTitle: 'Hito de timeline',
       noCover: 'Sin portada',
       coverAvailableSoon: 'Disponible pronto',
       series: 'Serie:',

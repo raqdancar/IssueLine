@@ -5,6 +5,7 @@ import {
   SUPPORTED_LOCALES,
   translations,
 } from './locales'
+import { sanitizeMojibakeText } from '@/lib/textSanitizer.js'
 
 const I18nContext = createContext({
   locale: DEFAULT_LOCALE,
@@ -49,7 +50,7 @@ const resolveTranslation = (locale, key) => {
 const interpolate = (template, params = {}) =>
   template.replace(/\{\{(\w+)\}\}/g, (_match, token) => {
     const value = params[token]
-    return value === undefined || value === null ? '' : String(value)
+    return value === undefined || value === null ? '' : sanitizeMojibakeText(String(value))
   })
 
 export function I18nProvider({ children }) {
@@ -67,7 +68,7 @@ export function I18nProvider({ children }) {
     (key, params) => {
       const value = resolveTranslation(locale, key) ?? resolveTranslation(DEFAULT_LOCALE, key)
       if (typeof value !== 'string') return key
-      return interpolate(value, params)
+      return sanitizeMojibakeText(interpolate(value, params))
     },
     [locale],
   )

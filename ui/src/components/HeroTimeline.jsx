@@ -15,6 +15,7 @@ import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
+import { parseJsonResponse } from '@/lib/httpClient.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import {
   COMPACT_DENSITY_THRESHOLD,
@@ -92,13 +93,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         const response = await fetch(`${apiBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
           signal: controller.signal,
         })
-
-        if (!response.ok) {
-          const payload = await response.json().catch(() => null)
-          throw new Error(payload?.error ?? `Request failed with status ${response.status}`)
-        }
-
-        const payload = await response.json()
+        const payload = await parseJsonResponse(response)
         setState({ status: 'success', entries: payload.entries ?? [], error: null })
       } catch (fetchError) {
         if (controller.signal.aborted) return
@@ -655,7 +650,6 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
                 listSpacingClass={timelineListSpacing}
                 timelineDensity={timelineDensity}
                 severityLookup={severityLookup}
-                fallbackImage={fallbackImage}
                 issueStatesById={issueStatesById}
                 canUseIssueStateActions={canUseIssueStateActions}
                 issueStateDisabled={issueStateDisabled}

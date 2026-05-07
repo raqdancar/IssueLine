@@ -222,6 +222,8 @@
     have: 'Have',
     read: 'Read',
     legacy: 'Legacy',
+    specialEventMarker: 'Special event',
+    specialEventFallbackTitle: 'Timeline milestone',
     noCover: 'No cover',
     coverAvailableSoon: 'Available soon',
     series: 'Series:',

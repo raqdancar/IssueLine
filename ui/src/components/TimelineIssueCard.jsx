@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import TimelineIssueCardDetailed from './timeline/TimelineIssueCardDetailed'
 import TimelineIssueCardCompact from './timeline/TimelineIssueCardCompact'
 import TimelineIssueCardMicro from './timeline/TimelineIssueCardMicro'
+import TimelineSpecialEventCard from './timeline/TimelineSpecialEventCard'
 import { createIssueCardViewModel } from './timeline/issueCardViewModel'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -19,7 +20,6 @@ function TimelineIssueCard(props) {
     index,
     totalEntries,
     severityLookup,
-    fallbackImage,
     issueState,
     density = 'detailed',
     highlightedEntryDomId = null,
@@ -36,19 +36,31 @@ function TimelineIssueCard(props) {
         index,
         totalEntries,
         severityLookup,
-        fallbackImage,
         issueState,
         t,
         locale,
       }),
-    [entry, index, totalEntries, severityLookup, fallbackImage, issueState, t, locale],
+    [entry, index, totalEntries, severityLookup, issueState, t, locale],
   )
-
-  // Fallback to detailed layout if an unknown density value is passed.
-  const SelectedComponent = densityComponents[density] ?? TimelineIssueCardDetailed
 
   const isHighlighted = viewModel.entryDomId === highlightedEntryDomId
   const isFlashing = flashEntryDomId === viewModel.entryDomId
+
+  if (viewModel.isSpecialEvent) {
+    return (
+      <TimelineSpecialEventCard
+        {...rest}
+        viewModel={viewModel}
+        density={density}
+        isHighlighted={isHighlighted}
+        isFlashing={isFlashing}
+        onEntryHighlight={onEntryHighlight}
+      />
+    )
+  }
+
+  // Fallback to detailed layout if an unknown density value is passed.
+  const SelectedComponent = densityComponents[density] ?? TimelineIssueCardDetailed
 
   return (
     <SelectedComponent

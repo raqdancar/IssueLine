@@ -221,6 +221,8 @@ const messages = {
       have: 'Tinc',
       read: 'Llegit',
       legacy: 'Legacy',
+      specialEventMarker: 'Esdeveniment especial',
+      specialEventFallbackTitle: 'Fita de timeline',
       noCover: 'Sense portada',
       coverAvailableSoon: 'Disponible aviat',
       series: 'Sèrie:',

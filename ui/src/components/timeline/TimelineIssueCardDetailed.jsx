@@ -1,4 +1,5 @@
 ﻿// Render the full-detail timeline issue card with metadata and actions.
+import { useEffect, useState } from 'react'
 import { CalendarDays } from 'lucide-react'
 import TimelineStageTab from './TimelineStageTab'
 import TimelineIssueToolbar from './TimelineIssueToolbar'
@@ -33,6 +34,14 @@ function TimelineIssueCardDetailed({
   } = viewModel
 
   const { seriesName, number, volume, publicationDate, price, pageCount, editing, rating, legacyNumber } = meta
+  const [coverFailed, setCoverFailed] = useState(false)
+
+  useEffect(() => {
+    setCoverFailed(false)
+  }, [coverImage])
+
+  const hasDisplayableCover = Boolean(coverImage && !coverFailed)
+
   const handleHighlight = () => {
     onEntryHighlight?.(entryDomId)
     onIssueSelect?.(entry)
@@ -103,7 +112,7 @@ function TimelineIssueCardDetailed({
                   className="flex w-28 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:w-32"
                   style={{ aspectRatio: '2 / 3' }}
                 >
-                  {coverImage ? (
+                  {hasDisplayableCover ? (
                     <button
                       type="button"
                       className="h-full w-full cursor-zoom-in md:cursor-default"
@@ -118,6 +127,7 @@ function TimelineIssueCardDetailed({
                         alt={entry.metadata?.issueLabel ?? t('common.issueCover')}
                         className="h-full w-full object-contain"
                         loading="lazy"
+                        onError={() => setCoverFailed(true)}
                       />
                     </button>
                   ) : (

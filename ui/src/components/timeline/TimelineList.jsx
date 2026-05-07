@@ -8,7 +8,6 @@ function TimelineList({
   listSpacingClass,
   timelineDensity,
   severityLookup,
-  fallbackImage,
   issueStatesById,
   canUseIssueStateActions,
   issueStateDisabled,
@@ -39,7 +38,6 @@ function TimelineList({
                 index={index}
                 totalEntries={entries.length}
                 severityLookup={severityLookup}
-                fallbackImage={fallbackImage}
                 issueState={issueState}
                 showIssueStateActions={Boolean(showIssueStateActions)}
                 issueStateDisabled={issueStateDisabled}

@@ -2,6 +2,7 @@
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { getEntryDomId, getStageKey } from '../../utils/timeline'
+import { isSpecialTimelineEventEntry } from './utils'
 
 const formatDate = (value, locale, t) => {
   try {
@@ -35,7 +36,6 @@ export function createIssueCardViewModel({
   index,
   totalEntries,
   severityLookup,
-  fallbackImage,
   issueState,
   t,
   locale,
@@ -65,8 +65,10 @@ export function createIssueCardViewModel({
   const isLast = index === totalEntries - 1
   const issueLabel = entry.metadata?.issueLabel ?? entry.issue_code ?? t('timeline.issueFallback')
   const meta = entry.metadata ?? {}
-  // Resolve cover from multiple metadata shapes used by old and new imports.
-  const coverImage = resolveIssueCoverImage(meta, fallbackImage)
+  // For timeline cards, show "No cover" when missing instead of a generic fallback image.
+  const coverImage = resolveIssueCoverImage(meta, null)
+  const isSpecialEvent = isSpecialTimelineEventEntry(entry)
+  const specialEventCode = entry.issue_code ?? meta.issue_code ?? meta.issueCode ?? meta.issueLabel ?? null
 
   const seriesName = meta.series_name ?? meta.seriesName ?? null
   const number = meta.number ?? null
@@ -97,6 +99,8 @@ export function createIssueCardViewModel({
     stageName,
     stageSummary,
     coverImage,
+    isSpecialEvent,
+    specialEventCode,
     meta: {
       seriesName,
       number,

@@ -1,4 +1,5 @@
 // Provide shared helpers for JSON HTTP requests to backend endpoints.
+import { sanitizeMojibakeDeep } from '@/lib/textSanitizer.js'
 
 const buildRequestError = (payload, response) => {
   const message = payload?.error || `Request failed with status ${response.status}`
@@ -8,7 +9,7 @@ const buildRequestError = (payload, response) => {
 }
 
 export const parseJsonResponse = async (response) => {
-  const payload = await response.json().catch(() => ({}))
+  const payload = sanitizeMojibakeDeep(await response.json().catch(() => ({})))
   if (!response.ok) {
     throw buildRequestError(payload, response)
   }
