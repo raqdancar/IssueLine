@@ -1063,6 +1063,8 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
         open={Boolean(selectedStageIssueId)}
         heroSlug={heroSlug}
         issueId={selectedStageIssueId}
+        timelineEntries={state.entries}
+        onIssueNavigate={(nextIssueId) => setSelectedStageIssueId(nextIssueId)}
         fallbackImage={null}
         issueState={selectedStageIssueId ? statesByIssueId?.[selectedStageIssueId] : null}
         canUseIssueStateActions={canFetchStates}

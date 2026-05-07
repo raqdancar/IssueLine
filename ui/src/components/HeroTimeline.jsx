@@ -722,12 +722,16 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         open={coverViewer.open}
         src={coverViewer.src}
         alt={coverViewer.alt}
+        portalContainer={isFullscreen ? sectionRef.current : undefined}
         onClose={() => setCoverViewer({ open: false, src: null, alt: '' })}
       />
       <IssueDetailsDialog
         open={Boolean(selectedIssueId)}
         heroSlug={slug}
         issueId={selectedIssueId}
+        portalContainer={isFullscreen ? sectionRef.current : undefined}
+        timelineEntries={entries}
+        onIssueNavigate={(nextIssueId) => setSelectedIssueId(nextIssueId)}
         fallbackImage={fallbackImage}
         issueState={selectedIssueId ? issueStatesById?.[selectedIssueId] : null}
         canUseIssueStateActions={canUseIssueStateActions}
@@ -741,6 +745,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       />
       <IssueOwnershipFormatDialog
         open={ownershipDialogState.open}
+        portalContainer={isFullscreen ? sectionRef.current : undefined}
         issueTitle={ownershipDialogState.issueTitle}
         editions={ownershipDialogState.editions}
         selectedEditionIds={ownershipDialogState.selectedEditionIds}

@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
-function CoverFullscreenViewer({ open, src, alt, onClose }) {
+function CoverFullscreenViewer({ open, src, alt, onClose, portalContainer }) {
   const { t } = useI18n()
   const [failed, setFailed] = useState(false)
 
@@ -17,6 +17,7 @@ function CoverFullscreenViewer({ open, src, alt, onClose }) {
   }, [src, open])
 
   if (!open || !src || typeof document === 'undefined') return null
+  const portalTarget = portalContainer ?? document.body
   const resolvedAlt = alt ?? t('common.issueCover')
 
   return createPortal(
@@ -50,7 +51,7 @@ function CoverFullscreenViewer({ open, src, alt, onClose }) {
         )}
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }
 

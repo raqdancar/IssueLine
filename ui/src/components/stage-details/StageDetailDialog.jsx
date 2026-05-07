@@ -6,16 +6,20 @@ import { useI18n } from '@/i18n/I18nProvider.jsx'
 import StageIssuesTimeline from './StageIssuesTimeline'
 
 // Modal dialog that shows one stage summary and its issue timeline strip.
-function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSelect }) {
+function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSelect, portalContainer }) {
   const { t } = useI18n()
   useModalLayer({ open, onClose, lockScroll: true, closeOnEscape: true })
 
   if (!open || typeof document === 'undefined' || !stage) return null
+  const portalTarget = portalContainer ?? document.body
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[110] flex items-start justify-center bg-slate-950/70 px-3 py-4 md:items-center md:px-6 md:py-8"
-      onClick={onClose}
+      className="fixed inset-0 z-[130] flex items-start justify-center bg-slate-950/70 px-3 py-4 md:items-center md:px-6 md:py-8"
+      onClick={(event) => {
+        event.stopPropagation()
+        onClose?.()
+      }}
     >
       <div className="w-full max-w-6xl" onClick={(event) => event.stopPropagation()}>
         <div className="max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/30 sm:p-6">
@@ -44,7 +48,7 @@ function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSe
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }
 

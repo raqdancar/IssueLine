@@ -13,6 +13,7 @@ const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLE
 
 function IssueOwnershipFormatDialog({
   open,
+  portalContainer,
   issueTitle,
   editions = [],
   selectedEditionIds = [],
@@ -39,6 +40,7 @@ function IssueOwnershipFormatDialog({
 
   if (!open) return null
   if (typeof document === 'undefined') return null
+  const portalTarget = portalContainer ?? document.body
 
   const selectedSet = new Set(selectedEditionIds)
 
@@ -155,7 +157,7 @@ function IssueOwnershipFormatDialog({
         </div>
       </div>
     </div>,
-    document.body,
+    portalTarget,
   )
 }
 
