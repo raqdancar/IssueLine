@@ -35,7 +35,7 @@ function TimelineIssueCardDetailed({
     meta,
   } = viewModel
 
-  const { seriesName, number, volume, publicationDate, price, pageCount, editing, rating, legacyNumber } = meta
+  const { seriesName, number, volume, publicationDate, price, pageCount, editing, rating, legacyNumber, legacyMatchesIssueNumber } = meta
   const [coverFailed, setCoverFailed] = useState(false)
 
   useEffect(() => {
@@ -105,7 +105,13 @@ function TimelineIssueCardDetailed({
               {seriesName || number || legacyNumber ? (
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   {seriesName || number ? (
-                    <span className="inline-flex items-center gap-3 rounded-full border border-slate-300/70 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm">
+                    <span
+                      className={
+                        legacyMatchesIssueNumber
+                          ? 'inline-flex items-center gap-3 rounded-full border border-amber-300/80 bg-linear-to-r from-white via-amber-50/80 to-indigo-50 px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm shadow-amber-100/70'
+                          : 'inline-flex items-center gap-3 rounded-full border border-slate-300/70 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm'
+                      }
+                    >
                       <span>{seriesName ?? t('timeline.issueFallback')}</span>
                       {number ? (
                         <span
@@ -115,9 +121,14 @@ function TimelineIssueCardDetailed({
                           #{number}
                         </span>
                       ) : null}
+                      {legacyMatchesIssueNumber ? (
+                        <span className="rounded-full border border-indigo-200 bg-white/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-indigo-700">
+                          {t('timeline.legacy')}
+                        </span>
+                      ) : null}
                     </span>
                   ) : null}
-                  {legacyNumber ? (
+                  {legacyNumber && !legacyMatchesIssueNumber ? (
                     <span
                       className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm"
                       aria-label={`${t('timeline.legacy')} #${legacyNumber}`}

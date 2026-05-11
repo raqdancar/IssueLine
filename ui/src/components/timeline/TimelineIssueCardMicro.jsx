@@ -12,7 +12,7 @@ function TimelineIssueCardMicro({
 }) {
   const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
-  const { seriesName, number, publicationDate, legacyNumber } = meta
+  const { seriesName, number, publicationDate, legacyNumber, legacyMatchesIssueNumber } = meta
   const haveIt = Boolean(issueState?.haveIt)
   const readIt = Boolean(issueState?.readIt)
   const handleHighlight = () => {
@@ -57,7 +57,8 @@ function TimelineIssueCardMicro({
             {number || legacyNumber ? (
               <span className="inline-flex items-center gap-2 text-slate-500">
                 {number ? <span>#{number}</span> : null}
-                {legacyNumber ? <span className="text-indigo-600">{t('timeline.legacy')} #{legacyNumber}</span> : null}
+                {legacyNumber && !legacyMatchesIssueNumber ? <span className="text-indigo-600">{t('timeline.legacy')} #{legacyNumber}</span> : null}
+                {legacyMatchesIssueNumber ? <span className="text-indigo-600">{t('timeline.legacy')}</span> : null}
               </span>
             ) : null}
           </div>

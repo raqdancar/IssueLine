@@ -18,7 +18,7 @@ function TimelineIssueCardCompact({
 }) {
   const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, gradientStyle, issueDateLabel, stageName, meta } = viewModel
-  const { seriesName, number, publicationDate, legacyNumber } = meta
+  const { seriesName, number, publicationDate, legacyNumber, legacyMatchesIssueNumber } = meta
   const handleHighlight = () => {
     onEntryHighlight?.(entryDomId)
     onIssueSelect?.(entry)
@@ -67,12 +67,23 @@ function TimelineIssueCardCompact({
             {seriesName || number || legacyNumber ? (
               <div className="flex flex-wrap items-center gap-2">
                 {seriesName || number ? (
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm">
+                  <span
+                    className={
+                      legacyMatchesIssueNumber
+                        ? 'inline-flex items-center gap-2 rounded-full border border-amber-300/80 bg-linear-to-r from-white via-amber-50/80 to-indigo-50 px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm shadow-amber-100/70'
+                        : 'inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm'
+                    }
+                  >
                     <span>{seriesName ?? t('timeline.issueFallback')}</span>
                     {number ? <span className="text-slate-500">#{number}</span> : null}
+                    {legacyMatchesIssueNumber ? (
+                      <span className="rounded-full border border-indigo-200 bg-white/80 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-indigo-700">
+                        {t('timeline.legacy')}
+                      </span>
+                    ) : null}
                   </span>
                 ) : null}
-                {legacyNumber ? (
+                {legacyNumber && !legacyMatchesIssueNumber ? (
                   <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-semibold text-indigo-700 shadow-sm">
                     {t('timeline.legacy')} <span className="text-sm font-black text-indigo-900">#{legacyNumber}</span>
                   </span>
