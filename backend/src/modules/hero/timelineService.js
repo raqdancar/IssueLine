@@ -24,6 +24,60 @@ const normalizeIssueDate = (value) => {
   return date.toISOString().slice(0, 10)
 }
 
+const resolveTimelineStageId = (timelineEntry = {}) => {
+  const metadata = timelineEntry?.metadata ?? {}
+  const rawStageId = timelineEntry?.stage_id ?? metadata.stage_id ?? metadata.stageId ?? null
+  const stageId = Number(rawStageId)
+  return Number.isSafeInteger(stageId) && stageId > 0 ? stageId : null
+}
+
+const resolveStageName = (stage = {}, metadata = {}) =>
+  stage.title ??
+  stage.name ??
+  stage.label ??
+  stage.stage_name ??
+  stage.stageName ??
+  metadata.stage_name ??
+  metadata.stageName ??
+  metadata.stage?.name ??
+  metadata.stage?.label ??
+  null
+
+const resolveStageSummary = (stage = {}, metadata = {}) =>
+  stage.summary ??
+  stage.short_summary ??
+  stage.shortSummary ??
+  metadata.stage_summary ??
+  metadata.stageSummary ??
+  metadata.stage?.short_summary ??
+  metadata.stage?.summary ??
+  null
+
+const applyStageMetadataOverlay = (entry, stageMap = new Map()) => {
+  const stageId = resolveTimelineStageId(entry)
+  if (!stageId) return entry
+
+  const stage = stageMap.get(stageId)
+  if (!stage) return entry
+
+  const metadata = entry?.metadata ?? {}
+  const stageName = resolveStageName(stage, metadata)
+  const stageSummary = resolveStageSummary(stage, metadata)
+
+  return {
+    ...entry,
+    metadata: {
+      ...metadata,
+      stage_id: stageId,
+      stageId,
+      stage_name: stageName,
+      stageName: stageName,
+      stage_summary: stageSummary,
+      stageSummary: stageSummary,
+    },
+  }
+}
+
 /**
  * Cerca un personatge per `slug` i retorna la seva informació bàsica.
  *
@@ -66,7 +120,7 @@ export const getHeroBySlug = async (slug) => {
 export const getHeroTimelineEntries = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, special_issue, created_at')
+    .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, special_issue, created_at')
     .eq('hero_api_id', heroApiId)
     .order('issue_date', { ascending: true })
 
@@ -122,10 +176,7 @@ export const getHeroTimelineEntries = async (heroApiId) => {
     new Set(
       enrichedEntries
         .map((entry) => {
-          const metadata = entry?.metadata ?? {}
-          const rawStageId = metadata.stage_id ?? metadata.stageId ?? null
-          const stageId = Number(rawStageId)
-          return Number.isSafeInteger(stageId) && stageId > 0 ? stageId : null
+          return resolveTimelineStageId(entry)
         })
         .filter(Boolean)
     )
@@ -162,48 +213,7 @@ export const getHeroTimelineEntries = async (heroApiId) => {
     return enrichedEntries
   }
 
-  return enrichedEntries.map((entry) => {
-    const metadata = entry?.metadata ?? null
-    if (!metadata) return entry
-    const stageId = Number(metadata.stage_id ?? metadata.stageId ?? 0)
-    if (!Number.isSafeInteger(stageId) || stageId <= 0) {
-      return entry
-    }
-    const stage = stageMap.get(stageId)
-    if (!stage) return entry
-
-    const stageName =
-      stage.title ??
-      stage.name ??
-      stage.label ??
-      stage.stage_name ??
-      stage.stageName ??
-      metadata.stage_name ??
-      metadata.stageName ??
-      metadata.stage?.name ??
-      metadata.stage?.label ??
-      null
-    const stageSummary =
-      stage.summary ??
-      stage.short_summary ??
-      stage.shortSummary ??
-      metadata.stage_summary ??
-      metadata.stageSummary ??
-      metadata.stage?.short_summary ??
-      metadata.stage?.summary ??
-      null
-
-    return {
-      ...entry,
-      metadata: {
-        ...metadata,
-        stage_name: stageName,
-        stageName: stageName,
-        stage_summary: stageSummary,
-        stageSummary: stageSummary,
-      },
-    }
-  })
+  return enrichedEntries.map((entry) => applyStageMetadataOverlay(entry, stageMap))
 }
 
 const toSafeInteger = (value) => {
@@ -253,7 +263,7 @@ const resolveTimelineIssueDetailPayload = (timelineEntry, heroIssueRow) => {
     issue: {
       title: heroIssueRow?.title ?? metadata.title ?? null,
       number: resolveTimelineIssueNumber(timelineEntry, heroIssueRow),
-      legacyNumber: metadata.legacy_number ?? metadata.legacyNumber ?? null,
+      legacyNumber: timelineEntry.legacy_number ?? metadata.legacy_number ?? metadata.legacyNumber ?? null,
     },
     series: {
       id: heroIssueRow?.series_id ?? toSafeInteger(metadata.series_id ?? metadata.seriesId),
@@ -342,11 +352,10 @@ const loadCollectedEditionsForHeroIssue = async (heroIssueId) => {
   return (data ?? []).map(mapCollectedEditionRow).filter(Boolean)
 }
 
-const resolveStageIdentityFromMetadata = (metadata = {}, stageIdentityById = new Map()) => {
-  const rawStageId = metadata.stage_id ?? metadata.stageId ?? null
-  const stageId = Number(rawStageId)
-  const stageIdentityFromTable =
-    Number.isSafeInteger(stageId) && stageId > 0 ? stageIdentityById.get(stageId) ?? null : null
+const resolveStageIdentityFromTimelineEntry = (timelineEntry = {}, stageIdentityById = new Map()) => {
+  const metadata = timelineEntry?.metadata ?? {}
+  const stageId = resolveTimelineStageId(timelineEntry)
+  const stageIdentityFromTable = stageId ? stageIdentityById.get(stageId) ?? null : null
 
   const resolvedName =
     stageIdentityFromTable?.name ??
@@ -443,7 +452,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
 
   const { data: timelineRows, error: timelineError } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, metadata')
+    .select('id, metadata, stage_id')
     .eq('hero_api_id', heroApiId)
 
   if (timelineError) {
@@ -454,9 +463,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
     new Set(
       (timelineRows ?? [])
         .map((row) => {
-          const metadata = row?.metadata ?? {}
-          const stageId = Number(metadata.stage_id ?? metadata.stageId ?? 0)
-          return Number.isSafeInteger(stageId) && stageId > 0 ? stageId : null
+          return resolveTimelineStageId(row)
         })
         .filter(Boolean)
     )
@@ -473,7 +480,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
       for (const stage of stageRows ?? []) {
         const stageId = Number(stage?.id)
         if (!Number.isSafeInteger(stageId) || stageId <= 0) continue
-        const stageName = stage.title ?? stage.name ?? stage.label ?? stage.stage_name ?? stage.stageName ?? null
+        const stageName = resolveStageName(stage)
         if (!stageName) continue
         const stageKey = String(stageName).trim().toLowerCase()
         if (!stageKey) continue
@@ -493,7 +500,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
     const metadata = row.metadata ?? {}
     const gcdIssueId = resolveGcdIssueIdFromMetadata(metadata)
     if (!gcdIssueId || timelineStageByGcdIssueId.has(gcdIssueId)) continue
-    const stage = resolveStageIdentityFromMetadata(metadata, stageIdentityById)
+    const stage = resolveStageIdentityFromTimelineEntry(row, stageIdentityById)
     timelineStageByGcdIssueId.set(gcdIssueId, stage)
     timelineIssueIdByGcdIssueId.set(gcdIssueId, row.id)
   }
@@ -584,7 +591,7 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
 
   const { data: timelineEntry, error: timelineError } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, hero_api_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, created_at, updated_at')
+    .select('id, hero_api_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, created_at, updated_at')
     .eq('hero_api_id', heroApiId)
     .eq('id', issueId)
     .limit(1)
@@ -621,9 +628,27 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
   }
 
   const collectedEditions = await loadCollectedEditionsForHeroIssue(heroIssueId)
+  const stageId = resolveTimelineStageId(timelineEntry)
+  let enrichedTimelineEntry = timelineEntry
+
+  if (stageId) {
+    const { data: stageRows, error: stageError } = await supabaseServiceClient
+      .from('hero_issue_stages')
+      .select('*')
+      .eq('id', stageId)
+
+    if (!stageError) {
+      const stageMap = new Map((stageRows ?? []).map((stage) => [Number(stage.id), stage]))
+      enrichedTimelineEntry = applyStageMetadataOverlay(timelineEntry, stageMap)
+    } else {
+      console.warn(
+        `[heroTimeline] stage metadata overlay skipped for timeline issue ${issueId}: ${stageError.message}`
+      )
+    }
+  }
 
   return {
-    issue: resolveTimelineIssueDetailPayload(timelineEntry, heroIssueRow),
+    issue: resolveTimelineIssueDetailPayload(enrichedTimelineEntry, heroIssueRow),
     collectedEditions,
   }
 }
@@ -907,4 +932,3 @@ export const deleteHeroTimelineEntriesByGcdIssueIds = async (heroApiId, gcdIssue
 
   return { deleted, failed }
 }
-

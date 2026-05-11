@@ -78,7 +78,9 @@ export function createIssueCardViewModel({
   const pageCount = normalizeIntegerText(meta.page_count ?? meta.pageCount ?? null)
   const editing = meta.editing ?? null
   const rating = meta.rating ?? null
-  const legacyNumber = meta.legacy_number ?? meta.legacyNumber ?? null
+  const legacyNumber = entry.legacy_number ?? meta.legacy_number ?? meta.legacyNumber ?? null
+  const legacyMatchesIssueNumber =
+    Boolean(number && legacyNumber) && normalizeIntegerText(number) === normalizeIntegerText(legacyNumber)
   const stageIdentity = getStageKey(entry)
   const stageName = stageIdentity?.label ?? null
   const stageKey = stageIdentity?.key ?? null
@@ -111,6 +113,7 @@ export function createIssueCardViewModel({
       editing,
       rating,
       legacyNumber,
+      legacyMatchesIssueNumber,
     },
   }
 }
