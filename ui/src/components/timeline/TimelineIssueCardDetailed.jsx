@@ -35,7 +35,19 @@ function TimelineIssueCardDetailed({
     meta,
   } = viewModel
 
-  const { seriesName, number, volume, publicationDate, price, pageCount, editing, rating, legacyNumber, legacyMatchesIssueNumber } = meta
+  const {
+    seriesName,
+    number,
+    volume,
+    publicationDate,
+    price,
+    pageCount,
+    editing,
+    rating,
+    issueTitle,
+    legacyNumber,
+    legacyMatchesIssueNumber,
+  } = meta
   const [coverFailed, setCoverFailed] = useState(false)
 
   useEffect(() => {
@@ -69,6 +81,8 @@ function TimelineIssueCardDetailed({
   const showcaseDateClasses = isShowcaseLeft
     ? 'pointer-events-none absolute left-0 top-0 translate-x-[calc(100%+0.45rem)] text-left md:left-auto md:right-0 md:top-3 md:translate-x-[calc(100%+0.8rem)]'
     : 'pointer-events-none absolute left-0 top-0 translate-x-[calc(100%+0.45rem)] text-left md:top-3 md:-translate-x-[calc(100%+0.8rem)] md:text-right'
+  const displayTitle = issueTitle || entry.headline
+  const showHeadlineContext = Boolean(issueTitle && issueTitle !== entry.headline)
 
   return (
     <li id={entryDomId} className={rootClasses}>
@@ -173,7 +187,21 @@ function TimelineIssueCardDetailed({
                 </div>
               </div>
               <div className="flex-1 space-y-2">
-                <h4 className={`title-xs ${severityVariant.title}`}>{entry.headline}</h4>
+                <div className="rounded-2xl border border-white/80 bg-white/70 px-3 py-2 shadow-inner shadow-slate-100/80">
+                  {showHeadlineContext ? (
+                    <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                      {entry.headline}
+                    </p>
+                  ) : null}
+                  <h4 className={`text-lg font-black leading-tight sm:text-xl ${severityVariant.title}`}>
+                    {displayTitle}
+                  </h4>
+                  {(seriesName || number) && showHeadlineContext ? (
+                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      {seriesName ? seriesName : t('timeline.issueFallback')}{number ? ` #${number}` : ''}
+                    </p>
+                  ) : null}
+                </div>
                 {entry.summary ? <p className="body-sm text-slate-600">{entry.summary}</p> : null}
                 {stageSummary ? <p className="body-xs text-indigo-800/80">{stageSummary}</p> : null}
                 <div className="grid gap-1 text-slate-600 body-xs sm:grid-cols-2">

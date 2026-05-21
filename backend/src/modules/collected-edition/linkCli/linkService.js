@@ -15,6 +15,35 @@ const extractIssueNumber = (value) => {
   return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null
 }
 
+const normalizeText = (value) => String(value ?? '').trim().toLowerCase()
+
+const filterRowsBySeries = (rows, seriesFilter = {}) => {
+  const seriesId = Number(seriesFilter.seriesId)
+  if (Number.isSafeInteger(seriesId) && seriesId > 0) {
+    return rows.filter((row) => Number(row.series_id) === seriesId)
+  }
+
+  const seriesName = normalizeText(seriesFilter.seriesName)
+  if (seriesName) {
+    return rows.filter((row) => normalizeText(row.series_name) === seriesName)
+  }
+
+  return rows
+}
+
+const isVariantIssue = (row) => Boolean(row?.raw?.variant_of)
+
+const resolveCanonicalIssueMatch = (matches) => {
+  if (matches.length <= 1) return matches[0] ?? null
+
+  const nonVariantMatches = matches.filter((row) => !isVariantIssue(row))
+  if (nonVariantMatches.length === 1) {
+    return nonVariantMatches[0]
+  }
+
+  return null
+}
+
 const resolveTargetsByGcd = async ({ heroApiId, selector }) => {
   const rows = await getHeroIssuesByGcdIssueIds({ heroApiId, gcdIssueIds: selector })
   const foundByGcd = new Map(rows.map((row) => [Number(row.gcd_issue_id), row]))
@@ -26,8 +55,8 @@ const resolveTargetsByGcd = async ({ heroApiId, selector }) => {
   }
 }
 
-const resolveTargetsByNumber = async ({ heroApiId, selector }) => {
-  const rows = await getHeroIssuesForHero({ heroApiId })
+const resolveTargetsByNumber = async ({ heroApiId, selector, seriesFilter }) => {
+  const rows = filterRowsBySeries(await getHeroIssuesForHero({ heroApiId }), seriesFilter)
   const grouped = new Map()
 
   for (const row of rows) {
@@ -49,21 +78,29 @@ const resolveTargetsByNumber = async ({ heroApiId, selector }) => {
       missing.push(issueNumber)
       continue
     }
-    // Surface ambiguous number matches so operator can decide intentionally.
+    const canonicalMatch = resolveCanonicalIssueMatch(matches)
+    if (canonicalMatch) {
+      resolvedRows.push(canonicalMatch)
+      continue
+    }
+
+    // Surface unresolved ambiguous number matches so operator can decide intentionally.
     if (matches.length > 1) {
       ambiguous.push({
         issueNumber,
         candidates: matches.map((item) => ({
           id: item.id,
           gcdIssueId: item.gcd_issue_id,
+          seriesId: item.series_id,
           seriesName: item.series_name,
           number: item.number,
           title: item.title,
+          variantOf: item.raw?.variant_of ?? null,
+          variantName: item.raw?.variant_name ?? null,
         })),
       })
       continue
     }
-    resolvedRows.push(matches[0])
   }
 
   return {
@@ -73,17 +110,19 @@ const resolveTargetsByNumber = async ({ heroApiId, selector }) => {
   }
 }
 
-const resolveTargetRows = async ({ heroApiId, mode, selector }) => {
+const resolveTargetRows = async ({ heroApiId, mode, selector, seriesFilter }) => {
   if (mode === 'gcd') {
     return resolveTargetsByGcd({ heroApiId, selector })
   }
-  return resolveTargetsByNumber({ heroApiId, selector })
+  return resolveTargetsByNumber({ heroApiId, selector, seriesFilter })
 }
 
 export const linkCollectedEditionToIssues = async ({
   collectedEditionId,
   mode,
   selector,
+  seriesId = null,
+  seriesName = null,
   notes = null,
 }) => {
   const collectedEdition = await getCollectedEditionById(collectedEditionId)
@@ -95,6 +134,7 @@ export const linkCollectedEditionToIssues = async ({
     heroApiId: collectedEdition.hero_api_id,
     mode,
     selector,
+    seriesFilter: { seriesId, seriesName },
   })
 
   // Deduplicate target rows before checking existing links and inserting new ones.
@@ -117,6 +157,8 @@ export const linkCollectedEditionToIssues = async ({
     collectedEdition,
     mode,
     selector,
+    seriesId,
+    seriesName,
     matched: uniqueRows.size,
     created: inserted.length,
     alreadyLinked: existing.size,

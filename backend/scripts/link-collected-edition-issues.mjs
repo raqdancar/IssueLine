@@ -19,6 +19,8 @@ const parseArgs = () => {
     collectedEditionId: null,
     mode: null,
     selector: null,
+    seriesId: null,
+    seriesName: null,
     notes: null,
   }
 
@@ -29,6 +31,11 @@ const parseArgs = () => {
       options.mode = parseMode(token.split('=').slice(1).join('='))
     } else if (token.startsWith('--issues=')) {
       options.selector = parseNumericSelector(token.split('=').slice(1).join('='))
+    } else if (token.startsWith('--series-id=')) {
+      const parsed = Number(token.split('=').slice(1).join('='))
+      options.seriesId = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
+    } else if (token.startsWith('--series=')) {
+      options.seriesName = token.split('=').slice(1).join('=').trim() || null
     } else if (token.startsWith('--note=')) {
       options.notes = token.split('=').slice(1).join('=').trim() || null
     }
@@ -39,6 +46,9 @@ const parseArgs = () => {
   }
   if (options.selector === null && args.some((arg) => arg.startsWith('--issues='))) {
     throw new Error('Invalid --issues value. Use comma-separated values/ranges, e.g. 110-111,114.')
+  }
+  if (options.seriesId === null && args.some((arg) => arg.startsWith('--series-id='))) {
+    throw new Error('Invalid --series-id value. Use a positive GCD series id.')
   }
 
   return options
@@ -52,6 +62,8 @@ const printSummary = (result) => {
     collectedEditionTitle: result.collectedEdition.title,
     heroApiId: result.collectedEdition.hero_api_id,
     mode: result.mode,
+    seriesId: result.seriesId ?? '',
+    seriesName: result.seriesName ?? '',
     requested: result.selector.length,
     matched: result.matched,
     created: result.created,
@@ -69,7 +81,10 @@ const printSummary = (result) => {
     console.log('\nAmbiguous selectors (skipped):')
     result.ambiguous.slice(0, 20).forEach((entry) => {
       const candidates = entry.candidates
-        .map((candidate) => `${candidate.gcdIssueId} (${candidate.seriesName ?? 'unknown'} #${candidate.number ?? '?'})`)
+        .map(
+          (candidate) =>
+            `${candidate.gcdIssueId} (series_id=${candidate.seriesId ?? 'unknown'}, ${candidate.seriesName ?? 'unknown'} #${candidate.number ?? '?'}, variant=${candidate.variantName ?? 'base'})`
+        )
         .join(' | ')
       console.log(`  ${entry.issueNumber}: ${candidates}`)
     })
@@ -81,10 +96,12 @@ const run = async () => {
   console.log('---------------------------------------')
 
   const options = parseArgs()
-  const { rl, collectedEditionId, mode, selector, notes } = await askLinkingInputs({
+  const { rl, collectedEditionId, mode, selector, seriesId, seriesName, notes } = await askLinkingInputs({
     preselectedCollectedEditionId: options.collectedEditionId,
     preselectedMode: options.mode,
     preselectedSelector: options.selector,
+    preselectedSeriesId: options.seriesId,
+    preselectedSeriesName: options.seriesName,
     preselectedNotes: options.notes,
   })
 
@@ -93,6 +110,8 @@ const run = async () => {
       collectedEditionId,
       mode,
       selector,
+      seriesId,
+      seriesName,
       notes,
     })
     printSummary(result)

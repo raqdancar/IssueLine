@@ -52,7 +52,9 @@ function TimelineFullscreenShowcase({
           />
         ) : null}
         <div className={`min-w-0 flex-1 md:h-full md:overflow-y-auto md:pr-1 ${!canShowNavigator || !isNavigatorVisible ? 'md:col-span-2' : ''}`}>
-          {canShowNavigator && !isNavigatorVisible ? <TimelineNavigatorToggle onClick={onShowNavigator} /> : null}
+          {canShowNavigator && !isNavigatorVisible ? (
+            <TimelineNavigatorToggle onClick={onShowNavigator} showcaseMode />
+          ) : null}
           <TimelineList
             entries={entries}
             zoomLevel={zoomLevel}

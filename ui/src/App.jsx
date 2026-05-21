@@ -1,9 +1,7 @@
 // Compose the main frontend application shell and route views.
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes, useMatch } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
 import AppHeader from '@/components/AppHeader'
-import HeroTab from '@/components/HeroTab'
 import Footer from '@/components/Footer'
 import AuthDialog from '@/components/AuthDialog'
 import { isSupabaseConfigured } from '@/lib/supabaseClient'
@@ -14,15 +12,9 @@ import { useHeroesCatalog } from '@/hooks/useHeroesCatalog.js'
 import { useSupabaseSession } from '@/hooks/useSupabaseSession.js'
 import { useAuthActions } from '@/hooks/useAuthActions.js'
 
+const HomePage = lazy(() => import('@/pages/HomePage'))
 const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
 const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
-
-const statusClasses = {
-  idle: 'text-slate-500',
-  loading: 'text-slate-500',
-  error: 'text-red-600',
-  success: 'text-emerald-600',
-}
 
 const formatSlugTitle = (slug) =>
   decodeURIComponent(slug)
@@ -40,6 +32,7 @@ function App() {
   const heroRouteMatch = useMatch('/heroes/:slug')
   const heroSlug = heroRouteMatch?.params?.slug ?? null
   const isAccountRoute = Boolean(useMatch('/account'))
+  const isHomeRoute = Boolean(useMatch({ path: '/', end: true }))
   const handleSignedIn = useCallback(() => {
     setAuthDialogOpen(false)
     setAuthMode('sign-in')
@@ -102,17 +95,20 @@ function App() {
           languageLabel={locale.toUpperCase()}
         />
 
-        <main className="flex w-full flex-1 flex-col gap-6 overflow-x-hidden px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+        <main
+          className={
+            isHomeRoute
+              ? 'flex w-full flex-1 flex-col overflow-x-hidden'
+              : 'flex w-full flex-1 flex-col gap-6 overflow-x-hidden px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24'
+          }
+        >
           <Routes>
             <Route
               path="/"
               element={
-                <HeroDashboard
-                  heroes={heroes}
-                  heroesStatus={heroesStatus}
-                  loadHeroes={loadHeroes}
-                  status={status}
-                />
+                <Suspense fallback={routeFallback}>
+                  <HomePage heroes={heroes} heroesStatus={heroesStatus} loadHeroes={loadHeroes} authStatus={status} />
+                </Suspense>
               }
             />
             <Route
@@ -133,7 +129,11 @@ function App() {
             />
           </Routes>
 
-          {!isSupabaseConfigured && <EnvironmentNotice />}
+          {!isSupabaseConfigured && (
+            <div className={isHomeRoute ? 'px-4 pb-10 sm:px-6 lg:px-10 xl:px-16 2xl:px-24' : ''}>
+              <EnvironmentNotice />
+            </div>
+          )}
         </main>
 
         <Footer />
@@ -152,53 +152,6 @@ function App() {
         isConfigured={isSupabaseConfigured}
       />
     </SessionProvider>
-  )
-}
-
-function HeroDashboard({ heroes, heroesStatus, loadHeroes, status }) {
-  const { t } = useI18n()
-
-  return (
-    <section className="rounded-2xl bg-white p-6 shadow">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold">{t('app.heroVisualizer')}</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            {heroesStatus.state === 'success'
-              ? t('app.showingCuratedHeroes', { count: heroes.length })
-              : t('app.connectSupabaseAndSeed')}
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => void loadHeroes()}
-          disabled={heroesStatus.state === 'loading'}
-        >
-          {heroesStatus.state === 'loading' ? t('app.refreshing') : t('app.refreshHeroes')}
-        </Button>
-      </div>
-      {status.message ? (
-        <p className={`mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ${statusClasses[status.state]}`}>
-          {status.message}
-        </p>
-      ) : null}
-      <div className="mt-6">
-        {heroesStatus.state === 'error' ? (
-          <p className="text-sm text-red-600">{heroesStatus.message}</p>
-        ) : heroesStatus.state === 'loading' ? (
-          <p className="text-sm text-slate-500">{t('app.loadingHeroes')}</p>
-        ) : heroes.length ? (
-          <div className="grid gap-4 md:grid-cols-2">
-            {heroes.map((hero) => (
-              <HeroTab key={hero.api_id} hero={hero} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500">{t('app.noHeroesSeedHint')}</p>
-        )}
-      </div>
-    </section>
   )
 }
 

@@ -1,9 +1,10 @@
 ﻿// Render stage/collection insight panels and progress actions for a hero timeline.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
+import { Check, CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
 import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
 import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
 import { TimelineInsightsSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
@@ -11,9 +12,11 @@ import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
+import { resolvePrintLanguageBadge } from '@/lib/printLanguage'
 import { parseJsonResponse } from '@/lib/httpClient.js'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
+const ALL_FILTER_VALUE = 'all'
 
 const resolveStageName = (entry, t) => {
   const meta = entry?.metadata ?? {}
@@ -161,6 +164,94 @@ const buildStageGroups = (entries, stateIndex = {}, t, locale) => {
 }
 
 const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLECTED_EDITION_IMAGE_BUCKET)
+
+const normalizeFilterValue = (value) => String(value ?? '').trim().toLowerCase()
+
+const humanizeFormat = (value) => {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return 'Unknown'
+
+  return normalized
+    .split(/[_\-\s]+/)
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ')
+}
+
+const resolveEditionLanguageFilter = (edition) => {
+  const rawValue = edition?.printLanguage ?? edition?.print_language ?? ''
+  const badge = resolvePrintLanguageBadge(rawValue)
+  if (badge?.code) {
+    return {
+      value: badge.code.toLowerCase(),
+      label: badge.label ?? badge.code,
+    }
+  }
+
+  const normalized = normalizeFilterValue(rawValue)
+  return normalized ? { value: normalized, label: String(rawValue).trim() } : null
+}
+
+const resolveEditionFormatFilter = (edition) => {
+  const rawValue = edition?.format ?? ''
+  const normalized = normalizeFilterValue(rawValue)
+  return normalized ? { value: normalized, label: humanizeFormat(rawValue) } : null
+}
+
+const buildFilterOptions = (items, resolver) => {
+  const optionsByValue = new Map()
+  for (const item of items) {
+    const option = resolver(item)
+    if (!option?.value || optionsByValue.has(option.value)) continue
+    optionsByValue.set(option.value, option)
+  }
+  return Array.from(optionsByValue.values()).sort((a, b) => a.label.localeCompare(b.label))
+}
+
+function CollectedFilterSelect({ label, value, allLabel, options, onChange }) {
+  const selectedLabel = value === ALL_FILTER_VALUE ? allLabel : options.find((option) => option.value === value)?.label ?? allLabel
+  const normalizedOptions = [{ value: ALL_FILTER_VALUE, label: allLabel }, ...options]
+
+  return (
+    <div className="space-y-1">
+      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">{label}</p>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="flex h-11 w-full items-center justify-between gap-3 rounded-2xl border border-amber-300/80 bg-white px-4 text-left text-sm font-semibold text-red-800 shadow-sm shadow-amber-100/60 transition hover:border-amber-400 hover:bg-amber-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/50"
+          >
+            <span className="min-w-0 truncate">{selectedLabel}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-red-700" aria-hidden="true" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          className="w-[var(--radix-popover-trigger-width)] rounded-2xl border border-amber-200 bg-white/98 p-1.5 shadow-xl shadow-slate-900/12"
+        >
+          <div className="max-h-72 overflow-y-auto">
+            {normalizedOptions.map((option) => {
+              const selected = option.value === value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => onChange(option.value)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${
+                    selected ? 'bg-red-50 text-red-800' : 'text-slate-700 hover:bg-amber-50 hover:text-red-800'
+                  }`}
+                >
+                  <span className="min-w-0 truncate">{option.label}</span>
+                  {selected ? <Check className="h-4 w-4 shrink-0 text-red-700" aria-hidden="true" /> : null}
+                </button>
+              )
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
 
 const buildStageCoverageMap = (stages = []) =>
   stages.reduce((acc, stage) => {
@@ -567,6 +658,8 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const [openStage, setOpenStage] = useState(null)
   const [insightTab, setInsightTab] = useState('progress')
   const [editionActionState, setEditionActionState] = useState({ pendingEditionId: null, error: null })
+  const [collectedLanguageFilter, setCollectedLanguageFilter] = useState(ALL_FILTER_VALUE)
+  const [collectedFormatFilter, setCollectedFormatFilter] = useState(ALL_FILTER_VALUE)
   const [selectedStageKey, setSelectedStageKey] = useState(null)
   const [selectedStageIssueId, setSelectedStageIssueId] = useState(null)
   const { isAuthenticated } = useSessionContext()
@@ -610,6 +703,27 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
   const totalIssues = state.entries.length
   const collectedEditions = state.collectedEditions ?? []
+  const collectedLanguageOptions = useMemo(
+    () => buildFilterOptions(collectedEditions, resolveEditionLanguageFilter),
+    [collectedEditions],
+  )
+  const collectedFormatOptions = useMemo(
+    () => buildFilterOptions(collectedEditions, resolveEditionFormatFilter),
+    [collectedEditions],
+  )
+  const filteredCollectedEditions = useMemo(
+    () =>
+      collectedEditions.filter((edition) => {
+        const languageOption = resolveEditionLanguageFilter(edition)
+        const formatOption = resolveEditionFormatFilter(edition)
+        const languageMatches =
+          collectedLanguageFilter === ALL_FILTER_VALUE || languageOption?.value === collectedLanguageFilter
+        const formatMatches =
+          collectedFormatFilter === ALL_FILTER_VALUE || formatOption?.value === collectedFormatFilter
+        return languageMatches && formatMatches
+      }),
+    [collectedEditions, collectedFormatFilter, collectedLanguageFilter],
+  )
   const stageGroups = useMemo(
     () => buildStageGroups(state.entries, statesByIssueId ?? {}, t, locale),
     [state.entries, statesByIssueId, t, locale],
@@ -933,13 +1047,41 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
           {insightTab === 'collected' ? (
             <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectedCoverageTitle')}</p>
-                <p className="text-xs text-slate-500">{t('timeline.collectedCoverageSubtitle')}</p>
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectedCoverageTitle')}</p>
+                  <p className="text-xs text-slate-500">{t('timeline.collectedCoverageSubtitle')}</p>
+                </div>
+                {collectedEditions.length ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[28rem]">
+                    <CollectedFilterSelect
+                      label={t('timeline.collectedLanguageFilter')}
+                      value={collectedLanguageFilter}
+                      allLabel={t('timeline.collectedAllLanguages')}
+                      options={collectedLanguageOptions}
+                      onChange={setCollectedLanguageFilter}
+                    />
+                    <CollectedFilterSelect
+                      label={t('timeline.collectedFormatFilter')}
+                      value={collectedFormatFilter}
+                      allLabel={t('timeline.collectedAllFormats')}
+                      options={collectedFormatOptions}
+                      onChange={setCollectedFormatFilter}
+                    />
+                  </div>
+                ) : null}
               </div>
               {collectedEditions.length ? (
-                <div className="grid gap-3 lg:grid-cols-2">
-                  {collectedEditions.map((edition) => {
+                filteredCollectedEditions.length ? (
+                  <>
+                    <p className="text-xs font-semibold text-slate-500">
+                      {t('timeline.collectedFilteredCount', {
+                        count: filteredCollectedEditions.length,
+                        total: collectedEditions.length,
+                      })}
+                    </p>
+                    <div className="grid gap-3 lg:grid-cols-2">
+                  {filteredCollectedEditions.map((edition) => {
                     const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
                     const stageCoverage = buildStageCoverageMap(edition.stages)
                     const coveredStageCount = edition.stages?.length ?? 0
@@ -1041,7 +1183,13 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                       </article>
                     )
                   })}
-                </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+                    {t('timeline.collectedFilteredEmpty')}
+                  </p>
+                )
               ) : (
                 <p className="text-sm text-slate-500">{t('timeline.collectedCoverageEmpty')}</p>
               )}

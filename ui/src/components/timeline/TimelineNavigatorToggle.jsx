@@ -2,11 +2,14 @@
 import { Eye } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
-function TimelineNavigatorToggle({ onClick }) {
+function TimelineNavigatorToggle({ onClick, showcaseMode = false }) {
   const { t } = useI18n()
+  const wrapperClasses = showcaseMode
+    ? 'mb-3 flex justify-start md:sticky md:top-0 md:z-20 md:pb-2 md:pt-1'
+    : 'mb-3 flex justify-start md:sticky md:top-0 md:z-20 md:pb-2 md:pt-1 md:bg-linear-to-b md:from-white md:to-white/75'
 
   return (
-    <div className="mb-3 flex justify-start md:sticky md:top-0 md:z-20 md:pb-2 md:pt-1 md:bg-linear-to-b md:from-white md:to-white/75">
+    <div className={wrapperClasses}>
       <button
         type="button"
         onClick={onClick}

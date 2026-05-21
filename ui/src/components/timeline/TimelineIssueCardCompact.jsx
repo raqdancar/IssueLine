@@ -18,7 +18,7 @@ function TimelineIssueCardCompact({
 }) {
   const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, gradientStyle, issueDateLabel, stageName, meta } = viewModel
-  const { seriesName, number, publicationDate, legacyNumber, legacyMatchesIssueNumber } = meta
+  const { seriesName, number, publicationDate, issueTitle, legacyNumber, legacyMatchesIssueNumber } = meta
   const handleHighlight = () => {
     onEntryHighlight?.(entryDomId)
     onIssueSelect?.(entry)
@@ -35,6 +35,8 @@ function TimelineIssueCardCompact({
   const articleEmphasis = `${highlightClasses} ${flashClasses}`.trim()
   const stageLabelClasses =
     'mb-2 text-center text-[10px] font-black uppercase tracking-[0.35em] text-indigo-600'
+  const displayTitle = issueTitle || entry.headline
+  const showHeadlineContext = Boolean(issueTitle && issueTitle !== entry.headline)
 
   return (
     <li id={entryDomId} className="relative pl-7">
@@ -92,7 +94,10 @@ function TimelineIssueCardCompact({
             ) : null}
           </div>
           <div className="space-y-1.5">
-            <h4 className="text-sm font-semibold leading-snug text-slate-700">{entry.headline}</h4>
+            {showHeadlineContext ? (
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500">{entry.headline}</p>
+            ) : null}
+            <h4 className="text-base font-black leading-snug text-slate-800">{displayTitle}</h4>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
               {seriesName ? <span className="text-slate-600">{seriesName}</span> : null}
               {number ? <span className="text-slate-500">#{number}</span> : null}

@@ -1,7 +1,7 @@
 ﻿// Collect validated CLI input for collected-edition linking workflows.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
-import { searchCollectedEditionsByTitle } from '../repository.js'
+import { getCollectedEditionById, getHeroIssueSeriesForHero, searchCollectedEditionsByTitle } from '../repository.js'
 import { parseNumericSelector } from './selectorParser.js'
 
 const parseMode = (value) => {
@@ -32,10 +32,61 @@ const printCollectedEditions = (items) => {
   })
 }
 
+const printHeroIssueSeries = (items) => {
+  console.log('\nIssue series for this hero:')
+  items.forEach((item, index) => {
+    const annualLabel = item.isAnnual ? ', annual' : ''
+    console.log(
+      `  ${index + 1}. ${item.seriesName} (series_id=${item.seriesId ?? 'unknown'}, issues=${item.issueCount}${annualLabel})`
+    )
+  })
+}
+
+const askSeriesFilter = async ({ rl, collectedEditionId }) => {
+  const collectedEdition = await getCollectedEditionById(collectedEditionId)
+  if (!collectedEdition?.hero_api_id) return { seriesId: null, seriesName: null }
+
+  const series = await getHeroIssueSeriesForHero({ heroApiId: collectedEdition.hero_api_id })
+  if (!series.length) return { seriesId: null, seriesName: null }
+
+  let includeAnnuals = false
+  while (true) {
+    const visibleSeries = includeAnnuals ? series : series.filter((item) => !item.isAnnual)
+    const hiddenAnnualCount = series.length - visibleSeries.length
+
+    printHeroIssueSeries(visibleSeries)
+    if (hiddenAnnualCount > 0 && !includeAnnuals) {
+      console.log(`  (${hiddenAnnualCount} annual/special series hidden. Type "a" to show them.)`)
+    }
+
+    const answer = await rl.question('\nFilter issue numbers by series? Select number, "a" for annuals, or press Enter to skip: ')
+    const normalized = answer.trim()
+    if (!normalized) return { seriesId: null, seriesName: null }
+    if (normalized.toLowerCase() === 'a' || normalized.toLowerCase() === 'annuals') {
+      includeAnnuals = true
+      continue
+    }
+
+    const numeric = Number(normalized)
+    if (!Number.isSafeInteger(numeric) || numeric < 1 || numeric > visibleSeries.length) {
+      console.log('Invalid selection.')
+      continue
+    }
+
+    const selected = visibleSeries[numeric - 1]
+    return {
+      seriesId: selected.seriesId ?? null,
+      seriesName: selected.seriesId ? null : selected.seriesName,
+    }
+  }
+}
+
 export const askLinkingInputs = async ({
   preselectedCollectedEditionId = null,
   preselectedMode = null,
   preselectedSelector = null,
+  preselectedSeriesId = null,
+  preselectedSeriesName = null,
   preselectedNotes = null,
 } = {}) => {
   const rl = createInterface({
@@ -83,6 +134,13 @@ export const askLinkingInputs = async ({
         errorMessage: 'Please type "gcd" or "number".',
       }))
 
+    const seriesFilter =
+      mode === 'number'
+        ? preselectedSeriesId || preselectedSeriesName
+          ? { seriesId: preselectedSeriesId, seriesName: preselectedSeriesName }
+          : await askSeriesFilter({ rl, collectedEditionId })
+        : { seriesId: null, seriesName: null }
+
     const selector =
       preselectedSelector ??
       (await askUntilValid({
@@ -105,6 +163,8 @@ export const askLinkingInputs = async ({
       collectedEditionId,
       mode,
       selector,
+      seriesId: seriesFilter.seriesId,
+      seriesName: seriesFilter.seriesName,
       notes,
     }
   } catch (error) {

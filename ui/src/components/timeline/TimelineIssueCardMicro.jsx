@@ -12,7 +12,7 @@ function TimelineIssueCardMicro({
 }) {
   const { t } = useI18n()
   const { entry, entryDomId, isLast, severityVariant, issueDateLabel, meta, stageName } = viewModel
-  const { seriesName, number, publicationDate, legacyNumber, legacyMatchesIssueNumber } = meta
+  const { seriesName, number, publicationDate, issueTitle, legacyNumber, legacyMatchesIssueNumber } = meta
   const haveIt = Boolean(issueState?.haveIt)
   const readIt = Boolean(issueState?.readIt)
   const handleHighlight = () => {
@@ -31,6 +31,8 @@ function TimelineIssueCardMicro({
   const borderGlow = `${highlightClasses} ${flashClasses}`.trim()
   const stageLabelClasses =
     'text-center text-[9px] font-semibold uppercase tracking-[0.35em] text-indigo-500'
+  const displayTitle = issueTitle || entry.headline
+  const showHeadlineContext = Boolean(issueTitle && issueTitle !== entry.headline)
 
   return (
     <li id={entryDomId} className="relative pl-6">
@@ -62,7 +64,10 @@ function TimelineIssueCardMicro({
               </span>
             ) : null}
           </div>
-          <p className="mt-1 text-sm font-semibold leading-snug text-slate-800">{entry.headline}</p>
+          {showHeadlineContext ? (
+            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-indigo-500">{entry.headline}</p>
+          ) : null}
+          <p className="mt-1 text-sm font-black leading-snug text-slate-800">{displayTitle}</p>
           {entry.summary ? <p className="mt-1 text-[11px] text-slate-500">{entry.summary}</p> : null}
           <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
             {seriesName ? <span>{seriesName}</span> : null}

@@ -1,5 +1,22 @@
 // Provide shared Supabase access helpers for hero catalog/detail payloads.
 
+const resolveTimelineStageKey = (row) => {
+  const metadata = row?.metadata ?? {}
+  const stageValue =
+    row?.stage_id ??
+    metadata.stage_id ??
+    metadata.stageId ??
+    metadata.stage_key ??
+    metadata.stageKey ??
+    metadata.stage_name ??
+    metadata.stageName ??
+    metadata.stage?.key ??
+    metadata.stage?.name ??
+    metadata.stage?.label
+
+  return stageValue ? String(stageValue).trim().toLowerCase() : null
+}
+
 const buildHeroCoverageById = (timelineRows) => {
   const coverageById = new Map()
 
@@ -10,6 +27,7 @@ const buildHeroCoverageById = (timelineRows) => {
       count: 0,
       startYear: null,
       endYear: null,
+      stageKeys: new Set(),
     }
 
     current.count += 1
@@ -24,10 +42,25 @@ const buildHeroCoverageById = (timelineRows) => {
       }
     }
 
+    const stageKey = resolveTimelineStageKey(row)
+    if (stageKey) {
+      current.stageKeys.add(stageKey)
+    }
+
     coverageById.set(row.hero_api_id, current)
   }
 
-  return coverageById
+  return new Map(
+    Array.from(coverageById.entries()).map(([heroApiId, coverage]) => [
+      heroApiId,
+      {
+        count: coverage.count,
+        startYear: coverage.startYear,
+        endYear: coverage.endYear,
+        stageCount: coverage.stageKeys.size,
+      },
+    ]),
+  )
 }
 
 const buildCollectedEditionCountByHeroId = (rows) => {
@@ -76,7 +109,7 @@ export const fetchHeroesOverview = async (supabaseClient) => {
       ...hero,
       heroImages: imagesByHeroId[hero.api_id] ?? [],
       hasTimelineIssues: false,
-      timelineCoverage: { count: 0, startYear: null, endYear: null },
+      timelineCoverage: { count: 0, startYear: null, endYear: null, stageCount: 0 },
       collectedEditionsCount: 0,
     }))
   }
@@ -84,7 +117,7 @@ export const fetchHeroesOverview = async (supabaseClient) => {
   const [timelineResult, collectedEditionsResult] = await Promise.all([
     supabaseClient
       .from('hero_timelines')
-      .select('hero_api_id, issue_date')
+      .select('hero_api_id, issue_date, metadata')
       .in('hero_api_id', heroApiIds),
     supabaseClient
       .from('collected_editions')
@@ -113,7 +146,12 @@ export const fetchHeroesOverview = async (supabaseClient) => {
     ...hero,
     heroImages: imagesByHeroId[hero.api_id] ?? [],
     hasTimelineIssues: heroesWithIssues.has(hero.api_id),
-    timelineCoverage: coverageById.get(hero.api_id) ?? { count: 0, startYear: null, endYear: null },
+    timelineCoverage: coverageById.get(hero.api_id) ?? {
+      count: 0,
+      startYear: null,
+      endYear: null,
+      stageCount: 0,
+    },
     collectedEditionsCount: collectedEditionsCountByHeroId.get(hero.api_id) ?? 0,
   }))
 }

@@ -50,13 +50,154 @@ const messages = {
     footer: {
       ariaSiteFooter: 'Peu del lloc',
       ariaFooterLinks: 'Enllaços del peu',
-      tagline: 'Segueix números, col·lecció i progrés de lectura.',
+      tagline: 'Un arxiu editorial per a timelines, recopilatoris i la memoria llarga de la continuitat del comic.',
       legal: '© 2026 IssueLine',
-      disclaimer: 'Les dades i les imatges pertanyen als seus propietaris.',
+      disclaimer: 'Projecte d arxiu no oficial. Les dades i les imatges pertanyen als seus propietaris.',
       about: 'Sobre',
       feedback: 'Feedback',
       privacy: 'Privacitat',
+      roadmap: 'Roadmap',
+      dataSources: 'Fonts de dades',
+      changelog: 'Changelog',
       github: 'GitHub',
+    },
+    home: {
+      hero: {
+        eyebrow: 'Timelines editorials per a col leccionistes',
+        title: 'Explora decades d historia editorial com una col leccio viva.',
+        subtitle:
+          'Segueix runs, eres, portades, buits, recopilatoris i progres de lectura amb timelines visuals pensades per a arxius de comic.',
+        primaryCta: 'Explorar timeline',
+        secondaryCta: 'Veure preview',
+        scrollHint: 'Entrar a l arxiu',
+      },
+      showcase: {
+        eyebrow: 'Arxius de personatges',
+        title: 'Herois presentats com histories editorials.',
+        description:
+          'Cada arxiu uneix anys actius, numeros mapats, formats recopilats i progres per etapes sense convertir l experiencia en una taula de dades.',
+        years: 'Anys actius',
+        issues: 'Numeros',
+        stages: 'Etapes',
+        collected: 'Recopilats',
+        completion: 'Indexat',
+        cta: 'Explorar timeline',
+        noteTimeline: 'Cobertura cronologica des de primeres aparicions fins a rellancaments moderns.',
+        noteStages: 'Runs i eres editorials agrupades en etapes llegibles.',
+        noteEditions: 'Preparat per a omnibus, TPB, deluxe i recopilatoris regionals.',
+      },
+      timelinePreview: {
+        eyebrow: 'Preview de timeline',
+        title: 'Un arxiu vertical on cada entrega te el seu lloc en el temps.',
+        description:
+          'La Home posa davant l experiencia principal del producte: una timeline llegible que mostra eres, numeros que falten, estats de completat i context de col leccio d un cop d ull.',
+        calloutCovers: 'Portades com ancoratges',
+        calloutGaps: 'Buits visibles al moment',
+        calloutStages: 'Eres editorials agrupades',
+        calloutProgress: 'Estats de col leccio i lectura',
+        demoLabel: 'Arxiu demo',
+        demoTitle: 'Mapa de continuitat de Doctor Strange',
+        liveFeeling: 'Sensacio interactiva',
+        stageCoverage: 'Cobertura d etapa',
+        entries: {
+          origin: 'Primeres aparicions mistiques',
+          solo: 'La serie propia obre l arxiu',
+          missingArc: 'Buit detectat en el run',
+          legacy: 'Numeracio legacy restaurada',
+          modern: 'Rellancament modern seguit',
+        },
+        summaries: {
+          origin: 'Una fila de numero amb estil real de timeline: portada, data, metadades de serie i estat de col leccio.',
+          solo: 'La card mante visible l ordre de publicacio i separa possessio de lectura.',
+          missingArc: 'Els numeros que falten apareixen com esdeveniments de timeline, dins del run.',
+          legacy: 'La numeracio legacy conviu amb les metadades modernes sense amagar el context.',
+          modern: 'Els rellancaments recents continuen connectats al mateix arxiu editorial.',
+        },
+        stageNames: {
+          origin: 'Origens',
+          solo: 'Solo run',
+          missingArc: 'Buit',
+          legacy: 'Legacy',
+          modern: 'Moderna',
+        },
+        states: {
+          complete: 'Etapa completa',
+          owned: 'Numeros en col leccio',
+          missing: 'Numeros que falten',
+          read: 'Arc llegit',
+          tracking: 'En seguiment',
+        },
+      },
+      how: {
+        eyebrow: 'Com funciona',
+        title: 'De la prestatgeria a la timeline en quatre accions.',
+        description:
+          'IssueLine mante simples els fluxos de col leccionista i conserva el context editorial que fa important cada numero.',
+        steps: {
+          track: {
+            title: 'Track collection',
+            body: 'Marca el que tens en grapa i recopilatoris sense perdre l ordre de publicacio.',
+          },
+          read: {
+            title: 'Mark as read',
+            body: 'Separa possessio i lectura per convertir cada run en una cua de lectura guiada.',
+          },
+          missing: {
+            title: 'Discover missing issues',
+            body: 'Detecta numeros que falten, eres saltades i etapes incompletes abans de buscar la seguent edicio.',
+          },
+          history: {
+            title: 'Explore publishing history',
+            body: 'Recorre decades de continuitat per any, etapa, numero i fita editorial.',
+          },
+        },
+      },
+      collectors: {
+        eyebrow: 'Fet per a col leccionistes',
+        title: 'Dissenyat per sentir-se com obrir una caixa d arxiu.',
+        description:
+          'L experiencia ha de ser nostalgica, precisa i viva: part cataleg de museu, part mapa de lectura, part checklist de col leccio.',
+        quote:
+          'Una bona timeline no nomes diu que existeix. Explica que pertany al mateix run, que falta i on comenca el seguent descobriment.',
+        items: {
+          missing: {
+            title: 'Identifica faltes al moment',
+            body: 'Els buits apareixen dins del context, no amagats en llistes filtrades.',
+          },
+          runs: {
+            title: 'Segueix runs complets',
+            body: 'Agrupa historials editorials llargs en runs i eres amb sentit.',
+          },
+          progress: {
+            title: 'Organitza el progres de lectura',
+            body: 'Mante estats de llegit, posseït i buscat visibles dins de la timeline.',
+          },
+          continuity: {
+            title: 'Explora decades de continuitat',
+            body: 'Salta entre numeracio antiga, rellancaments, especials i reedicions.',
+          },
+        },
+      },
+      stats: {
+        heroes: 'Herois arxivats',
+        issues: 'Numeros indexats',
+        stages: 'Etapes editorials',
+        collectedEditions: 'Recopilatoris',
+      },
+      editions: {
+        eyebrow: 'Recopilatoris',
+        title: 'Les grapes son nomes una part de la prestatgeria.',
+        description:
+          'IssueLine esta preparat per mostrar omnibus, TPBs, edicions deluxe, linies tipus Marvel Gold i futura cobertura de recopilatoris al costat de la timeline.',
+        note: 'Showcase estatic avui, mapatge dinamic de recopilatoris dema.',
+        cta: 'Veure context timeline',
+        items: {
+          omnibus: { title: 'Omnibus', meta: 'Runs complets' },
+          tpb: { title: 'TPBs', meta: 'Arcs de lectura' },
+          gold: { title: 'Marvel Gold', meta: 'Eres classiques' },
+          deluxe: { title: 'Deluxe', meta: 'Prestatgeria premium' },
+        },
+      },
     },
     authDialog: {
       closeDialog: 'Tanca diàleg',
@@ -297,6 +438,12 @@ const messages = {
       collectedCoverageTitle: 'Cobertura de recopilatoris',
       collectedCoverageSubtitle: 'Recopilatoris i els numeros que contenen al llarg de les etapes.',
       collectedCoverageEmpty: 'Encara no hi ha recopilatoris enllacats per a aquest heroi.',
+      collectedLanguageFilter: 'Idioma',
+      collectedFormatFilter: 'Tipus de recopilatori',
+      collectedAllLanguages: 'Tots els idiomes',
+      collectedAllFormats: 'Tots els tipus',
+      collectedFilteredCount: '{{count}} de {{total}} recopilatoris',
+      collectedFilteredEmpty: 'No hi ha recopilatoris que coincideixin amb aquests filtres.',
       collectedIssuesCount: '{{count}} numeros enllacats',
       collectedStagesCount: '{{count}} etapes cobertes',
     },

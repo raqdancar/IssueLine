@@ -50,13 +50,154 @@
   footer: {
     ariaSiteFooter: 'Site footer',
     ariaFooterLinks: 'Footer links',
-    tagline: 'Track issues, collection, and reading progress.',
+    tagline: 'An editorial archive for timelines, collected editions, and the long memory of comic book continuity.',
     legal: '© 2026 IssueLine',
-    disclaimer: 'Data and artwork belong to their respective owners.',
+    disclaimer: 'Unofficial archival project. Data and artwork belong to their respective owners.',
     about: 'About',
     feedback: 'Feedback',
     privacy: 'Privacy',
+    roadmap: 'Roadmap',
+    dataSources: 'Data sources',
+    changelog: 'Changelog',
     github: 'GitHub',
+  },
+  home: {
+    hero: {
+      eyebrow: 'Editorial timelines for collectors',
+      title: 'Explore decades of publishing history as a living collection.',
+      subtitle:
+        'Follow runs, eras, covers, gaps, collected editions, and reading progress through visual timelines built for comic archives.',
+      primaryCta: 'Explore timeline',
+      secondaryCta: 'View timeline preview',
+      scrollHint: 'Enter the archive',
+    },
+    showcase: {
+      eyebrow: 'Character archives',
+      title: 'Heroes presented as editorial histories.',
+      description:
+        'Each archive brings together active years, mapped issues, collected formats, and stage-by-stage progress without reducing the experience to a database table.',
+      years: 'Active years',
+      issues: 'Issues',
+      stages: 'Stages',
+      collected: 'Collected',
+      completion: 'Indexed',
+      cta: 'Explore timeline',
+      noteTimeline: 'Chronological coverage from first appearances to modern relaunches.',
+      noteStages: 'Runs and editorial eras grouped into readable stages.',
+      noteEditions: 'Prepared for omnibus, TPB, deluxe, and regional collected editions.',
+    },
+    timelinePreview: {
+      eyebrow: 'Timeline preview',
+      title: 'A vertical archive where every cover has a place in time.',
+      description:
+        'The Home now foregrounds the core product experience: a readable timeline that makes eras, missing issues, completion states, and collected context visible at a glance.',
+      calloutCovers: 'Covers as anchors',
+      calloutGaps: 'Missing issues surfaced clearly',
+      calloutStages: 'Editorial eras grouped visually',
+      calloutProgress: 'Owned and read status ready',
+      demoLabel: 'Demo archive',
+      demoTitle: 'Doctor Strange continuity map',
+      liveFeeling: 'Interactive feel',
+      stageCoverage: 'Stage coverage',
+      entries: {
+        origin: 'First mystical appearances',
+        solo: 'Solo series opens the archive',
+        missingArc: 'Gap detected in the run',
+        legacy: 'Legacy numbering restored',
+        modern: 'Modern relaunch tracked',
+      },
+      summaries: {
+        origin: 'A real timeline-style issue row with cover, date, series metadata, and collection state.',
+        solo: 'The card keeps publication order visible while separating owned and read status.',
+        missingArc: 'Missing issues appear as timeline events, so gaps are visible inside the run.',
+        legacy: 'Legacy numbering can sit beside modern metadata without hiding the issue context.',
+        modern: 'Recent relaunches remain connected to the same editorial archive.',
+      },
+      stageNames: {
+        origin: 'Origins',
+        solo: 'Solo run',
+        missingArc: 'Gap',
+        legacy: 'Legacy',
+        modern: 'Modern',
+      },
+      states: {
+        complete: 'Complete stage',
+        owned: 'Owned issues',
+        missing: 'Missing issues',
+        read: 'Read arc',
+        tracking: 'Tracking now',
+      },
+    },
+    how: {
+      eyebrow: 'How it works',
+      title: 'From shelf to timeline in four focused actions.',
+      description:
+        'IssueLine keeps collector workflows simple while preserving the editorial context that makes each issue matter.',
+      steps: {
+        track: {
+          title: 'Track collection',
+          body: 'Mark what you own across singles and collected formats without losing the publication order.',
+        },
+        read: {
+          title: 'Mark as read',
+          body: 'Separate ownership from reading progress so every run can become a guided queue.',
+        },
+        missing: {
+          title: 'Discover gaps',
+          body: 'Spot missing issues, skipped eras, and incomplete stages before hunting for the next edition.',
+        },
+        history: {
+          title: 'Explore history',
+          body: 'Move through decades of continuity by year, stage, issue, and editorial milestone.',
+        },
+      },
+    },
+    collectors: {
+      eyebrow: 'Built for collectors',
+      title: 'Designed for the feeling of opening an archive box.',
+      description:
+        'The experience should feel nostalgic, precise, and alive: part museum catalog, part reading map, part collector checklist.',
+      quote:
+        'A good timeline does not just say what exists. It tells you what belongs together, what is missing, and where the next discovery starts.',
+      items: {
+        missing: {
+          title: 'Identify missing issues instantly',
+          body: 'Gaps stand out in context instead of hiding inside filtered lists.',
+        },
+        runs: {
+          title: 'Track complete runs',
+          body: 'Group long publication histories into meaningful runs and eras.',
+        },
+        progress: {
+          title: 'Organize reading progress',
+          body: 'Keep read, owned, and wanted states visible as part of the timeline.',
+        },
+        continuity: {
+          title: 'Explore decades of continuity',
+          body: 'Move between old numbering, relaunches, specials, and collected reprints.',
+        },
+      },
+    },
+    stats: {
+      heroes: 'Heroes archived',
+      issues: 'Issues indexed',
+      stages: 'Editorial stages',
+      collectedEditions: 'Collected editions',
+    },
+    editions: {
+      eyebrow: 'Collected editions',
+      title: 'Singles are only one part of the shelf.',
+      description:
+        'IssueLine is ready to show omnibus, trade paperbacks, deluxe editions, Marvel Gold style lines, and future collected-format coverage beside the timeline.',
+      note: 'Static showcase today, dynamic collected-edition mapping tomorrow.',
+      cta: 'See timeline context',
+      items: {
+        omnibus: { title: 'Omnibus', meta: 'Oversized runs' },
+        tpb: { title: 'TPBs', meta: 'Reading arcs' },
+        gold: { title: 'Marvel Gold', meta: 'Classic eras' },
+        deluxe: { title: 'Deluxe', meta: 'Premium shelf' },
+      },
+    },
   },
   authDialog: {
     closeDialog: 'Close dialog',
@@ -298,6 +439,12 @@
     collectedCoverageTitle: 'Collected coverage',
     collectedCoverageSubtitle: 'Collected editions and their contained issues across timeline stages.',
     collectedCoverageEmpty: 'No collected editions linked yet for this hero.',
+    collectedLanguageFilter: 'Language',
+    collectedFormatFilter: 'Collected type',
+    collectedAllLanguages: 'All languages',
+    collectedAllFormats: 'All types',
+    collectedFilteredCount: '{{count}} of {{total}} collected editions',
+    collectedFilteredEmpty: 'No collected editions match these filters.',
     collectedIssuesCount: '{{count}} linked issues',
     collectedStagesCount: '{{count}} covered stages',
   },

@@ -124,6 +124,24 @@
 }
 
 @layer utilities {
+  @keyframes home-cover-drift {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-33.333%);
+    }
+  }
+
+  @keyframes home-cover-drift-reverse {
+    from {
+      transform: translateX(-33.333%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
   @keyframes timeline-logo-covers-marquee {
     from {
       transform: translateX(0);
@@ -169,6 +187,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    [class*='home-cover-drift'] {
+      animation: none;
+    }
+
     .timeline-logo-cover-track {
       animation: none;
     }

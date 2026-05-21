@@ -50,13 +50,154 @@ const messages = {
     footer: {
       ariaSiteFooter: 'Pie del sitio',
       ariaFooterLinks: 'Enlaces del pie',
-      tagline: 'Sigue números, colección y progreso de lectura.',
+      tagline: 'Un archivo editorial para timelines, recopilatorios y la memoria larga de la continuidad comiquera.',
       legal: '© 2026 IssueLine',
-      disclaimer: 'Los datos y el arte pertenecen a sus respectivos propietarios.',
+      disclaimer: 'Proyecto de archivo no oficial. Los datos y el arte pertenecen a sus respectivos propietarios.',
       about: 'Acerca de',
       feedback: 'Feedback',
       privacy: 'Privacidad',
+      roadmap: 'Roadmap',
+      dataSources: 'Fuentes de datos',
+      changelog: 'Changelog',
       github: 'GitHub',
+    },
+    home: {
+      hero: {
+        eyebrow: 'Timelines editoriales para coleccionistas',
+        title: 'Explora decadas de historia editorial como una coleccion viva.',
+        subtitle:
+          'Sigue runs, eras, portadas, huecos, recopilatorios y progreso de lectura mediante timelines visuales pensadas para archivos de comic.',
+        primaryCta: 'Explorar timeline',
+        secondaryCta: 'Ver preview',
+        scrollHint: 'Entrar al archivo',
+      },
+      showcase: {
+        eyebrow: 'Archivos de personajes',
+        title: 'Heroes presentados como historias editoriales.',
+        description:
+          'Cada archivo une anos activos, issues mapeados, formatos recopilados y progreso por etapas sin convertir la experiencia en una tabla de datos.',
+        years: 'Anos activos',
+        issues: 'Issues',
+        stages: 'Etapas',
+        collected: 'Recopilados',
+        completion: 'Indexado',
+        cta: 'Explorar timeline',
+        noteTimeline: 'Cobertura cronologica desde primeras apariciones hasta relanzamientos modernos.',
+        noteStages: 'Runs y eras editoriales agrupadas en etapas legibles.',
+        noteEditions: 'Preparado para omnibus, TPB, deluxe y recopilatorios regionales.',
+      },
+      timelinePreview: {
+        eyebrow: 'Preview de timeline',
+        title: 'Un archivo vertical donde cada entrega tiene su lugar en el tiempo.',
+        description:
+          'La Home pone delante la experiencia principal del producto: una timeline legible que muestra eras, issues faltantes, estados de completado y contexto de coleccion de un vistazo.',
+        calloutCovers: 'Portadas como anclas',
+        calloutGaps: 'Huecos visibles al instante',
+        calloutStages: 'Eras editoriales agrupadas',
+        calloutProgress: 'Estados de coleccion y lectura',
+        demoLabel: 'Archivo demo',
+        demoTitle: 'Mapa de continuidad de Doctor Strange',
+        liveFeeling: 'Sensacion interactiva',
+        stageCoverage: 'Cobertura de etapa',
+        entries: {
+          origin: 'Primeras apariciones misticas',
+          solo: 'La serie propia abre el archivo',
+          missingArc: 'Hueco detectado en el run',
+          legacy: 'Numeracion legacy restaurada',
+          modern: 'Relanzamiento moderno seguido',
+        },
+        summaries: {
+          origin: 'Una fila de issue con estilo real de timeline: portada, fecha, metadata de serie y estado de coleccion.',
+          solo: 'La card mantiene visible el orden de publicacion y separa posesion de lectura.',
+          missingArc: 'Los issues faltantes aparecen como eventos de timeline, dentro del run.',
+          legacy: 'La numeracion legacy convive con la metadata moderna sin ocultar el contexto.',
+          modern: 'Los relanzamientos recientes siguen conectados al mismo archivo editorial.',
+        },
+        stageNames: {
+          origin: 'Origenes',
+          solo: 'Solo run',
+          missingArc: 'Hueco',
+          legacy: 'Legacy',
+          modern: 'Moderna',
+        },
+        states: {
+          complete: 'Etapa completa',
+          owned: 'Issues en coleccion',
+          missing: 'Issues faltantes',
+          read: 'Arco leido',
+          tracking: 'En seguimiento',
+        },
+      },
+      how: {
+        eyebrow: 'Como funciona',
+        title: 'De la estanteria a la timeline en cuatro acciones.',
+        description:
+          'IssueLine mantiene simples los flujos de coleccionista y conserva el contexto editorial que hace importante cada issue.',
+        steps: {
+          track: {
+            title: 'Track collection',
+            body: 'Marca lo que tienes en grapas y recopilatorios sin perder el orden de publicacion.',
+          },
+          read: {
+            title: 'Mark as read',
+            body: 'Separa posesion y lectura para convertir cada run en una cola de lectura guiada.',
+          },
+          missing: {
+            title: 'Discover missing issues',
+            body: 'Detecta issues faltantes, eras saltadas y etapas incompletas antes de buscar la siguiente edicion.',
+          },
+          history: {
+            title: 'Explore publishing history',
+            body: 'Recorre decadas de continuidad por ano, etapa, issue e hito editorial.',
+          },
+        },
+      },
+      collectors: {
+        eyebrow: 'Hecho para coleccionistas',
+        title: 'Disenado para sentirse como abrir una caja de archivo.',
+        description:
+          'La experiencia debe sentirse nostalgica, precisa y viva: parte catalogo de museo, parte mapa de lectura, parte checklist de coleccion.',
+        quote:
+          'Una buena timeline no solo dice que existe. Te cuenta que pertenece al mismo run, que falta y donde empieza el siguiente descubrimiento.',
+        items: {
+          missing: {
+            title: 'Identifica faltantes al instante',
+            body: 'Los huecos aparecen dentro del contexto, no escondidos en listas filtradas.',
+          },
+          runs: {
+            title: 'Sigue runs completos',
+            body: 'Agrupa historiales editoriales largos en runs y eras con sentido.',
+          },
+          progress: {
+            title: 'Organiza el progreso de lectura',
+            body: 'Mantiene estados de leido, poseido y buscado visibles dentro de la timeline.',
+          },
+          continuity: {
+            title: 'Explora decadas de continuidad',
+            body: 'Salta entre numeracion antigua, relanzamientos, especiales y reediciones.',
+          },
+        },
+      },
+      stats: {
+        heroes: 'Heroes archivados',
+        issues: 'Issues indexados',
+        stages: 'Etapas editoriales',
+        collectedEditions: 'Recopilatorios',
+      },
+      editions: {
+        eyebrow: 'Recopilatorios',
+        title: 'Las grapas son solo una parte de la estanteria.',
+        description:
+          'IssueLine esta preparado para mostrar omnibus, TPBs, ediciones deluxe, lineas tipo Marvel Gold y futura cobertura de recopilatorios junto a la timeline.',
+        note: 'Showcase estatico hoy, mapeo dinamico de recopilatorios manana.',
+        cta: 'Ver contexto timeline',
+        items: {
+          omnibus: { title: 'Omnibus', meta: 'Runs completos' },
+          tpb: { title: 'TPBs', meta: 'Arcos de lectura' },
+          gold: { title: 'Marvel Gold', meta: 'Eras clasicas' },
+          deluxe: { title: 'Deluxe', meta: 'Estanteria premium' },
+        },
+      },
     },
     authDialog: {
       closeDialog: 'Cerrar diálogo',
@@ -296,6 +437,12 @@ const messages = {
       collectedCoverageTitle: 'Cobertura de recopilatorios',
       collectedCoverageSubtitle: 'Recopilatorios y los numeros que contienen a traves de las etapas.',
       collectedCoverageEmpty: 'Todavia no hay recopilatorios enlazados para este heroe.',
+      collectedLanguageFilter: 'Idioma',
+      collectedFormatFilter: 'Tipo de recopilatorio',
+      collectedAllLanguages: 'Todos los idiomas',
+      collectedAllFormats: 'Todos los tipos',
+      collectedFilteredCount: '{{count}} de {{total}} recopilatorios',
+      collectedFilteredEmpty: 'No hay recopilatorios que coincidan con estos filtros.',
       collectedIssuesCount: '{{count}} numeros enlazados',
       collectedStagesCount: '{{count}} etapas cubiertas',
     },

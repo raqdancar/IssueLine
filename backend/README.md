@@ -210,13 +210,23 @@ npm run link:collected-edition-issues
 It supports:
 - collected-edition selection by title search
 - link mode `gcd` (exact `gcd_issue_id`) or `number` (issue numbers, conservative and ambiguity-safe)
+- optional series filtering for `number` mode, so ranges like `1-18` target one specific series/run
+- annual/special series are hidden by default in the interactive series picker; type `a` to show them
 - list/range selectors like `17779,17780,18000-18005` or `110-111,114-146`
 
 Optional flags:
 - `--collected-id=<uuid>`
 - `--mode=gcd|number`
 - `--issues=<selector>`
+- `--series-id=<gcd-series-id>` for exact series filtering in `number` mode
+- `--series=<series-name>` for exact title filtering in `number` mode
 - `--note=<text>`
+
+Example:
+
+```bash
+npm run link:collected-edition-issues -- --collected-id=<uuid> --mode=number --series-id=12345 --issues=1-18
+```
 
 ### Upload collected-edition cover to storage
 

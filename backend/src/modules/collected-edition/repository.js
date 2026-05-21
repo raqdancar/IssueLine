@@ -146,7 +146,7 @@ export const getHeroIssuesByGcdIssueIds = async ({ heroApiId, gcdIssueIds }) => 
 
   const { data, error } = await supabaseServiceClient
     .from('hero_issues')
-    .select('id, hero_api_id, gcd_issue_id, series_name, number, title')
+    .select('id, hero_api_id, gcd_issue_id, series_id, series_name, number, title, raw')
     .eq('hero_api_id', heroApiId)
     .in('gcd_issue_id', normalized)
 
@@ -161,13 +161,45 @@ export const getHeroIssuesForHero = async ({ heroApiId }) => {
   if (!heroApiId) return []
   const { data, error } = await supabaseServiceClient
     .from('hero_issues')
-    .select('id, hero_api_id, gcd_issue_id, series_name, number, title')
+    .select('id, hero_api_id, gcd_issue_id, series_id, series_name, number, title, raw')
     .eq('hero_api_id', heroApiId)
 
   if (error) {
     throw new Error(`Failed to load hero issues: ${error.message}`)
   }
   return data ?? []
+}
+
+export const getHeroIssueSeriesForHero = async ({ heroApiId }) => {
+  if (!heroApiId) return []
+  const { data, error } = await supabaseServiceClient
+    .from('hero_issues')
+    .select('series_id, series_name, number')
+    .eq('hero_api_id', heroApiId)
+
+  if (error) {
+    throw new Error(`Failed to load hero issue series: ${error.message}`)
+  }
+
+  const seriesMap = new Map()
+  for (const row of data ?? []) {
+    const seriesName = row.series_name ?? 'Unknown series'
+    const key = row.series_id ? `id:${row.series_id}` : `name:${row.series_name ?? 'unknown'}`
+    const current = seriesMap.get(key) ?? {
+      seriesId: row.series_id ?? null,
+      seriesName,
+      isAnnual: /\bannual\b/i.test(seriesName),
+      issueCount: 0,
+    }
+    current.issueCount += 1
+    seriesMap.set(key, current)
+  }
+
+  return Array.from(seriesMap.values()).sort((a, b) => {
+    const byName = String(a.seriesName).localeCompare(String(b.seriesName))
+    if (byName !== 0) return byName
+    return Number(a.seriesId ?? 0) - Number(b.seriesId ?? 0)
+  })
 }
 
 export const getExistingCollectedEditionLinks = async ({ collectedEditionId, heroIssueIds }) => {

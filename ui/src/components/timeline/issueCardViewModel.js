@@ -13,6 +13,8 @@ const formatDate = (value, locale, t) => {
   }
 }
 
+const normalizeText = (value) => (typeof value === 'string' ? value.trim() : '')
+
 const dualStateVariant = {
   dot: 'border-transparent bg-[linear-gradient(180deg,rgba(16,185,129,0.9),rgba(14,165,233,0.9))]',
   panel: 'border-slate-200 bg-white',
@@ -86,6 +88,13 @@ export function createIssueCardViewModel({
   const stageKey = stageIdentity?.key ?? null
   const stageSummary =
     meta.stage_summary ?? meta.stageSummary ?? meta.stage?.short_summary ?? meta.stage?.summary ?? null
+  const issueTitle =
+    normalizeText(meta.title) ||
+    normalizeText(meta.issue_title) ||
+    normalizeText(meta.issueTitle) ||
+    normalizeText(meta.issue?.title) ||
+    normalizeText(meta.raw?.title) ||
+    null
 
   return {
     entry,
@@ -112,6 +121,7 @@ export function createIssueCardViewModel({
       pageCount,
       editing,
       rating,
+      issueTitle,
       legacyNumber,
       legacyMatchesIssueNumber,
     },
