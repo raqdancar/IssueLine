@@ -1,14 +1,20 @@
 ﻿// Render stage/collection insight panels and progress actions for a hero timeline.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
+import { BookOpen, Check, CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
 import { backendBaseUrl } from '@/utils/backend'
-import { useIssueStateMutation, useIssueStatesQuery, useStageReadMutation } from '@/hooks/useIssueStates'
+import {
+  useCollectedEditionReadMutation,
+  useIssueStateMutation,
+  useIssueStatesQuery,
+  useStageReadMutation,
+} from '@/hooks/useIssueStates'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
 import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
 import { TimelineInsightsSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
 import PrintLanguageBadge from '@/components/PrintLanguageBadge'
+import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
@@ -167,17 +173,6 @@ const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLE
 
 const normalizeFilterValue = (value) => String(value ?? '').trim().toLowerCase()
 
-const humanizeFormat = (value) => {
-  const normalized = String(value ?? '').trim()
-  if (!normalized) return 'Unknown'
-
-  return normalized
-    .split(/[_\-\s]+/)
-    .filter(Boolean)
-    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
-    .join(' ')
-}
-
 const resolveEditionLanguageFilter = (edition) => {
   const rawValue = edition?.printLanguage ?? edition?.print_language ?? ''
   const badge = resolvePrintLanguageBadge(rawValue)
@@ -195,7 +190,7 @@ const resolveEditionLanguageFilter = (edition) => {
 const resolveEditionFormatFilter = (edition) => {
   const rawValue = edition?.format ?? ''
   const normalized = normalizeFilterValue(rawValue)
-  return normalized ? { value: normalized, label: humanizeFormat(rawValue) } : null
+  return normalized ? { value: normalized, label: formatCollectedEditionFormat(rawValue) } : null
 }
 
 const buildFilterOptions = (items, resolver) => {
@@ -657,7 +652,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   }))
   const [openStage, setOpenStage] = useState(null)
   const [insightTab, setInsightTab] = useState('progress')
-  const [editionActionState, setEditionActionState] = useState({ pendingEditionId: null, error: null })
+  const [editionActionState, setEditionActionState] = useState({ pendingEditionId: null, pendingAction: null, error: null })
   const [collectedLanguageFilter, setCollectedLanguageFilter] = useState(ALL_FILTER_VALUE)
   const [collectedFormatFilter, setCollectedFormatFilter] = useState(ALL_FILTER_VALUE)
   const [selectedStageKey, setSelectedStageKey] = useState(null)
@@ -668,6 +663,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   })
   const issueStateMutation = useIssueStateMutation(heroSlug)
   const stageReadMutation = useStageReadMutation(heroSlug)
+  const collectedEditionReadMutation = useCollectedEditionReadMutation(heroSlug)
 
   // Fetch timeline entries plus collected-edition coverage for insights tabs.
   useEffect(() => {
@@ -886,6 +882,12 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     })
   }
 
+  const isCollectedEditionRead = (edition) => {
+    const issueIds = getCollectedEditionTimelineIssueIds(edition)
+    if (!issueIds.length) return false
+    return issueIds.every((issueId) => Boolean(statesByIssueId?.[issueId]?.readIt))
+  }
+
   const handleCollectedEditionToggle = async (edition) => {
     if (!canFetchStates || !edition?.id) return
 
@@ -894,7 +896,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     if (!issueIds.length) return
 
     const currentlyOwned = isCollectedEditionOwned(edition)
-    setEditionActionState({ pendingEditionId: editionId, error: null })
+    setEditionActionState({ pendingEditionId: editionId, pendingAction: 'ownership', error: null })
 
     try {
       if (!currentlyOwned) {
@@ -927,10 +929,37 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           }
         }
       }
-      setEditionActionState({ pendingEditionId: null, error: null })
+      setEditionActionState({ pendingEditionId: null, pendingAction: null, error: null })
     } catch (error) {
       setEditionActionState({
         pendingEditionId: null,
+        pendingAction: null,
+        error: error?.message ?? t('timeline.unableUpdateIssueState'),
+      })
+    }
+  }
+
+  const handleCollectedEditionReadToggle = async (edition) => {
+    if (!canFetchStates || !edition?.id) return
+
+    const editionId = String(edition.id)
+    const issueIds = getCollectedEditionTimelineIssueIds(edition)
+    if (!issueIds.length) return
+
+    const nextReadIt = !isCollectedEditionRead(edition)
+    setEditionActionState({ pendingEditionId: editionId, pendingAction: 'read', error: null })
+
+    try {
+      await collectedEditionReadMutation.mutateAsync({
+        collectedEditionId: editionId,
+        issueIds,
+        readIt: nextReadIt,
+      })
+      setEditionActionState({ pendingEditionId: null, pendingAction: null, error: null })
+    } catch (error) {
+      setEditionActionState({
+        pendingEditionId: null,
+        pendingAction: null,
         error: error?.message ?? t('timeline.unableUpdateIssueState'),
       })
     }
@@ -1088,8 +1117,15 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                     const editionId = String(edition.id)
                     const editionTimelineIssueIds = getCollectedEditionTimelineIssueIds(edition)
                     const isEditionOwned = isCollectedEditionOwned(edition)
-                    const isEditionActionPending = editionActionState.pendingEditionId === editionId
-                    const editionActionDisabled = !canFetchStates || isEditionActionPending || !editionTimelineIssueIds.length
+                    const isEditionRead = isCollectedEditionRead(edition)
+                    const isEditionOwnershipPending =
+                      editionActionState.pendingEditionId === editionId && editionActionState.pendingAction === 'ownership'
+                    const isEditionReadPending =
+                      editionActionState.pendingEditionId === editionId && editionActionState.pendingAction === 'read'
+                    const editionActionDisabled =
+                      !canFetchStates ||
+                      Boolean(editionActionState.pendingEditionId) ||
+                      !editionTimelineIssueIds.length
 
                     return (
                       <article key={edition.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
@@ -1111,36 +1147,66 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                           <div className="min-w-0 flex-1 space-y-1">
                             <div className="flex min-w-0 items-start justify-between gap-2">
                               <p className="min-w-0 body-sm font-semibold break-words text-slate-900">{edition.title}</p>
-                              <button
-                                type="button"
-                                aria-pressed={isEditionOwned}
-                                aria-label={t('timeline.addToCollection')}
-                                aria-busy={isEditionActionPending ? 'true' : undefined}
-                                disabled={editionActionDisabled}
-                                title={
-                                  !canFetchStates
-                                    ? t('timeline.signInToTrackOwnedRead')
-                                    : isEditionActionPending
-                                      ? t('timeline.savingUpdate')
-                                      : t('timeline.addToCollection')
-                                }
-                                onClick={() => void handleCollectedEditionToggle(edition)}
-                                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
-                                  isEditionOwned
-                                    ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
-                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/30 hover:text-slate-900'
-                                } ${editionActionDisabled ? 'cursor-not-allowed opacity-70' : ''}`}
-                              >
-                                {isEditionActionPending ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                                ) : (
-                                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                                )}
-                              </button>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  aria-pressed={isEditionOwned}
+                                  aria-label={t('timeline.addToCollection')}
+                                  aria-busy={isEditionOwnershipPending ? 'true' : undefined}
+                                  disabled={editionActionDisabled}
+                                  title={
+                                    !canFetchStates
+                                      ? t('timeline.signInToTrackOwnedRead')
+                                      : isEditionOwnershipPending
+                                        ? t('timeline.savingUpdate')
+                                        : t('timeline.addToCollection')
+                                  }
+                                  onClick={() => void handleCollectedEditionToggle(edition)}
+                                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                                    isEditionOwned
+                                      ? 'border-emerald-300 bg-emerald-100 text-emerald-700'
+                                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-900/30 hover:text-slate-900'
+                                  } ${editionActionDisabled ? 'cursor-not-allowed opacity-70' : ''}`}
+                                >
+                                  {isEditionOwnershipPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                  ) : (
+                                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  aria-pressed={isEditionRead}
+                                  aria-label={isEditionRead ? t('timeline.allRead') : t('timeline.markAsRead')}
+                                  aria-busy={isEditionReadPending ? 'true' : undefined}
+                                  disabled={editionActionDisabled}
+                                  title={
+                                    !canFetchStates
+                                      ? t('timeline.signInToTrackOwnedRead')
+                                      : isEditionReadPending
+                                        ? t('timeline.savingUpdate')
+                                        : isEditionRead
+                                          ? t('timeline.allRead')
+                                          : t('timeline.markAsRead')
+                                  }
+                                  onClick={() => void handleCollectedEditionReadToggle(edition)}
+                                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                                    isEditionRead
+                                      ? 'border-sky-300 bg-sky-100 text-sky-700'
+                                      : 'border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-700'
+                                  } ${editionActionDisabled ? 'cursor-not-allowed opacity-70' : ''}`}
+                                >
+                                  {isEditionReadPending ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                  ) : (
+                                    <BookOpen className="h-4 w-4" aria-hidden="true" />
+                                  )}
+                                </button>
+                              </div>
                             </div>
                             {edition.subtitle ? <p className="body-xs break-words text-slate-600">{edition.subtitle}</p> : null}
                             <div className="body-xs flex flex-wrap items-center gap-1.5 text-slate-500">
-                              <span>{edition.format ?? 'unknown'}</span>
+                              <span>{formatCollectedEditionFormat(edition.format)}</span>
                               <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
                               {edition.publicationDate ? <span>{edition.publicationDate}</span> : null}
                             </div>

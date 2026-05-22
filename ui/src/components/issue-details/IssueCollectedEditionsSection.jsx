@@ -1,5 +1,6 @@
 ﻿// Render collected-edition cards linked to the selected issue.
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
 import { buildPublicStorageUrl } from '@/lib/issueImages'
 import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 import IssueCollectedEditionPlaceholderCard from './IssueCollectedEditionPlaceholderCard'
@@ -63,7 +64,7 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
-                      {edition.format ?? 'unknown'}
+                      {formatCollectedEditionFormat(edition.format)}
                     </span>
                     <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
                   </div>

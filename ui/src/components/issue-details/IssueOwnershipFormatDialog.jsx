@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, PackageCheck, X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
+import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
 import { buildPublicStorageUrl } from '@/lib/issueImages'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import PrintLanguageBadge from '@/components/PrintLanguageBadge'
@@ -115,7 +116,7 @@ function IssueOwnershipFormatDialog({
                         {edition.title ?? t('issueDetails.collected.placeholderTitle')}
                       </p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
-                        <span>{edition.format ?? 'unknown'}</span>
+                        <span>{formatCollectedEditionFormat(edition.format)}</span>
                         <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
                         {edition.publicationDate ? <span>{edition.publicationDate}</span> : null}
                       </div>

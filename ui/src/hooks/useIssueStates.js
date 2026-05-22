@@ -9,7 +9,12 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
-import { fetchIssueStates, markStageIssuesRead, patchIssueState } from '@/lib/issueStatesApi.js'
+import {
+  fetchIssueStates,
+  markStageIssuesRead,
+  patchIssueState,
+  toggleCollectedEditionReadStatus,
+} from '@/lib/issueStatesApi.js'
 import { isBackendConfigured } from '@/utils/backend.js'
 
 const issueStatesQueryKey = (heroSlug) => ['issue-states', heroSlug ?? 'unknown']
@@ -189,6 +194,72 @@ export const useStageReadMutation = (heroSlug) => {
         })
         return stateIndexToArray(next)
       })
+    },
+  })
+}
+
+export const useCollectedEditionReadMutation = (heroSlug) => {
+  const queryClient = useQueryClient()
+  const { session } = useSessionContext()
+  const accessToken = session?.access_token ?? null
+  const authorized = Boolean(accessToken && isBackendConfigured)
+  const queryKey = issueStatesQueryKey(heroSlug)
+
+  return useMutation({
+    mutationFn: async ({ collectedEditionId, readIt }) => {
+      if (!authorized) {
+        throw new Error('Sign in to update issue states.')
+      }
+      if (!collectedEditionId) {
+        throw new Error('Missing collected edition identifier.')
+      }
+      return toggleCollectedEditionReadStatus({ heroSlug, collectedEditionId, readIt, accessToken })
+    },
+    onMutate: async ({ issueIds = [], readIt }) => {
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData(queryKey)
+      if (!issueIds?.length) {
+        return { previous }
+      }
+
+      const optimistic = buildStateIndex(previous)
+      const timestamp = new Date().toISOString()
+      issueIds.forEach((issueId) => {
+        if (!issueId) return
+        const current = optimistic[issueId] ?? { issueId, haveIt: false, readIt: false, collectedEditionIds: [] }
+        const nextState = { ...current, readIt: Boolean(readIt), updatedAt: timestamp }
+        if (!nextState.haveIt && !nextState.readIt) {
+          delete optimistic[issueId]
+        } else {
+          optimistic[issueId] = nextState
+        }
+      })
+      queryClient.setQueryData(queryKey, stateIndexToArray(optimistic))
+      return { previous }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous)
+      }
+    },
+    onSuccess: (data) => {
+      const states = data?.states ?? []
+      const stateByIssueId = buildStateIndex(states)
+      const affectedIssueIds = data?.issueIds ?? []
+
+      queryClient.setQueryData(queryKey, (current) => {
+        const next = buildStateIndex(current)
+        affectedIssueIds.forEach((issueId) => {
+          const state = stateByIssueId[issueId]
+          if (!state || (!state.haveIt && !state.readIt)) {
+            delete next[issueId]
+          } else {
+            next[issueId] = state
+          }
+        })
+        return stateIndexToArray(next)
+      })
+      void queryClient.invalidateQueries({ queryKey })
     },
   })
 }

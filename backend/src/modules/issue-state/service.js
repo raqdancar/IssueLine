@@ -729,3 +729,119 @@ export const toggleCollectedEditionOwnership = async ({ userId, heroApiId, colle
   const states = await getUserIssueStatesByIssueIds({ userId, issueIds })
   return { collectedEditionId, haveIt, issueIds, states }
 }
+
+/**
+ * Activa o desactiva la lectura d'un recopilatori per a totes les issues vinculades.
+ *
+ * A diferència de la possessió, aquesta operació no modifica els enllaços de
+ * recopilatoris seleccionats; només propaga `read_it` conservant `have_it`.
+ *
+ * @param {{ userId:string, heroApiId:number, collectedEditionId:string, readIt:boolean }} params
+ * @returns {Promise<{collectedEditionId:string,readIt:boolean,issueIds:string[],states:Array}>}
+ */
+export const toggleCollectedEditionReadStatus = async ({ userId, heroApiId, collectedEditionId, readIt }) => {
+  if (!userId) {
+    throw new Error('User is required to update collected-edition reading state.')
+  }
+  if (!heroApiId) {
+    throw new Error('heroApiId is required to update collected-edition reading state.')
+  }
+  if (!collectedEditionId) {
+    throw new Error('collectedEditionId is required to update collected-edition reading state.')
+  }
+
+  const { data: linksRows, error: linksError } = await supabaseServiceClient
+    .from('collected_edition_issue_links')
+    .select('hero_issue_id')
+    .eq('collected_edition_id', collectedEditionId)
+
+  if (linksError) {
+    throw new Error(`Failed to load collected-edition links: ${linksError.message}`)
+  }
+
+  const heroIssueIds = Array.from(new Set((linksRows ?? []).map((row) => row.hero_issue_id).filter(Boolean)))
+  if (!heroIssueIds.length) {
+    return { collectedEditionId, readIt, issueIds: [], states: [] }
+  }
+
+  const timelineIssueIdByHeroIssueId = await mapHeroIssueIdsToTimelineIssueIds({ heroApiId, heroIssueIds })
+  const issueIds = Array.from(
+    new Set(
+      heroIssueIds
+        .map((heroIssueId) => timelineIssueIdByHeroIssueId.get(heroIssueId))
+        .filter(Boolean)
+    )
+  )
+
+  if (!issueIds.length) {
+    return { collectedEditionId, readIt, issueIds: [], states: [] }
+  }
+
+  const currentStates = await getUserIssueStatesByIssueIds({ userId, issueIds })
+  const stateByIssueId = new Map(currentStates.map((state) => [state.issueId, state]))
+  const timestamp = new Date().toISOString()
+
+  if (readIt) {
+    const payload = issueIds.map((issueId) => {
+      const current = stateByIssueId.get(issueId)
+      return {
+        user_id: userId,
+        issue_id: issueId,
+        have_it: current?.haveIt ?? false,
+        read_it: true,
+        updated_at: timestamp,
+      }
+    })
+
+    const { error } = await supabaseServiceClient
+      .from(ISSUE_STATES_TABLE)
+      .upsert(payload, { onConflict: 'user_id,issue_id' })
+
+    if (error) {
+      throw new Error(`Failed to save reading states for collected edition: ${error.message}`)
+    }
+  } else {
+    const toDelete = []
+    const toUpsert = []
+
+    for (const issueId of issueIds) {
+      const current = stateByIssueId.get(issueId)
+      if (!current?.haveIt) {
+        toDelete.push(issueId)
+      } else {
+        toUpsert.push({
+          user_id: userId,
+          issue_id: issueId,
+          have_it: true,
+          read_it: false,
+          updated_at: timestamp,
+        })
+      }
+    }
+
+    if (toDelete.length) {
+      const { error } = await supabaseServiceClient
+        .from(ISSUE_STATES_TABLE)
+        .delete()
+        .eq('user_id', userId)
+        .in('issue_id', toDelete)
+
+      if (error) {
+        throw new Error(`Failed to clear reading states for collected edition: ${error.message}`)
+      }
+    }
+
+    if (toUpsert.length) {
+      const { error } = await supabaseServiceClient
+        .from(ISSUE_STATES_TABLE)
+        .upsert(toUpsert, { onConflict: 'user_id,issue_id' })
+
+      if (error) {
+        throw new Error(`Failed to update reading states for collected edition: ${error.message}`)
+      }
+    }
+  }
+
+  const states = await getUserIssueStatesByIssueIds({ userId, issueIds })
+  return { collectedEditionId, readIt, issueIds, states }
+}
