@@ -1,8 +1,7 @@
-import { ArrowRight, CalendarRange, Layers3, LibraryBig, RotateCw } from 'lucide-react'
+import { ArrowRight, CalendarRange, Layers3, LibraryBig } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
-import { cn } from '@/lib/utils'
 import SectionHeading from './SectionHeading'
 import {
   estimateCompletion,
@@ -48,29 +47,19 @@ function CharacterVisual({ hero, palette, index }) {
   )
 }
 
-function CharacterShowcase({ heroes, heroesStatus, loadHeroes }) {
+function CharacterShowcase({ heroes, heroesStatus }) {
   const { t } = useI18n()
   const displayHeroes = getDisplayHeroes(heroes)
 
   return (
     <section id="character-showcase" className="bg-white px-4 py-18 sm:px-6 lg:px-10 lg:py-24 xl:px-16 2xl:px-24">
       <div className="mx-auto w-full max-w-400">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-3xl">
           <SectionHeading
             eyebrow={t('home.showcase.eyebrow')}
             title={t('home.showcase.title')}
             description={t('home.showcase.description')}
           />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void loadHeroes?.()}
-            disabled={heroesStatus?.state === 'loading'}
-            className="w-fit border-slate-300 bg-white text-slate-800 hover:bg-slate-100"
-          >
-            <RotateCw className={cn('h-4 w-4', heroesStatus?.state === 'loading' ? 'animate-spin' : '')} aria-hidden="true" />
-            {heroesStatus?.state === 'loading' ? t('app.refreshing') : t('app.refreshHeroes')}
-          </Button>
         </div>
 
         {heroesStatus?.state === 'error' ? (

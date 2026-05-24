@@ -40,8 +40,6 @@ const messages = {
       heroVisualizer: 'Visualizador de héroes',
       showingCuratedHeroes: 'Mostrando {{count}} héroes curados guardados en Supabase.',
       connectSupabaseAndSeed: 'Conecta Supabase y carga tu roster para visualizarlo aquí.',
-      refreshing: 'Actualizando...',
-      refreshHeroes: 'Actualizar héroes',
       noHeroesSeedHint: 'No se encontraron héroes. Ejecuta npm run seed:superheroes para poblar la caché.',
       pendingEnvVars: 'Variables de entorno pendientes',
       envVarsHint:

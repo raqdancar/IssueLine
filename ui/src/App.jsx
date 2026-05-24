@@ -28,7 +28,7 @@ function App() {
   const [authMode, setAuthMode] = useState('sign-in')
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false)
   const { session, navAvatarUrl } = useSupabaseSession()
-  const { heroes, heroesStatus, loadHeroes } = useHeroesCatalog({ t })
+  const { heroes, heroesStatus } = useHeroesCatalog({ t })
   const heroRouteMatch = useMatch('/heroes/:slug')
   const heroSlug = heroRouteMatch?.params?.slug ?? null
   const isAccountRoute = Boolean(useMatch('/account'))
@@ -107,7 +107,7 @@ function App() {
               path="/"
               element={
                 <Suspense fallback={routeFallback}>
-                  <HomePage heroes={heroes} heroesStatus={heroesStatus} loadHeroes={loadHeroes} authStatus={status} />
+                  <HomePage heroes={heroes} heroesStatus={heroesStatus} authStatus={status} />
                 </Suspense>
               }
             />

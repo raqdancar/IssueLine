@@ -1,6 +1,6 @@
-// Provide hero catalog loading state and refresh behavior for dashboard pages.
+// Provide hero catalog loading state for dashboard pages.
 
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchHeroesOverview } from '@/lib/heroesApi.js'
 import { supabase } from '@/lib/supabaseClient'
@@ -40,14 +40,8 @@ export const useHeroesCatalog = ({ t }) => {
     }
   }, [heroes.length, query.error, query.isError, query.isFetching, t])
 
-  const loadHeroes = useCallback(async () => {
-    if (!supabase) return
-    await query.refetch()
-  }, [query.refetch])
-
   return {
     heroes,
     heroesStatus,
-    loadHeroes,
   }
 }

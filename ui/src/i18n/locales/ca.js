@@ -40,8 +40,6 @@ const messages = {
       heroVisualizer: "Visualitzador d'herois",
       showingCuratedHeroes: 'Mostrant {{count}} herois curats desats a Supabase.',
       connectSupabaseAndSeed: 'Connecta Supabase i carrega el roster per visualitzar-lo aquí.',
-      refreshing: 'Actualitzant...',
-      refreshHeroes: 'Actualitza herois',
       noHeroesSeedHint: "No s'han trobat herois. Executa npm run seed:superheroes per omplir la memòria cau.",
       pendingEnvVars: "Variables d'entorn pendents",
       envVarsHint:

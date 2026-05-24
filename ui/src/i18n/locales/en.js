@@ -40,8 +40,6 @@
     heroVisualizer: 'Hero visualizer',
     showingCuratedHeroes: 'Showing {{count}} curated heroes stored in Supabase.',
     connectSupabaseAndSeed: 'Connect Supabase and seed your roster to view it here.',
-    refreshing: 'Refreshing...',
-    refreshHeroes: 'Refresh heroes',
     noHeroesSeedHint: 'No heroes found. Run npm run seed:superheroes to populate the cache.',
     pendingEnvVars: 'Pending environment variables',
     envVarsHint:

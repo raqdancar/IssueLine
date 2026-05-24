@@ -6,11 +6,11 @@ import HomeHeroSection from '@/components/home/HomeHeroSection'
 import HowItWorksSection from '@/components/home/HowItWorksSection'
 import TimelinePreviewSection from '@/components/home/TimelinePreviewSection'
 
-function HomePage({ heroes, heroesStatus, loadHeroes }) {
+function HomePage({ heroes, heroesStatus }) {
   return (
     <div className="bg-white">
       <HomeHeroSection heroes={heroes} />
-      <CharacterShowcase heroes={heroes} heroesStatus={heroesStatus} loadHeroes={loadHeroes} />
+      <CharacterShowcase heroes={heroes} heroesStatus={heroesStatus} />
       <TimelinePreviewSection />
       <HowItWorksSection />
       <CollectorsSection />
