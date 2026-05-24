@@ -99,7 +99,7 @@ function App() {
           className={
             isHomeRoute
               ? 'flex w-full flex-1 flex-col overflow-x-hidden'
-              : 'flex w-full flex-1 flex-col gap-6 overflow-x-hidden px-4 py-8 sm:px-6 lg:px-10 xl:px-16 2xl:px-24'
+              : 'flex w-full min-w-0 flex-1 flex-col gap-6 overflow-x-hidden px-3 py-6 sm:px-6 sm:py-8 lg:px-10 xl:px-16 2xl:px-24'
           }
         >
           <Routes>

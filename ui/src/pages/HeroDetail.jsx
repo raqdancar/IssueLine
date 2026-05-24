@@ -184,7 +184,7 @@ function HeroDetail() {
   }
 
   return (
-    <section className="w-full rounded-[32px] border border-slate-100 bg-white/85 p-6 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 lg:p-8">
+    <section className="w-full max-w-full min-w-0 rounded-2xl border border-slate-100 bg-white/85 p-3 shadow-xl shadow-slate-200/70 ring-1 ring-slate-100/70 backdrop-blur supports-backdrop-filter:bg-white/70 sm:rounded-[32px] sm:p-6 lg:p-8">
       {detailHeader}
       <div className="mt-6">
         {status === 'loading' ? (
@@ -193,7 +193,7 @@ function HeroDetail() {
           <p className="body-sm text-rose-600">{error}</p>
         ) : hero ? (
           <div className="space-y-8">
-            <div className="grid gap-8 lg:grid-cols-[minmax(160px,200px),1fr] xl:gap-12">
+            <div className="grid w-full max-w-full min-w-0 gap-6 lg:grid-cols-[minmax(160px,200px),minmax(0,1fr)] xl:gap-12">
               <aside className="space-y-6 rounded-3xl border border-slate-100 bg-white/85 p-5 text-sm text-slate-600 shadow-lg shadow-slate-200/60 ring-1 ring-white/70 backdrop-blur">
                 <div
                   className={`relative mx-auto overflow-hidden ${
@@ -287,7 +287,7 @@ function HeroDetail() {
                   ))}
                 </dl>
               </aside>
-              <div className="space-y-5">
+              <div className="min-w-0 space-y-5">
                 <Suspense fallback={<TimelineInsightsSkeleton />}>
                   <HeroTimelineInsights heroSlug={hero.slug} heroName={hero.name} />
                 </Suspense>

@@ -114,6 +114,14 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   * {
     border-color: hsl(var(--border));
     outline-color: hsl(var(--ring) / 0.5);

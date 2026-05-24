@@ -374,10 +374,10 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
   }
 
   return (
-    <div className="relative mt-3">
+    <div className="relative mt-3 min-w-0 max-w-full">
       <div
         ref={viewportRef}
-        className="no-scrollbar cursor-grab select-none active:cursor-grabbing overflow-x-auto rounded-xl border border-slate-200/80 bg-linear-to-r from-slate-50 via-white to-slate-50 px-2.5 py-2"
+        className="no-scrollbar max-w-full cursor-grab select-none active:cursor-grabbing overflow-x-auto rounded-xl border border-slate-200/80 bg-linear-to-r from-slate-50 via-white to-slate-50 px-2.5 py-2"
         style={{ touchAction: 'pan-x' }}
         onMouseEnter={pauseAutoScroll}
         onMouseLeave={() => resumeAutoScroll(350)}
@@ -392,7 +392,7 @@ const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
         onFocus={pauseAutoScroll}
         onBlur={() => resumeAutoScroll(350)}
       >
-        <div ref={trackRef} className="inline-flex min-w-max gap-2 pr-4">
+        <div ref={trackRef} className="inline-flex min-w-max max-w-none gap-2 pr-4">
           {repeatedIssues.map((issue, index) => {
             const issueKey = issue.heroIssueId ?? issue.gcdIssueId ?? issue.number ?? index
             const isDuplicatedToken = normalizedIssues.length > 1 && index >= normalizedIssues.length
@@ -431,8 +431,12 @@ const GaugeCard = ({ label, count, total, accentClass, t }) => {
   const dashOffset = circumference * (1 - normalized / 100)
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-3xl border border-slate-100 bg-white/80 p-4 text-center shadow-sm">
-      <svg width="140" height="140" viewBox="0 0 140 140" role="img" aria-label={t('timeline.percentReadTitle', { percent: normalized })}>
+    <div className="flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white/80 p-3 text-left shadow-sm md:flex-col md:justify-start md:text-center lg:rounded-3xl lg:p-4">
+      <div className="min-w-0 md:order-2">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500 sm:tracking-[0.22em] lg:tracking-[0.3em]">{label}</p>
+        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || '\u2014' })}</p>
+      </div>
+      <svg className="h-24 w-24 shrink-0 md:order-1 md:h-28 md:w-28 lg:h-[140px] lg:w-[140px]" viewBox="0 0 140 140" role="img" aria-label={t('timeline.percentReadTitle', { percent: normalized })}>
         <circle cx="70" cy="70" r={radius} strokeWidth="10" stroke="rgba(148, 163, 184, 0.25)" fill="none" />
         <circle
           cx="70"
@@ -450,10 +454,6 @@ const GaugeCard = ({ label, count, total, accentClass, t }) => {
           {normalized}%
         </text>
       </svg>
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{label}</p>
-        <p className="text-sm font-semibold text-slate-700">{t('timeline.issuesCountOfTotal', { count, total: total || '\u2014' })}</p>
-      </div>
     </div>
   )
 }
@@ -966,9 +966,9 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   }
 
   return (
-    <section className="overflow-x-hidden rounded-[32px] border border-slate-100 bg-linear-to-br from-white via-slate-50 to-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-2">
+    <section className="w-full max-w-full min-w-0 rounded-2xl border border-slate-100 bg-linear-to-br from-white via-slate-50 to-white p-3 shadow-sm sm:rounded-[32px] sm:p-6">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0 space-y-2">
           <p className="eyebrow text-indigo-500">{t('timeline.publishingResume')}</p>
           <h3 className="title-md text-slate-900">
             {heroName ? t('timeline.recordedSaga', { heroName }) : t('timeline.recordedSagaFallback')}
@@ -982,7 +982,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           </p>
         </div>
         {state.status === 'success' ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-center text-white shadow-inner shadow-slate-900/20">
+          <div className="w-fit max-w-full rounded-2xl border border-slate-200 bg-slate-900 px-4 py-3 text-center text-white shadow-inner shadow-slate-900/20">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-white/70">{t('timeline.coverage')}</p>
             <p className="text-xl font-black tracking-wide">{timelineRange.label}</p>
             <p className="text-xs text-white/70">{t('timeline.trackedIssues', { count: totalIssues })}</p>
@@ -992,13 +992,13 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
       {state.status === 'success' ? (
         <div className="mt-6 space-y-6">
-          <div className="w-full overflow-x-auto">
-            <div role="tablist" aria-label={t('timeline.publishingResume')} className="inline-flex min-w-full items-end gap-2 border-b border-border/80">
+          <div className="w-full min-w-0">
+            <div role="tablist" aria-label={t('timeline.publishingResume')} className="grid min-w-0 grid-cols-2 items-stretch gap-1 border-b border-border/80 md:inline-flex md:min-w-full md:items-end md:gap-2">
               <button
                 type="button"
                 role="tab"
                 aria-selected={insightTab === 'progress'}
-                className={`-mb-px rounded-t-xl border-x border-t border-b px-4 py-2 text-sm font-semibold transition ${
+                className={`-mb-px min-w-0 whitespace-normal break-words rounded-t-xl border-x border-t border-b px-2 py-2 text-center text-xs font-semibold leading-tight transition md:px-4 md:text-sm ${
                   insightTab === 'progress'
                     ? 'border-primary/70 border-b-card bg-card text-foreground shadow-sm'
                     : 'border-transparent text-muted-foreground hover:bg-accent/40 hover:text-foreground'
@@ -1011,7 +1011,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                 type="button"
                 role="tab"
                 aria-selected={insightTab === 'collected'}
-                className={`-mb-px rounded-t-xl border-x border-t border-b px-4 py-2 text-sm font-semibold transition ${
+                className={`-mb-px min-w-0 whitespace-normal break-words rounded-t-xl border-x border-t border-b px-2 py-2 text-center text-xs font-semibold leading-tight transition md:px-4 md:text-sm ${
                   insightTab === 'collected'
                     ? 'border-primary/70 border-b-card bg-card text-foreground shadow-sm'
                     : 'border-transparent text-muted-foreground hover:bg-accent/40 hover:text-foreground'
@@ -1025,10 +1025,10 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
 
           {insightTab === 'progress' ? (
             <>
-              <div className="space-y-4 rounded-3xl border border-slate-100 bg-white/60 p-4 shadow-inner">
+              <div className="min-w-0 space-y-4 rounded-2xl border border-slate-100 bg-white/60 p-3 shadow-inner sm:rounded-3xl sm:p-4">
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectionProgress')}</p>
                 {isAuthenticated ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid min-w-0 gap-3 md:grid-cols-2 md:gap-4">
                     <GaugeCard label={t('timeline.haveIt')} count={haveItCount} total={totalIssues} accentClass="text-emerald-500" t={t} />
                     <GaugeCard label={t('timeline.readIt')} count={readItCount} total={totalIssues} accentClass="text-indigo-500" t={t} />
                   </div>
@@ -1075,14 +1075,14 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           ) : null}
 
           {insightTab === 'collected' ? (
-            <div className="space-y-3 rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
+            <div className="min-w-0 space-y-3 rounded-2xl border border-slate-100 bg-white/80 p-3 shadow-sm sm:p-4">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">{t('timeline.collectedCoverageTitle')}</p>
                   <p className="text-xs text-slate-500">{t('timeline.collectedCoverageSubtitle')}</p>
                 </div>
                 {collectedEditions.length ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[28rem]">
+                  <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:min-w-[28rem]">
                     <CollectedFilterSelect
                       label={t('timeline.collectedLanguageFilter')}
                       value={collectedLanguageFilter}
@@ -1109,7 +1109,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                         total: collectedEditions.length,
                       })}
                     </p>
-                    <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="grid min-w-0 gap-3 lg:grid-cols-2">
                   {filteredCollectedEditions.map((edition) => {
                     const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
                     const stageCoverage = buildStageCoverageMap(edition.stages)
@@ -1128,8 +1128,8 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                       !editionTimelineIssueIds.length
 
                     return (
-                      <article key={edition.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                        <div className="flex gap-3">
+                      <article key={edition.id} className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                        <div className="flex min-w-0 gap-3">
                           <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
                             {coverImage ? (
                               <img
@@ -1145,9 +1145,9 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                             )}
                           </div>
                           <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex min-w-0 items-start justify-between gap-2">
+                            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                               <p className="min-w-0 body-sm font-semibold break-words text-slate-900">{edition.title}</p>
-                              <div className="flex shrink-0 items-center gap-1.5">
+                              <div className="flex shrink-0 items-center gap-1.5 self-start sm:self-auto">
                                 <button
                                   type="button"
                                   aria-pressed={isEditionOwned}
