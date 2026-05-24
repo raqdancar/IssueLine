@@ -63,9 +63,42 @@ const moonKnightTheme = {
   '--ring': '#ED2924',
 }
 
+const tintinTheme = {
+  '--color-slate-50': '#F5E7C8',
+  '--color-slate-100': '#F5E7C8',
+  '--color-slate-200': '#E3B23C',
+  '--color-slate-300': '#C49A6C',
+  '--color-slate-400': '#7DB9E8',
+  '--color-slate-500': '#1E3A5F',
+  '--color-slate-600': '#1E3A5F',
+  '--color-slate-700': '#111111',
+  '--color-slate-800': '#111111',
+  '--color-slate-900': '#111111',
+  '--color-slate-950': '#111111',
+  '--background': '#F5E7C8',
+  '--foreground': '#111111',
+  '--card': '#FFF8E6',
+  '--card-foreground': '#111111',
+  '--popover': '#FFF8E6',
+  '--popover-foreground': '#111111',
+  '--primary': '#D94A3A',
+  '--primary-foreground': '#FFFFFF',
+  '--secondary': '#1E3A5F',
+  '--secondary-foreground': '#FFFFFF',
+  '--muted': '#F5E7C8',
+  '--muted-foreground': '#1E3A5F',
+  '--accent': '#E3B23C',
+  '--accent-foreground': '#111111',
+  '--destructive': '#D94A3A',
+  '--border': '#C49A6C',
+  '--input': '#C49A6C',
+  '--ring': '#1E3A5F',
+}
+
 const heroThemesBySlug = {
   'doctor-strange': doctorStrangeTheme,
   'moon-knight': moonKnightTheme,
+  "tintin": tintinTheme,
 }
 
 export const resolveHeroThemeStyle = (slug) => {
