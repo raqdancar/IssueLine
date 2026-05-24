@@ -11,7 +11,15 @@ import CoverFullscreenViewer from './CoverFullscreenViewer'
 import IssueDetailsDialog from './issue-details/IssueDetailsDialog'
 import IssueOwnershipFormatDialog from './issue-details/IssueOwnershipFormatDialog'
 import { isAnnualIssueEntry } from './timeline/utils'
-import { getEntryDomId, getIssueKey, getStageKey, resolveMonthBucket, resolveYearBucket } from '../utils/timeline'
+import {
+  compareTimelineEntries,
+  getEntryDomId,
+  getIssueKey,
+  getStageKey,
+  resolveMonthBucket,
+  resolveTimelineOrder,
+  resolveYearBucket,
+} from '../utils/timeline'
 import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
@@ -27,6 +35,7 @@ import {
   ZOOM_STEP,
   indexModeOptions,
   severityVariants,
+  timelineOrderModeOptions,
   timelinePublicationFilterOptions,
   timelineSortOptions,
 } from './timeline/constants'
@@ -36,6 +45,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const sectionRef = useRef(null)
   const apiBaseUrl = backendBaseUrl
   const [sortDirection, setSortDirection] = useState('desc')
+  const [timelineOrderMode, setTimelineOrderMode] = useState('canonical')
   const [indexMode, setIndexMode] = useState('month')
   const [publicationFilter, setPublicationFilter] = useState('all')
   const [collectionFilters, setCollectionFilters] = useState({
@@ -121,17 +131,18 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   }, [slug])
 
   const severityLookup = useMemo(() => severityVariants, [])
+  const hasCanonicalTimelineOrder = useMemo(
+    () => entries.some((entry) => resolveTimelineOrder(entry) !== null),
+    [entries],
+  )
   const orderedEntries = useMemo(() => {
-    const direction = sortDirection === 'asc' ? 1 : -1
-    return [...entries].sort((a, b) => {
-      const aDate = new Date(a.issue_date ?? 0).getTime()
-      const bDate = new Date(b.issue_date ?? 0).getTime()
-      const safeADate = Number.isNaN(aDate) ? 0 : aDate
-      const safeBDate = Number.isNaN(bDate) ? 0 : bDate
-      if (safeADate === safeBDate) return 0
-      return direction * (safeADate - safeBDate)
-    })
-  }, [entries, sortDirection])
+    const useCanonicalOrder = hasCanonicalTimelineOrder && timelineOrderMode === 'canonical'
+    return [...entries].sort((a, b) =>
+      compareTimelineEntries(a, b, useCanonicalOrder ? 'asc' : sortDirection, {
+        useTimelineOrder: useCanonicalOrder,
+      }),
+    )
+  }, [entries, hasCanonicalTimelineOrder, sortDirection, timelineOrderMode])
   const filteredEntries = useMemo(() => {
     // Combine publication filters with user collection/read filters.
     const publicationFilterMatch = (entry) => {
@@ -606,6 +617,10 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         sortOptions={timelineSortOptions}
         sortDirection={sortDirection}
         onSortChange={setSortDirection}
+        timelineOrderMode={hasCanonicalTimelineOrder ? timelineOrderMode : 'publication'}
+        timelineOrderOptions={timelineOrderModeOptions}
+        onTimelineOrderModeChange={setTimelineOrderMode}
+        hasCanonicalTimelineOrder={hasCanonicalTimelineOrder}
         zoomPercentage={zoomPercentage}
         onZoomIn={() => adjustZoomLevel(ZOOM_STEP)}
         onZoomOut={() => adjustZoomLevel(-ZOOM_STEP)}

@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { Maximize2, Minimize2 } from 'lucide-react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
+import { compareTimelineEntries, resolveTimelineOrder } from '@/utils/timeline'
 import TimelineStageTab from './timeline/TimelineStageTab'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
 import TimelineIssueToolbar from './timeline/TimelineIssueToolbar'
@@ -42,7 +43,18 @@ const resolveYear = (entry) => {
   return 'Unknown'
 }
 
-const groupEntriesByYear = (entries, direction = 'desc') => {
+const groupEntriesByYear = (entries, direction = 'desc', orderMode = 'publication') => {
+  const hasCanonicalTimelineOrder = entries.some((entry) => resolveTimelineOrder(entry) !== null)
+
+  if (hasCanonicalTimelineOrder && orderMode === 'canonical') {
+    return [
+      {
+        year: 'Canonical order',
+        entries: [...entries].sort((a, b) => compareTimelineEntries(a, b, 'asc', { useTimelineOrder: true })),
+      },
+    ]
+  }
+
   const groups = new Map()
   for (const entry of entries) {
     const year = resolveYear(entry)
@@ -83,6 +95,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
   const [sortDirection, setSortDirection] = useState('desc')
+  const [timelineOrderMode, setTimelineOrderMode] = useState('canonical')
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
@@ -216,7 +229,14 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   }
   const shouldShowBackToTop = isMobileViewport && showBackToTop
 
-  const groupedEntries = useMemo(() => groupEntriesByYear(entries, sortDirection), [entries, sortDirection])
+  const hasCanonicalTimelineOrder = useMemo(
+    () => entries.some((entry) => resolveTimelineOrder(entry) !== null),
+    [entries],
+  )
+  const groupedEntries = useMemo(
+    () => groupEntriesByYear(entries, sortDirection, timelineOrderMode),
+    [entries, sortDirection, timelineOrderMode],
+  )
 
   if (!slug) {
     return (
@@ -287,6 +307,29 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
             </button>
           ) : null}
           <div className="flex items-center gap-2">
+            {hasCanonicalTimelineOrder ? (
+              <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
+                {[
+                  { label: t('timeline.canonicalOrder'), value: 'canonical' },
+                  { label: t('timeline.publicationOrder'), value: 'publication' },
+                ].map((option) => {
+                  const isActive = timelineOrderMode === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setTimelineOrderMode(option.value)}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                        isActive ? 'bg-indigo-200 text-slate-950 shadow' : 'text-slate-200 hover:text-white'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : null}
             <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('timeline.sort')}</span>
             <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
               {[{ label: t('timeline.newestFirst'), value: 'desc' }, { label: t('timeline.oldestFirst'), value: 'asc' }].map((option) => {

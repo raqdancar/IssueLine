@@ -13,6 +13,10 @@ function TimelineHeader({
   sortOptions,
   sortDirection,
   onSortChange,
+  timelineOrderMode = 'publication',
+  timelineOrderOptions = [],
+  onTimelineOrderModeChange,
+  hasCanonicalTimelineOrder = false,
   zoomPercentage,
   onZoomIn,
   onZoomOut,
@@ -79,6 +83,31 @@ function TimelineHeader({
             {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
             {isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
           </button>
+        ) : null}
+        {hasCanonicalTimelineOrder && timelineOrderOptions.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="body-xs text-slate-500">{t('timeline.orderMode')}</span>
+            <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+              {timelineOrderOptions.map((option) => {
+                const isActive = timelineOrderMode === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => onTimelineOrderModeChange?.(option.value)}
+                    className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                      isActive
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {t(option.labelKey)}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
           <span className="body-xs text-slate-500">{t('timeline.sortByDate')}</span>

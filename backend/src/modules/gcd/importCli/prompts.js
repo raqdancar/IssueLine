@@ -16,10 +16,12 @@ const parseYesNo = (value) => {
 
 const parseSeriesId = (value) => {
   const normalized = String(value ?? '').trim()
-  if (!/^\d+$/.test(normalized)) {
+  const match = normalized.match(/(?:^|\/)series\/(\d+)\/?$/i) ?? normalized.match(/^(\d+)$/)
+  const rawId = match?.[1] ?? null
+  if (!rawId) {
     return null
   }
-  const numeric = Number(normalized)
+  const numeric = Number(rawId)
   if (!Number.isSafeInteger(numeric) || numeric <= 0) {
     return null
   }
@@ -82,9 +84,9 @@ export const promptImportConfig = async ({ heroSlugOverride: preselectedHeroSlug
   try {
     const seriesId = await askUntilValid({
       rl,
-      question: 'Enter GCD series ID: ',
+      question: 'Enter GCD series ID or URL: ',
       parser: parseSeriesId,
-      errorMessage: 'Please enter a positive numeric GCD series ID.',
+      errorMessage: 'Please enter a positive numeric GCD series ID or a URL like https://www.comics.org/series/95422/.',
     })
 
     const heroSlugOverride =

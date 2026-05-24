@@ -70,3 +70,52 @@ export const getIssueKey = (entry) => {
   const shortLabel = numberLabel.startsWith('#') ? numberLabel : `#${numberLabel}`
   return { key: normalized, label: shortLabel }
 }
+
+export const resolveTimelineOrder = (entry) => {
+  const meta = entry?.metadata ?? {}
+  const value = meta.timelineOrder ?? meta.timeline_order
+  const numeric = Number(value)
+  return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null
+}
+
+const resolveEntryTimestamp = (entry) => {
+  const meta = entry?.metadata ?? {}
+  const rawDate =
+    entry?.issue_date ||
+    meta.issueDate ||
+    meta.issue_date ||
+    meta.keyDate ||
+    meta.key_date ||
+    meta.publication_date ||
+    meta.publicationDate
+
+  const timestamp = new Date(rawDate ?? 0).getTime()
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+const resolveGcdIssueId = (entry) => {
+  const meta = entry?.metadata ?? {}
+  const numeric = Number(meta.gcdIssueId ?? meta.gcd_issue_id)
+  return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : 0
+}
+
+export const compareTimelineEntries = (a, b, direction = 'asc', options = {}) => {
+  const useTimelineOrder = options.useTimelineOrder ?? true
+
+  if (useTimelineOrder) {
+    const orderA = resolveTimelineOrder(a)
+    const orderB = resolveTimelineOrder(b)
+    if (orderA !== null || orderB !== null) {
+      const safeA = orderA ?? Number.POSITIVE_INFINITY
+      const safeB = orderB ?? Number.POSITIVE_INFINITY
+      if (safeA !== safeB) return safeA - safeB
+    }
+  }
+
+  const directionValue = direction === 'desc' ? -1 : 1
+  const dateA = resolveEntryTimestamp(a)
+  const dateB = resolveEntryTimestamp(b)
+  if (dateA !== dateB) return directionValue * (dateA - dateB)
+
+  return resolveGcdIssueId(a) - resolveGcdIssueId(b)
+}

@@ -27,6 +27,11 @@ export const timelineSortOptions = [
   { labelKey: 'timeline.oldestFirst', value: 'asc' },
 ]
 
+export const timelineOrderModeOptions = [
+  { labelKey: 'timeline.canonicalOrder', value: 'canonical' },
+  { labelKey: 'timeline.publicationOrder', value: 'publication' },
+]
+
 export const timelinePublicationFilterOptions = [
   { labelKey: 'timeline.allIssues', value: 'all' },
   { labelKey: 'timeline.annualsOnly', value: 'annuals' },

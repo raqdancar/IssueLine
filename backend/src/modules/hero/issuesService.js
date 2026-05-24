@@ -172,6 +172,36 @@ export const getHeroIssueCoverPathMap = async (heroApiId, gcdIssueIds) => {
   return lookup
 }
 
+export const getHeroIssueTimelineOrderMap = async (heroApiId, gcdIssueIds) => {
+  if (!heroApiId || !gcdIssueIds?.length) {
+    return new Map()
+  }
+
+  const identifiers = normalizeGcdIssueIds(gcdIssueIds)
+  if (!identifiers.length) {
+    return new Map()
+  }
+
+  const { data, error } = await supabaseServiceClient
+    .from('hero_issues')
+    .select('gcd_issue_id, timeline_order')
+    .eq('hero_api_id', heroApiId)
+    .in('gcd_issue_id', identifiers)
+
+  if (error) {
+    throw new Error(`Failed to load hero issue timeline order: ${error.message}`)
+  }
+
+  const lookup = new Map()
+  for (const row of data ?? []) {
+    const timelineOrder = Number(row.timeline_order)
+    if (!Number.isSafeInteger(timelineOrder) || timelineOrder <= 0) continue
+    lookup.set(row.gcd_issue_id, timelineOrder)
+  }
+
+  return lookup
+}
+
 const buildIssuePayloadFromRow = (row) => {
   if (row.raw) {
     const payload = {

@@ -11,7 +11,7 @@
  */
 
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
-import { getHeroIssueCoverPathMap } from './issuesService.js'
+import { getHeroIssueCoverPathMap, getHeroIssueTimelineOrderMap } from './issuesService.js'
 
 const normalizeIssueDate = (value) => {
   if (!value) {
@@ -78,6 +78,42 @@ const applyStageMetadataOverlay = (entry, stageMap = new Map()) => {
   }
 }
 
+const resolveEntryGcdIssueId = (entry = {}) => {
+  const metadata = entry.metadata ?? {}
+  const value = metadata.gcdIssueId ?? metadata.gcd_issue_id
+  const numeric = Number(value)
+  return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null
+}
+
+const resolveEntryTimelineOrder = (entry = {}) => {
+  const metadata = entry.metadata ?? {}
+  const value = metadata.timelineOrder ?? metadata.timeline_order
+  const numeric = Number(value)
+  return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null
+}
+
+const resolveEntryTimestamp = (entry = {}) => {
+  const timestamp = new Date(entry.issue_date ?? 0).getTime()
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
+const sortTimelineEntries = (entries = []) =>
+  [...entries].sort((a, b) => {
+    const orderA = resolveEntryTimelineOrder(a)
+    const orderB = resolveEntryTimelineOrder(b)
+    if (orderA !== null || orderB !== null) {
+      const safeA = orderA ?? Number.POSITIVE_INFINITY
+      const safeB = orderB ?? Number.POSITIVE_INFINITY
+      if (safeA !== safeB) return safeA - safeB
+    }
+
+    const dateA = resolveEntryTimestamp(a)
+    const dateB = resolveEntryTimestamp(b)
+    if (dateA !== dateB) return dateA - dateB
+
+    return (resolveEntryGcdIssueId(a) ?? 0) - (resolveEntryGcdIssueId(b) ?? 0)
+  })
+
 /**
  * Cerca un personatge per `slug` i retorna la seva informació bàsica.
  *
@@ -131,15 +167,11 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   const entries = data ?? []
   let enrichedEntries = entries
   const gcdIssueIds = entries
-    .map((entry) => {
-      const metadata = entry.metadata ?? {}
-      if (metadata.gcdIssueId) return Number(metadata.gcdIssueId)
-      if (metadata.gcd_issue_id) return Number(metadata.gcd_issue_id)
-      return null
-    })
+    .map((entry) => resolveEntryGcdIssueId(entry))
     .filter((value) => Number.isFinite(value))
 
   let coverLookup = new Map()
+  let timelineOrderLookup = new Map()
   if (gcdIssueIds.length) {
     try {
       coverLookup = await getHeroIssueCoverPathMap(heroApiId, gcdIssueIds)
@@ -150,23 +182,44 @@ export const getHeroTimelineEntries = async (heroApiId) => {
       )
       coverLookup = new Map()
     }
+
+    try {
+      timelineOrderLookup = await getHeroIssueTimelineOrderMap(heroApiId, gcdIssueIds)
+    } catch (timelineOrderLookupError) {
+      // Optional migration: heroes without timeline_order keep the default chronological ordering.
+      console.warn(
+        `[heroTimeline] timeline order enrichment skipped for hero ${heroApiId}: ${timelineOrderLookupError.message}`
+      )
+      timelineOrderLookup = new Map()
+    }
   }
 
-  if (coverLookup.size) {
+  if (coverLookup.size || timelineOrderLookup.size) {
     enrichedEntries = entries.map((entry) => {
       const metadata = entry.metadata ?? null
       if (!metadata) return entry
-      const gcdIssueId = metadata.gcdIssueId ?? metadata.gcd_issue_id
+      const gcdIssueId = resolveEntryGcdIssueId(entry)
       const coverPath = coverLookup.get(Number(gcdIssueId))
-      if (!coverPath) {
+      const timelineOrder = timelineOrderLookup.get(Number(gcdIssueId))
+      if (!coverPath && !timelineOrder) {
         return entry
       }
       return {
         ...entry,
         metadata: {
           ...metadata,
-          coverImagePath: coverPath,
-          cover_image_path: coverPath,
+          ...(coverPath
+            ? {
+                coverImagePath: coverPath,
+                cover_image_path: coverPath,
+              }
+            : {}),
+          ...(timelineOrder
+            ? {
+                timelineOrder,
+                timeline_order: timelineOrder,
+              }
+            : {}),
         },
       }
     })
@@ -183,7 +236,7 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   )
 
   if (!stageIds.length) {
-    return enrichedEntries
+    return sortTimelineEntries(enrichedEntries)
   }
 
   const { data: stageRows, error: stageError } = await supabaseServiceClient
@@ -210,10 +263,10 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   )
 
   if (!stageMap.size) {
-    return enrichedEntries
+    return sortTimelineEntries(enrichedEntries)
   }
 
-  return enrichedEntries.map((entry) => applyStageMetadataOverlay(entry, stageMap))
+  return sortTimelineEntries(enrichedEntries.map((entry) => applyStageMetadataOverlay(entry, stageMap)))
 }
 
 const toSafeInteger = (value) => {

@@ -24,6 +24,7 @@ const normalizeHeroNameCandidate = (value) => {
   return normalized
     .replace(/\([^)]*series[^)]*\)/gi, ' ')
     .replace(/\([^)]*\d{4}[^)]*\)/g, ' ')
+    .replace(/^(?:the\s+)?adventures?\s+of\s+/i, ' ')
     .replace(/\bvol(\.|ume)?\s*\d+\b/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim()
