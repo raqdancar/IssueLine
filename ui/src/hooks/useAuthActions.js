@@ -10,6 +10,15 @@ const initialFormValues = {
   confirmPassword: '',
 }
 
+const resolveAuthRedirectUrl = () => {
+  const configuredUrl = import.meta.env.VITE_AUTH_REDIRECT_URL?.trim()
+  if (configuredUrl) return configuredUrl
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/auth/verified`
+  }
+  return undefined
+}
+
 export const useAuthActions = ({ t, onSignedIn, onSignUpSuccess } = {}) => {
   const [formValues, setFormValues] = useState(initialFormValues)
   const [status, setStatus] = useState({ state: 'idle', message: '' })
@@ -34,6 +43,9 @@ export const useAuthActions = ({ t, onSignedIn, onSignUpSuccess } = {}) => {
     const credentials = {
       email: formValues.email.trim().toLowerCase(),
       password: formValues.password,
+      options: {
+        emailRedirectTo: resolveAuthRedirectUrl(),
+      },
     }
 
     const { data, error } = await supabase.auth.signInWithPassword(credentials)

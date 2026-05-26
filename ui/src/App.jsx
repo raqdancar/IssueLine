@@ -15,6 +15,7 @@ import { useAuthActions } from '@/hooks/useAuthActions.js'
 const HomePage = lazy(() => import('@/pages/HomePage'))
 const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
 const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
+const AuthVerified = lazy(() => import('@/pages/AuthVerified'))
 
 const formatSlugTitle = (slug) =>
   decodeURIComponent(slug)
@@ -32,6 +33,7 @@ function App() {
   const heroRouteMatch = useMatch('/heroes/:slug')
   const heroSlug = heroRouteMatch?.params?.slug ?? null
   const isAccountRoute = Boolean(useMatch('/account'))
+  const isAuthVerifiedRoute = Boolean(useMatch('/auth/verified'))
   const isHomeRoute = Boolean(useMatch({ path: '/', end: true }))
   const handleSignedIn = useCallback(() => {
     setAuthDialogOpen(false)
@@ -71,8 +73,9 @@ function App() {
     const appName = t('common.appName')
     if (heroTitle) return `${appName} | ${heroTitle}`
     if (isAccountRoute) return `${appName} | ${t('common.account')}`
+    if (isAuthVerifiedRoute) return `${appName} | ${t('authVerified.title')}`
     return `${appName} | ${t('app.heroVisualizer')}`
-  }, [heroTitle, isAccountRoute, t])
+  }, [heroTitle, isAccountRoute, isAuthVerifiedRoute, t])
   const routeFallback = <p className="body-sm text-slate-500">{t('common.loading')}</p>
 
   useEffect(() => {
@@ -124,6 +127,14 @@ function App() {
               element={
                 <Suspense fallback={routeFallback}>
                   <AccountSettings onRequireSignIn={openAuthDialog} />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/auth/verified"
+              element={
+                <Suspense fallback={routeFallback}>
+                  <AuthVerified onSignInClick={openAuthDialog} />
                 </Suspense>
               }
             />

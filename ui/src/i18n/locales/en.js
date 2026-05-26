@@ -45,6 +45,16 @@
     envVarsHint:
       'Copy .env.example to .env and add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY values.',
   },
+  authVerified: {
+    eyebrow: 'Account verified',
+    title: 'Email verified successfully',
+    subtitle: 'Your IssueLine account is now active.',
+    body: 'You can now sign in, save your collection, mark readings, and explore editorial timelines.',
+    signInCta: 'Sign in',
+    homeCta: 'Back to archive',
+    errorTitle: 'Email verification failed',
+    errorSubtitle: 'The verification link could not be completed.',
+  },
   footer: {
     ariaSiteFooter: 'Site footer',
     ariaFooterLinks: 'Footer links',

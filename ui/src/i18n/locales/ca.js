@@ -45,6 +45,16 @@ const messages = {
       envVarsHint:
         'Copia .env.example a .env i afegeix els valors VITE_SUPABASE_URL i VITE_SUPABASE_ANON_KEY.',
     },
+    authVerified: {
+      eyebrow: 'Compte verificat',
+      title: 'Email verificat correctament',
+      subtitle: 'El teu compte d IssueLine ja esta activat.',
+      body: 'Ja pots iniciar sessio i comencar a guardar la col leccio, marcar lectures i explorar timelines editorials.',
+      signInCta: 'Inicia sessio',
+      homeCta: 'Tornar a l arxiu',
+      errorTitle: 'No s ha pogut verificar l email',
+      errorSubtitle: 'L enllac de verificacio no s ha pogut completar.',
+    },
     footer: {
       ariaSiteFooter: 'Peu del lloc',
       ariaFooterLinks: 'Enllaços del peu',
