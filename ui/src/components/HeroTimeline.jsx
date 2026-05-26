@@ -23,9 +23,9 @@ import {
 import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
+import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
 import { useTimelineFullscreen } from '@/hooks/useTimelineFullscreen.js'
 import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
-import { parseJsonResponse } from '@/lib/httpClient.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import {
   COMPACT_DENSITY_THRESHOLD,
@@ -68,11 +68,9 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     selectedEditionIds: [],
     error: null,
   })
-  const [{ status, entries, error }, setState] = useState({
-    status: apiBaseUrl ? 'idle' : 'disabled',
-    entries: [],
-    error: null,
-  })
+  const timelineQuery = useHeroTimelineQuery(slug)
+  const { status, entries } = timelineQuery
+  const error = timelineQuery.errorMessage || t('timeline.loadingTimeline')
   const { isAuthenticated } = useSessionContext()
   const issueStatesQuery = useIssueStatesQuery(slug, {
     enabled: status === 'success' && Boolean(apiBaseUrl) && isAuthenticated,
@@ -93,35 +91,6 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const [showBackToTop, setShowBackToTop] = useState(false)
   const flashTimeoutRef = useRef(null)
   const { isFullscreen, fullscreenEnabled, toggleFullscreen } = useTimelineFullscreen(sectionRef)
-
-  // Load timeline entries for the current hero slug.
-  useEffect(() => {
-    if (!apiBaseUrl || !slug) return undefined
-
-    const controller = new AbortController()
-    setState((previous) => ({ ...previous, status: 'loading', error: null }))
-
-    const loadTimeline = async () => {
-      try {
-        const response = await fetch(`${apiBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
-          signal: controller.signal,
-        })
-        const payload = await parseJsonResponse(response)
-        setState({ status: 'success', entries: payload.entries ?? [], error: null })
-      } catch (fetchError) {
-        if (controller.signal.aborted) return
-        setState({
-          status: 'error',
-          entries: [],
-          error: fetchError.message || t('timeline.loadingTimeline'),
-        })
-      }
-    }
-
-    void loadTimeline()
-
-    return () => controller.abort()
-  }, [apiBaseUrl, slug])
 
   useEffect(() => {
     // Reset filters and selected issue when switching heroes.

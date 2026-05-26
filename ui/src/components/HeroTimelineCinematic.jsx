@@ -11,11 +11,10 @@ import TimelineIssueToolbar from './timeline/TimelineIssueToolbar'
 import { TimelineLoadingSkeleton } from './timeline/TimelineLoadingSkeleton'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
+import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
-import { parseJsonResponse } from '@/lib/httpClient.js'
 import { canUseFullscreen, exitDocumentFullscreen, isElementFullscreen, requestElementFullscreen } from '@/lib/fullscreen.js'
-
-const normalizeBaseUrl = (value) => value?.replace(/\/+$/, '')
+import { backendBaseUrl } from '@/utils/backend.js'
 
 const formatDate = (value, locale, t) => {
   if (!value) return t('timeline.dateTba')
@@ -92,7 +91,6 @@ const groupEntriesByYear = (entries, direction = 'desc', orderMode = 'publicatio
 function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc = null, timelineLogoAlt = null }) {
   const { t, locale } = useI18n()
   const sectionRef = useRef(null)
-  const backendBaseUrl = normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL)
   const [logoVisible, setLogoVisible] = useState(Boolean(timelineLogoSrc))
   const [sortDirection, setSortDirection] = useState('desc')
   const [timelineOrderMode, setTimelineOrderMode] = useState('canonical')
@@ -102,11 +100,9 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [fullscreenEnabled, setFullscreenEnabled] = useState(false)
   const { isAuthenticated } = useSessionContext()
-  const [{ status, entries, error }, setState] = useState({
-    status: backendBaseUrl ? 'idle' : 'disabled',
-    entries: [],
-    error: null,
-  })
+  const timelineQuery = useHeroTimelineQuery(slug)
+  const { status, entries } = timelineQuery
+  const error = timelineQuery.errorMessage || t('timeline.loadingTimeline')
   const issueStatesQuery = useIssueStatesQuery(slug, {
     enabled: status === 'success' && Boolean(backendBaseUrl) && isAuthenticated,
   })
@@ -118,35 +114,6 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   useEffect(() => {
     setLogoVisible(Boolean(timelineLogoSrc))
   }, [timelineLogoSrc])
-
-  // Load cinematic timeline entries for the active hero.
-  useEffect(() => {
-    if (!backendBaseUrl || !slug) return undefined
-
-    const controller = new AbortController()
-    setState((previous) => ({ ...previous, status: 'loading', error: null }))
-
-    const loadTimeline = async () => {
-      try {
-        const response = await fetch(`${backendBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
-          signal: controller.signal,
-        })
-        const payload = await parseJsonResponse(response)
-        setState({ status: 'success', entries: payload.entries ?? [], error: null })
-      } catch (fetchError) {
-        if (controller.signal.aborted) return
-        setState({
-          status: 'error',
-          entries: [],
-          error: fetchError.message || t('timeline.loadingTimeline'),
-        })
-      }
-    }
-
-    void loadTimeline()
-
-    return () => controller.abort()
-  }, [backendBaseUrl, slug, t])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined

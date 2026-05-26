@@ -5,6 +5,7 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "npm --prefix ui run dev",
+    "dev:all": "concurrently -n ui,backend -c cyan,magenta \"npm --prefix ui run dev\" \"npm --prefix backend run dev\"",
     "build": "npm --prefix ui install --include=optional --no-package-lock && npm --prefix ui run build",
     "preview": "npm --prefix ui run preview",
     "verify:prod": "node ./scripts/verify-production.mjs",
@@ -23,6 +24,7 @@
     "supabase:status": "npx supabase status"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "supabase": "^2.92.1"
   }
 }

@@ -10,8 +10,24 @@
  * compatibilitat amb dades parcials i diferents versions de metadades.
  */
 
-import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 import { getHeroIssueCoverPathMap, getHeroIssueTimelineOrderMap } from './issuesService.js'
+import {
+  deleteTimelineRowsByIds,
+  findHeroBySlug,
+  findHeroIssueByGcdIssueId,
+  findTimelineEntryById,
+  insertTimelineRow,
+  insertTimelineRows,
+  listCollectedEditionLinksByEditionIds,
+  listCollectedEditionsByHero,
+  listCollectedEditionsForHeroIssue,
+  listHeroIssuesByIds,
+  listStageRowsById,
+  listStageRowsByIds,
+  listTimelineEntries,
+  listTimelineMetadataRows,
+  updateTimelineRow,
+} from './repository.js'
 
 const normalizeIssueDate = (value) => {
   if (!value) {
@@ -122,24 +138,7 @@ const sortTimelineEntries = (entries = []) =>
  */
 
 export const getHeroBySlug = async (slug) => {
-  const normalizedSlug = slug?.trim().toLowerCase()
-  if (!normalizedSlug) {
-    throw new Error('Hero slug is required.')
-  }
-
-  const { data, error } = await supabaseServiceClient
-    .from('superheroes')
-    .select('api_id, name, slug, publisher')
-    .eq('slug', normalizedSlug)
-    .order('api_id', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  if (error) {
-    throw new Error(`Failed to fetch hero by slug: ${error.message}`)
-  }
-
-  return data
+  return findHeroBySlug(slug)
 }
 
 /**
@@ -154,17 +153,7 @@ export const getHeroBySlug = async (slug) => {
  */
 
 export const getHeroTimelineEntries = async (heroApiId) => {
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, special_issue, created_at')
-    .eq('hero_api_id', heroApiId)
-    .order('issue_date', { ascending: true })
-
-  if (error) {
-    throw new Error(`Failed to fetch timeline entries: ${error.message}`)
-  }
-
-  const entries = data ?? []
+  const entries = await listTimelineEntries(heroApiId)
   let enrichedEntries = entries
   const gcdIssueIds = entries
     .map((entry) => resolveEntryGcdIssueId(entry))
@@ -239,12 +228,10 @@ export const getHeroTimelineEntries = async (heroApiId) => {
     return sortTimelineEntries(enrichedEntries)
   }
 
-  const { data: stageRows, error: stageError } = await supabaseServiceClient
-    .from('hero_issue_stages')
-    .select('*')
-    .in('id', stageIds)
-
-  if (stageError) {
+  let stageRows = []
+  try {
+    stageRows = await listStageRowsByIds(stageIds)
+  } catch (stageError) {
     // Stage title syncing is optional. Keep timeline functional if the table/columns are not available yet.
     console.warn(
       `[heroTimeline] stage metadata overlay skipped for hero ${heroApiId}: ${stageError.message}`
@@ -389,20 +376,8 @@ const mapCollectedEditionRow = (row) => {
 }
 
 const loadCollectedEditionsForHeroIssue = async (heroIssueId) => {
-  if (!heroIssueId) return []
-
-  const { data, error } = await supabaseServiceClient
-    .from('collected_edition_issue_links')
-    .select(
-      'notes, collected_editions(id, title, subtitle, series_title, print_language, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn)'
-    )
-    .eq('hero_issue_id', heroIssueId)
-
-  if (error) {
-    throw new Error(`Failed to load collected editions for issue: ${error.message}`)
-  }
-
-  return (data ?? []).map(mapCollectedEditionRow).filter(Boolean)
+  const rows = await listCollectedEditionsForHeroIssue(heroIssueId)
+  return rows.map(mapCollectedEditionRow).filter(Boolean)
 }
 
 const resolveStageIdentityFromTimelineEntry = (timelineEntry = {}, stageIdentityById = new Map()) => {
@@ -446,31 +421,12 @@ const resolveGcdIssueIdFromMetadata = (metadata = {}) => {
 export const getHeroCollectedEditionsOverview = async (heroApiId) => {
   if (!heroApiId) return []
 
-  const { data: editionRows, error: editionError } = await supabaseServiceClient
-    .from('collected_editions')
-    .select('id, title, subtitle, print_language, publisher, publication_date, format, cover_image_url, source, source_external_id, source_series_id, isbn')
-    .eq('hero_api_id', heroApiId)
-    .order('publication_date', { ascending: true, nullsFirst: false })
-
-  if (editionError) {
-    throw new Error(`Failed to load collected editions overview: ${editionError.message}`)
-  }
-
-  const editions = editionRows ?? []
+  const editions = await listCollectedEditionsByHero(heroApiId)
   if (!editions.length) return []
 
   const collectedEditionIds = editions.map((row) => row.id)
 
-  const { data: linksRows, error: linksError } = await supabaseServiceClient
-    .from('collected_edition_issue_links')
-    .select('collected_edition_id, hero_issue_id, notes')
-    .in('collected_edition_id', collectedEditionIds)
-
-  if (linksError) {
-    throw new Error(`Failed to load collected-edition links: ${linksError.message}`)
-  }
-
-  const links = linksRows ?? []
+  const links = await listCollectedEditionLinksByEditionIds(collectedEditionIds)
   if (!links.length) {
     return editions.map((row) => ({
       id: row.id,
@@ -493,24 +449,8 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
 
   const heroIssueIds = Array.from(new Set(links.map((link) => link.hero_issue_id).filter(Boolean)))
 
-  const { data: heroIssueRows, error: heroIssueError } = await supabaseServiceClient
-    .from('hero_issues')
-    .select('id, gcd_issue_id, number, series_name, title')
-    .eq('hero_api_id', heroApiId)
-    .in('id', heroIssueIds)
-
-  if (heroIssueError) {
-    throw new Error(`Failed to load hero issues for collected overview: ${heroIssueError.message}`)
-  }
-
-  const { data: timelineRows, error: timelineError } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, metadata, stage_id')
-    .eq('hero_api_id', heroApiId)
-
-  if (timelineError) {
-    throw new Error(`Failed to load timeline metadata for collected overview: ${timelineError.message}`)
-  }
+  const heroIssueRows = await listHeroIssuesByIds({ heroApiId, heroIssueIds })
+  const timelineRows = await listTimelineMetadataRows(heroApiId)
 
   const stageIds = Array.from(
     new Set(
@@ -524,12 +464,8 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
   const stageIdentityById = new Map()
 
   if (stageIds.length) {
-    const { data: stageRows, error: stageError } = await supabaseServiceClient
-      .from('hero_issue_stages')
-      .select('*')
-      .in('id', stageIds)
-
-    if (!stageError) {
+    try {
+      const stageRows = await listStageRowsByIds(stageIds)
       for (const stage of stageRows ?? []) {
         const stageId = Number(stage?.id)
         if (!Number.isSafeInteger(stageId) || stageId <= 0) continue
@@ -539,7 +475,7 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
         if (!stageKey) continue
         stageIdentityById.set(stageId, { key: stageKey, name: stageName })
       }
-    } else {
+    } catch (stageError) {
       console.warn(
         `[heroTimeline] stage metadata overlay skipped for collected overview of hero ${heroApiId}: ${stageError.message}`
       )
@@ -642,17 +578,7 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
     throw new Error('Timeline issue identifier is required.')
   }
 
-  const { data: timelineEntry, error: timelineError } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, hero_api_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, created_at, updated_at')
-    .eq('hero_api_id', heroApiId)
-    .eq('id', issueId)
-    .limit(1)
-    .maybeSingle()
-
-  if (timelineError) {
-    throw new Error(`Failed to load timeline issue detail: ${timelineError.message}`)
-  }
+  const timelineEntry = await findTimelineEntryById({ heroApiId, issueId })
   if (!timelineEntry) {
     return null
   }
@@ -663,20 +589,7 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
   let heroIssueId = null
 
   if (gcdIssueId) {
-    const { data, error } = await supabaseServiceClient
-      .from('hero_issues')
-      .select(
-        'id, gcd_issue_id, series_id, series_name, number, volume, title, key_date, on_sale_date, publication_date, price, page_count, cover, cover_original, cover_image_path, raw'
-      )
-      .eq('hero_api_id', heroApiId)
-      .eq('gcd_issue_id', gcdIssueId)
-      .limit(1)
-      .maybeSingle()
-
-    if (error) {
-      throw new Error(`Failed to load cached issue metadata: ${error.message}`)
-    }
-    heroIssueRow = data ?? null
+    heroIssueRow = await findHeroIssueByGcdIssueId({ heroApiId, gcdIssueId })
     heroIssueId = heroIssueRow?.id ?? null
   }
 
@@ -685,15 +598,11 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
   let enrichedTimelineEntry = timelineEntry
 
   if (stageId) {
-    const { data: stageRows, error: stageError } = await supabaseServiceClient
-      .from('hero_issue_stages')
-      .select('*')
-      .eq('id', stageId)
-
-    if (!stageError) {
+    try {
+      const stageRows = await listStageRowsById(stageId)
       const stageMap = new Map((stageRows ?? []).map((stage) => [Number(stage.id), stage]))
       enrichedTimelineEntry = applyStageMetadataOverlay(timelineEntry, stageMap)
-    } else {
+    } catch (stageError) {
       console.warn(
         `[heroTimeline] stage metadata overlay skipped for timeline issue ${issueId}: ${stageError.message}`
       )
@@ -724,26 +633,16 @@ export const createHeroTimelineEntry = async ({
 }) => {
   const normalizedDate = normalizeIssueDate(issueDate)
 
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .insert({
-      hero_api_id: heroApiId,
-      headline,
-      summary,
-      issue_code: issueCode ?? null,
-      issue_date: normalizedDate,
-      source_url: sourceUrl ?? null,
-      severity,
-      metadata: metadata ?? null,
-    })
-    .select('*')
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to create hero timeline entry: ${error.message}`)
-  }
-
-  return data
+  return insertTimelineRow({
+    hero_api_id: heroApiId,
+    headline,
+    summary,
+    issue_code: issueCode ?? null,
+    issue_date: normalizedDate,
+    source_url: sourceUrl ?? null,
+    severity,
+    metadata: metadata ?? null,
+  })
 }
 
 /**
@@ -753,14 +652,7 @@ export const createHeroTimelineEntry = async ({
  */
 
 export const getExistingGcdIssueIds = async (heroApiId) => {
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('metadata')
-    .eq('hero_api_id', heroApiId)
-
-  if (error) {
-    throw new Error(`Failed to load existing hero timeline metadata: ${error.message}`)
-  }
+  const data = await listTimelineMetadataRows(heroApiId)
 
   const identifiers = new Set()
   for (const row of data ?? []) {
@@ -794,13 +686,7 @@ export const insertHeroTimelineEntries = async (heroApiId, entries) => {
     metadata: entry.metadata ?? null,
   }))
 
-  const { data, error } = await supabaseServiceClient.from('hero_timelines').insert(payload).select('*')
-
-  if (error) {
-    throw new Error(`Failed to create hero timeline entries: ${error.message}`)
-  }
-
-  return data ?? []
+  return insertTimelineRows(payload)
 }
 
 const chunk = (values, size = 100) => {
@@ -833,14 +719,7 @@ const resolveTimelineGcdIssueId = (entry) => {
 const loadTimelineRowsByGcdIssueId = async (heroApiId, gcdIssueIds) => {
   if (!gcdIssueIds.length) return new Map()
 
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, metadata')
-    .eq('hero_api_id', heroApiId)
-
-  if (error) {
-    throw new Error(`Failed to load hero timelines for upsert: ${error.message}`)
-  }
+  const data = await listTimelineMetadataRows(heroApiId)
 
   const targetSet = new Set(gcdIssueIds)
   const lookup = new Map()
@@ -903,12 +782,7 @@ export const upsertHeroTimelineEntriesByGcdIssueId = async (heroApiId, entries) 
     await Promise.all(
       batch.map(async ({ id, entry, gcdIssueId }) => {
         const payload = buildTimelinePayload(heroApiId, entry)
-        const { data, error } = await supabaseServiceClient
-          .from('hero_timelines')
-          .update(payload)
-          .eq('id', id)
-          .select('*')
-          .maybeSingle()
+        const { data, error } = await updateTimelineRow({ id, payload })
 
         if (error) {
           skipped.push({ gcdIssueId, id, reason: error.message })
@@ -947,14 +821,7 @@ export const deleteHeroTimelineEntriesByGcdIssueIds = async (heroApiId, gcdIssue
     return { deleted: 0, failed: [] }
   }
 
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, metadata')
-    .eq('hero_api_id', heroApiId)
-
-  if (error) {
-    throw new Error(`Failed to load hero timelines for delete: ${error.message}`)
-  }
+  const data = await listTimelineMetadataRows(heroApiId)
 
   const targetSet = new Set(targets)
   const idsToDelete = (data ?? [])
@@ -971,10 +838,7 @@ export const deleteHeroTimelineEntriesByGcdIssueIds = async (heroApiId, gcdIssue
   const failed = []
   let deleted = 0
   for (const batch of chunk(idsToDelete, 100)) {
-    const { error: deleteError, count } = await supabaseServiceClient
-      .from('hero_timelines')
-      .delete({ count: 'exact' })
-      .in('id', batch)
+    const { error: deleteError, count } = await deleteTimelineRowsByIds(batch)
 
     if (deleteError) {
       failed.push({ ids: batch, reason: deleteError.message })

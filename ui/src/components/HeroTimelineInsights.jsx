@@ -1,13 +1,13 @@
 ﻿// Render stage/collection insight panels and progress actions for a hero timeline.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookOpen, Check, CheckCircle2, ChevronDown, Info, Loader2 } from 'lucide-react'
-import { backendBaseUrl } from '@/utils/backend'
 import {
   useCollectedEditionReadMutation,
   useIssueStateMutation,
   useIssueStatesQuery,
   useStageReadMutation,
 } from '@/hooks/useIssueStates'
+import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
@@ -19,7 +19,6 @@ import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
 import { resolvePrintLanguageBadge } from '@/lib/printLanguage'
-import { parseJsonResponse } from '@/lib/httpClient.js'
 
 const COLLECTED_EDITION_IMAGE_BUCKET = import.meta.env.VITE_COLLECTED_EDITION_IMAGE_BUCKET ?? 'collected-edition-images'
 const ALL_FILTER_VALUE = 'all'
@@ -643,13 +642,22 @@ function StageAccordionItem({
 
 function HeroTimelineInsights({ heroSlug, heroName }) {
   const { t, locale } = useI18n()
-  const apiBaseUrl = backendBaseUrl
-  const [state, setState] = useState(() => ({
-    status: !apiBaseUrl || !heroSlug ? 'disabled' : 'idle',
-    entries: [],
-    collectedEditions: [],
-    error: null,
-  }))
+  const timelineQuery = useHeroTimelineQuery(heroSlug)
+  const state = useMemo(
+    () => ({
+      status: timelineQuery.status,
+      entries: timelineQuery.entries,
+      collectedEditions: timelineQuery.collectedEditionsOverview,
+      error: timelineQuery.errorMessage || t('timeline.loadingOverview'),
+    }),
+    [
+      timelineQuery.collectedEditionsOverview,
+      timelineQuery.entries,
+      timelineQuery.errorMessage,
+      timelineQuery.status,
+      t,
+    ],
+  )
   const [openStage, setOpenStage] = useState(null)
   const [insightTab, setInsightTab] = useState('progress')
   const [editionActionState, setEditionActionState] = useState({ pendingEditionId: null, pendingAction: null, error: null })
@@ -664,38 +672,6 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const issueStateMutation = useIssueStateMutation(heroSlug)
   const stageReadMutation = useStageReadMutation(heroSlug)
   const collectedEditionReadMutation = useCollectedEditionReadMutation(heroSlug)
-
-  // Fetch timeline entries plus collected-edition coverage for insights tabs.
-  useEffect(() => {
-    if (!apiBaseUrl || !heroSlug) {
-      setState({ status: 'disabled', entries: [], collectedEditions: [], error: null })
-      return undefined
-    }
-
-    const controller = new AbortController()
-    setState({ status: 'loading', entries: [], collectedEditions: [], error: null })
-
-    const loadEntries = async () => {
-      try {
-        const response = await fetch(`${apiBaseUrl}/hero-timelines/${encodeURIComponent(heroSlug)}`, {
-          signal: controller.signal,
-        })
-        const payload = await parseJsonResponse(response)
-        setState({
-          status: 'success',
-          entries: payload.entries ?? [],
-          collectedEditions: payload.collectedEditionsOverview ?? [],
-          error: null,
-        })
-      } catch (error) {
-        if (controller.signal.aborted) return
-        setState({ status: 'error', entries: [], collectedEditions: [], error: error.message || t('timeline.loadingOverview') })
-      }
-    }
-
-    void loadEntries()
-    return () => controller.abort()
-  }, [apiBaseUrl, heroSlug, t])
 
   const totalIssues = state.entries.length
   const collectedEditions = state.collectedEditions ?? []

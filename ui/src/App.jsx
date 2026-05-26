@@ -1,6 +1,6 @@
 // Compose the main frontend application shell and route views.
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
-import { Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { Route, Routes, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import AppHeader from '@/components/AppHeader'
 import Footer from '@/components/Footer'
 import AuthDialog from '@/components/AuthDialog'
@@ -12,19 +12,7 @@ import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { useHeroesCatalog } from '@/hooks/useHeroesCatalog.js'
 import { useSupabaseSession } from '@/hooks/useSupabaseSession.js'
 import { useAuthActions } from '@/hooks/useAuthActions.js'
-
-const HomePage = lazy(() => import('@/pages/HomePage'))
-const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
-const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
-const AuthVerified = lazy(() => import('@/pages/AuthVerified'))
-const StoragePolicy = lazy(() => import('@/pages/StoragePolicy'))
-
-const formatSlugTitle = (slug) =>
-  decodeURIComponent(slug)
-    .split('-')
-    .filter(Boolean)
-    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
-    .join(' ')
+import { appRoutes, getRouteDocumentTitle } from '@/routes/appRoutes.jsx'
 
 function App() {
   const { t, locale, setLocale } = useI18n()
@@ -34,12 +22,15 @@ function App() {
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false)
   const { session, navAvatarUrl } = useSupabaseSession()
   const { heroes, heroesStatus } = useHeroesCatalog({ t })
-  const heroRouteMatch = useMatch('/heroes/:slug')
-  const heroSlug = heroRouteMatch?.params?.slug ?? null
-  const isAccountRoute = Boolean(useMatch('/account'))
-  const isAuthVerifiedRoute = Boolean(useMatch('/auth/verified'))
-  const isPrivacyRoute = Boolean(useMatch('/privacy'))
-  const isHomeRoute = Boolean(useMatch({ path: '/', end: true }))
+  const activeRouteMatch = useMemo(() => {
+    for (const route of appRoutes) {
+      const match = matchPath({ path: route.path, end: route.end ?? true }, location.pathname)
+      if (match) return { route, params: match.params }
+    }
+    return { route: null, params: {} }
+  }, [location.pathname])
+  const heroSlug = activeRouteMatch.route?.id === 'heroDetail' ? activeRouteMatch.params.slug : null
+  const isHomeRoute = Boolean(activeRouteMatch.route?.isHome)
   const handleSignedIn = useCallback(() => {
     setAuthDialogOpen(false)
     setAuthMode('sign-in')
@@ -73,16 +64,20 @@ function App() {
     [session],
   )
   const shellThemeStyle = useMemo(() => resolveHeroThemeStyle(heroSlug), [heroSlug])
-  const heroTitle = heroSlug ? formatSlugTitle(heroSlug) : null
-  const documentTitle = useMemo(() => {
-    const appName = t('common.appName')
-    if (heroTitle) return `${appName} | ${heroTitle}`
-    if (isAccountRoute) return `${appName} | ${t('common.account')}`
-    if (isAuthVerifiedRoute) return `${appName} | ${t('authVerified.title')}`
-    if (isPrivacyRoute) return `${appName} | ${t('privacy.title')}`
-    return `${appName} | ${t('app.heroVisualizer')}`
-  }, [heroTitle, isAccountRoute, isAuthVerifiedRoute, isPrivacyRoute, t])
+  const documentTitle = useMemo(
+    () => getRouteDocumentTitle({ route: activeRouteMatch.route, params: activeRouteMatch.params, t }),
+    [activeRouteMatch.params, activeRouteMatch.route, t],
+  )
   const routeFallback = <p className="body-sm text-slate-500">{t('common.loading')}</p>
+  const routeRenderContext = useMemo(
+    () => ({
+      heroes,
+      heroesStatus,
+      authStatus: status,
+      openAuthDialog,
+    }),
+    [heroes, heroesStatus, openAuthDialog, status],
+  )
 
   useEffect(() => {
     document.title = documentTitle
@@ -133,46 +128,13 @@ function App() {
           }
         >
           <Routes>
-            <Route
-              path="/"
-              element={
-                <Suspense fallback={routeFallback}>
-                  <HomePage heroes={heroes} heroesStatus={heroesStatus} authStatus={status} />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/heroes/:slug"
-              element={
-                <Suspense fallback={routeFallback}>
-                  <HeroDetail />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/account"
-              element={
-                <Suspense fallback={routeFallback}>
-                  <AccountSettings onRequireSignIn={openAuthDialog} />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/auth/verified"
-              element={
-                <Suspense fallback={routeFallback}>
-                  <AuthVerified onSignInClick={openAuthDialog} />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/privacy"
-              element={
-                <Suspense fallback={routeFallback}>
-                  <StoragePolicy />
-                </Suspense>
-              }
-            />
+            {appRoutes.map((route) => (
+              <Route
+                key={route.id}
+                path={route.path}
+                element={<Suspense fallback={routeFallback}>{route.render(routeRenderContext)}</Suspense>}
+              />
+            ))}
           </Routes>
 
           {!isSupabaseConfigured && (

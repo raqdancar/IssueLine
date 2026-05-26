@@ -6,9 +6,9 @@ import { TimelineInsightsSkeleton, TimelineLoadingSkeleton } from '@/components/
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
-import { backendBaseUrl } from '@/utils/backend.js'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { fetchHeroBySlugWithImages } from '@/lib/heroesApi.js'
+import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
 
 const HeroTimelineCinematic = lazy(() => import('@/components/HeroTimelineCinematic'))
 const HeroTimelineInsights = lazy(() => import('@/components/HeroTimelineInsights'))
@@ -49,7 +49,6 @@ function HeroDetail() {
   })
   const [timelineView, setTimelineView] = useState('classic')
   const [timelineLogoUnavailable, setTimelineLogoUnavailable] = useState(false)
-  const [timelineBackdropCovers, setTimelineBackdropCovers] = useState([])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase || !slug) {
@@ -97,10 +96,27 @@ function HeroDetail() {
   const timelineLogoSrc = hero?.slug ? `${timelineLogoBaseUrl}/${hero.slug}.png` : null
   const timelineLogoAlt = hero?.name ? `${hero.name} timeline logo` : null
   const hasTimelineLogo = Boolean(timelineLogoSrc) && !timelineLogoUnavailable
+  const timelineBackdropQuery = useHeroTimelineQuery(slug, { enabled: hasTimelineLogo })
   const showcaseImageSrc = hasTimelineLogo ? timelineLogoSrc : imageSrc
   const showcaseImageAlt = hasTimelineLogo ? timelineLogoAlt : imageAlt
   const alignment = hero?.alignment?.toLowerCase()
   const stats = hero?.powerstats ?? {}
+  const timelineBackdropCovers = useMemo(() => {
+    if (!hasTimelineLogo || timelineBackdropQuery.status !== 'success') {
+      return []
+    }
+
+    const coverCandidates = timelineBackdropQuery.entries
+      .map((entry) => resolveIssueCoverImage(entry?.metadata ?? {}, null))
+      .filter(Boolean)
+
+    if (!coverCandidates.length) {
+      return []
+    }
+
+    const uniqueCovers = Array.from(new Set(coverCandidates))
+    return shuffleArray(uniqueCovers).slice(0, 16)
+  }, [hasTimelineLogo, timelineBackdropQuery.entries, timelineBackdropQuery.status])
   const animatedBackdropCovers = useMemo(
     () => (timelineBackdropCovers.length ? [...timelineBackdropCovers, ...timelineBackdropCovers] : []),
     [timelineBackdropCovers],
@@ -109,54 +125,6 @@ function HeroDetail() {
   useEffect(() => {
     setTimelineLogoUnavailable(false)
   }, [timelineLogoSrc])
-
-  useEffect(() => {
-    if (!slug || !backendBaseUrl || !hasTimelineLogo) {
-      setTimelineBackdropCovers([])
-      return undefined
-    }
-
-    const controller = new AbortController()
-    let active = true
-
-    const loadTimelineBackdropCovers = async () => {
-      try {
-        const response = await fetch(`${backendBaseUrl}/hero-timelines/${encodeURIComponent(slug)}`, {
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          setTimelineBackdropCovers([])
-          return
-        }
-
-        const payload = await response.json()
-        const coverCandidates = (payload?.entries ?? [])
-          .map((entry) => resolveIssueCoverImage(entry?.metadata ?? {}, null))
-          .filter(Boolean)
-
-        if (!active || !coverCandidates.length) {
-          if (active) setTimelineBackdropCovers([])
-          return
-        }
-
-        const uniqueCovers = Array.from(new Set(coverCandidates))
-        const randomized = shuffleArray(uniqueCovers).slice(0, 16)
-        if (active) {
-          setTimelineBackdropCovers(randomized)
-        }
-      } catch {
-        if (active) setTimelineBackdropCovers([])
-      }
-    }
-
-    void loadTimelineBackdropCovers()
-
-    return () => {
-      active = false
-      controller.abort()
-    }
-  }, [hasTimelineLogo, slug])
 
   const detailHeader = useMemo(
     () => (

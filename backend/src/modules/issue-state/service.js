@@ -9,9 +9,18 @@
  */
 
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
-
-const ISSUE_STATES_TABLE = 'user_issue_states'
-const ISSUE_COLLECTED_EDITIONS_TABLE = 'user_issue_collected_editions'
+import {
+  ISSUE_COLLECTED_EDITIONS_TABLE,
+  ISSUE_STATES_TABLE,
+  deleteCollectedEditionSelectionsForIssue,
+  findTimelineIssue,
+  findUserIssueStateRecord,
+  insertCollectedEditionSelections,
+  listCollectedEditionSelections,
+  listIssueStates,
+  listTimelineIssueIdsForHero,
+  listTimelineRowsForHero,
+} from './repository.js'
 
 const isMissingRelationError = (error) => {
   const code = error?.code ?? ''
@@ -58,14 +67,7 @@ const resolveStageKey = (metadata = {}) => {
 }
 
 const fetchHeroTimelineStageMap = async (heroApiId) => {
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, metadata')
-    .eq('hero_api_id', heroApiId)
-
-  if (error) {
-    throw new Error(`Failed to load hero timeline entries: ${error.message}`)
-  }
+  const data = await listTimelineRowsForHero(heroApiId, 'id, metadata')
 
   const stageIndex = new Map()
   for (const entry of data ?? []) {
@@ -88,43 +90,15 @@ const fetchHeroTimelineStageMap = async (heroApiId) => {
  */
 
 export const getHeroTimelineIssueIds = async (heroApiId) => {
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id')
-    .eq('hero_api_id', heroApiId)
-
-  if (error) {
-    throw new Error(`Failed to load hero timeline entries: ${error.message}`)
-  }
-
-  return (data ?? []).map((entry) => entry.id)
+  return listTimelineIssueIdsForHero(heroApiId)
 }
 
 const fetchUserIssueStateRecord = async (userId, issueId) => {
-  const { data, error } = await supabaseServiceClient
-    .from(ISSUE_STATES_TABLE)
-    .select('id, have_it, read_it')
-    .eq('user_id', userId)
-    .eq('issue_id', issueId)
-    .maybeSingle()
-
-  if (error && error.code !== 'PGRST116') {
-    throw new Error(`Failed to load existing issue state: ${error.message}`)
-  }
-
-  return data ?? null
+  return findUserIssueStateRecord({ userId, issueId })
 }
 
 const ensureIssueExists = async (issueId) => {
-  const { data, error } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, hero_api_id, metadata')
-    .eq('id', issueId)
-    .maybeSingle()
-
-  if (error) {
-    throw new Error(`Failed to verify hero timeline issue: ${error.message}`)
-  }
+  const data = await findTimelineIssue(issueId)
   if (!data) {
     const err = new Error(`Hero timeline issue "${issueId}" was not found.`)
     err.statusCode = 404
@@ -137,11 +111,7 @@ const ensureIssueExists = async (issueId) => {
 const getCollectedEditionSelectionsByIssueIds = async ({ userId, issueIds }) => {
   if (!userId || !issueIds?.length) return new Map()
 
-  const { data, error } = await supabaseServiceClient
-    .from(ISSUE_COLLECTED_EDITIONS_TABLE)
-    .select('issue_id, collected_edition_id')
-    .eq('user_id', userId)
-    .in('issue_id', issueIds)
+  const { data, error } = await listCollectedEditionSelections({ userId, issueIds })
 
   if (error) {
     if (isMissingRelationError(error)) {
@@ -218,11 +188,7 @@ const syncCollectedEditionSelections = async ({ userId, issueId, collectedEditio
   if (!userId || !issueId) return
   const nextIds = Array.from(new Set(collectedEditionIds ?? []))
 
-  const { error: deleteError } = await supabaseServiceClient
-    .from(ISSUE_COLLECTED_EDITIONS_TABLE)
-    .delete()
-    .eq('user_id', userId)
-    .eq('issue_id', issueId)
+  const { error: deleteError } = await deleteCollectedEditionSelectionsForIssue({ userId, issueId })
 
   if (deleteError) {
     if (isMissingRelationError(deleteError)) {
@@ -239,9 +205,7 @@ const syncCollectedEditionSelections = async ({ userId, issueId, collectedEditio
     collected_edition_id: collectedEditionId,
   }))
 
-  const { error: insertError } = await supabaseServiceClient
-    .from(ISSUE_COLLECTED_EDITIONS_TABLE)
-    .insert(payload)
+  const { error: insertError } = await insertCollectedEditionSelections(payload)
 
   if (insertError) {
     if (isMissingRelationError(insertError)) {
@@ -264,14 +228,7 @@ const mapHeroIssueIdsToTimelineIssueIds = async ({ heroApiId, heroIssueIds }) =>
     throw new Error(`Failed to load hero issues for ownership propagation: ${heroIssueError.message}`)
   }
 
-  const { data: timelineRows, error: timelineError } = await supabaseServiceClient
-    .from('hero_timelines')
-    .select('id, metadata')
-    .eq('hero_api_id', heroApiId)
-
-  if (timelineError) {
-    throw new Error(`Failed to load timeline issues for ownership propagation: ${timelineError.message}`)
-  }
+  const timelineRows = await listTimelineRowsForHero(heroApiId, 'id, metadata')
 
   const timelineIssueIdByGcdIssueId = new Map()
   for (const row of timelineRows ?? []) {
@@ -402,20 +359,12 @@ export const getUserIssueStatesByIssueIds = async ({ userId, issueIds }) => {
     return []
   }
 
-  const [stateResult, ownershipSelections] = await Promise.all([
-    supabaseServiceClient
-      .from(ISSUE_STATES_TABLE)
-      .select('issue_id, have_it, read_it, updated_at')
-      .eq('user_id', userId)
-      .in('issue_id', issueIds),
+  const [stateRows, ownershipSelections] = await Promise.all([
+    listIssueStates({ userId, issueIds }),
     getCollectedEditionSelectionsByIssueIds({ userId, issueIds }),
   ])
 
-  if (stateResult.error) {
-    throw new Error(`Failed to load issue states: ${stateResult.error.message}`)
-  }
-
-  return (stateResult.data ?? []).map((row) =>
+  return (stateRows ?? []).map((row) =>
     mapStateRow(row, ownershipSelections.get(row.issue_id) ?? [])
   )
 }
