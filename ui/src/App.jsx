@@ -1,9 +1,10 @@
 // Compose the main frontend application shell and route views.
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
-import { Route, Routes, useMatch } from 'react-router-dom'
+import { Route, Routes, useLocation, useMatch, useNavigate } from 'react-router-dom'
 import AppHeader from '@/components/AppHeader'
 import Footer from '@/components/Footer'
 import AuthDialog from '@/components/AuthDialog'
+import StorageNotice from '@/components/StorageNotice'
 import { isSupabaseConfigured } from '@/lib/supabaseClient'
 import { SessionProvider } from '@/lib/sessionContext.jsx'
 import { resolveHeroThemeStyle } from '@/lib/heroThemes'
@@ -16,6 +17,7 @@ const HomePage = lazy(() => import('@/pages/HomePage'))
 const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
 const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
 const AuthVerified = lazy(() => import('@/pages/AuthVerified'))
+const StoragePolicy = lazy(() => import('@/pages/StoragePolicy'))
 
 const formatSlugTitle = (slug) =>
   decodeURIComponent(slug)
@@ -26,6 +28,8 @@ const formatSlugTitle = (slug) =>
 
 function App() {
   const { t, locale, setLocale } = useI18n()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [authMode, setAuthMode] = useState('sign-in')
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false)
   const { session, navAvatarUrl } = useSupabaseSession()
@@ -34,6 +38,7 @@ function App() {
   const heroSlug = heroRouteMatch?.params?.slug ?? null
   const isAccountRoute = Boolean(useMatch('/account'))
   const isAuthVerifiedRoute = Boolean(useMatch('/auth/verified'))
+  const isPrivacyRoute = Boolean(useMatch('/privacy'))
   const isHomeRoute = Boolean(useMatch({ path: '/', end: true }))
   const handleSignedIn = useCallback(() => {
     setAuthDialogOpen(false)
@@ -74,13 +79,35 @@ function App() {
     if (heroTitle) return `${appName} | ${heroTitle}`
     if (isAccountRoute) return `${appName} | ${t('common.account')}`
     if (isAuthVerifiedRoute) return `${appName} | ${t('authVerified.title')}`
+    if (isPrivacyRoute) return `${appName} | ${t('privacy.title')}`
     return `${appName} | ${t('app.heroVisualizer')}`
-  }, [heroTitle, isAccountRoute, isAuthVerifiedRoute, t])
+  }, [heroTitle, isAccountRoute, isAuthVerifiedRoute, isPrivacyRoute, t])
   const routeFallback = <p className="body-sm text-slate-500">{t('common.loading')}</p>
 
   useEffect(() => {
     document.title = documentTitle
   }, [documentTitle])
+
+  useEffect(() => {
+    if (location.pathname !== '/' || !location.hash) return
+
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''))
+    const hasSupabaseAuthHash =
+      hashParams.has('access_token') ||
+      hashParams.has('refresh_token') ||
+      hashParams.has('error') ||
+      hashParams.has('error_description')
+
+    if (hasSupabaseAuthHash) {
+      navigate(
+        {
+          pathname: '/auth/verified',
+          hash: location.hash,
+        },
+        { replace: true },
+      )
+    }
+  }, [location.hash, location.pathname, navigate])
 
   return (
     <SessionProvider value={sessionContextValue}>
@@ -138,6 +165,14 @@ function App() {
                 </Suspense>
               }
             />
+            <Route
+              path="/privacy"
+              element={
+                <Suspense fallback={routeFallback}>
+                  <StoragePolicy />
+                </Suspense>
+              }
+            />
           </Routes>
 
           {!isSupabaseConfigured && (
@@ -162,6 +197,7 @@ function App() {
         saving={saving}
         isConfigured={isSupabaseConfigured}
       />
+      <StorageNotice />
     </SessionProvider>
   )
 }
