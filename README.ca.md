@@ -2,14 +2,18 @@
 
 ## Requisits
 
-- Node.js 20 (si tens `nvm`, executa `nvm use`).
+- Node.js 24 LTS. El repo fixa `v24.16.0` a `.nvmrc`; si tens `nvm`, executa `nvm use`.
 - Compte de Supabase amb projecte actiu.
+
+En Windows PowerShell, si `npm` queda bloquejat per la politica d'execucio, usa `npm.cmd ...` (per exemple `npm.cmd run dev:all`) o habilita scripts locals amb `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
 
 ## Inici ràpid
 
 ```bash
 npm install
-npm run dev
+npm --prefix ui install
+npm --prefix backend install
+npm run dev:all
 ```
 
 ## Execució en local
@@ -20,12 +24,16 @@ Des de l'arrel del repositori:
 # Frontend en mode desenvolupament (Vite + HMR)
 npm run dev
 
+# Frontend + backend alhora
+npm run dev:all
+
 # Àlies d'inici local (actualment apunta a dev)
 npm run start
 ```
 
 Comportament actual dels scripts de l'arrel:
 - `npm run dev`: arrenca el frontend (`ui`).
+- `npm run dev:all`: arrenca frontend i backend alhora.
 - `npm run start`: és un àlies de `npm run dev`.
 
 Si també vols arrencar el backend en local:
@@ -103,9 +111,14 @@ npm --prefix backend run dev
 ## Comandes útils
 
 - `npm run dev`: arrenca frontend (Vite).
+- `npm run dev:all`: arrenca frontend i backend alhora.
 - `npm run start`: àlies de dev (actualment).
 - `npm run build`: build de producció frontend.
 - `npm run preview`: previsualització del build.
+- `npm run ui:test`: tests unitaris del frontend (Vitest).
+- `npm run ui:test:watch`: tests del frontend en mode watch.
+- `npm run backend:test`: tests unitaris del backend.
+- `npm run backend:test:coverage`: tests del backend amb coverage.
 - `npm run backend:dev`: backend en desenvolupament.
 - `npm run backend:start`: backend en mode execució.
 - `npm run verify:prod`: comprovació ràpida frontend/backend desplegats.

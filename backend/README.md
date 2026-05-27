@@ -2,6 +2,10 @@
 
 This directory now follows a feature-first layout so related modules live together. The goal is to keep day-to-day work focused on the hero timeline stack without digging through unrelated files.
 
+## Requirements
+
+- Node.js 24 LTS. The repository pins `v24.16.0` in the root `.nvmrc`.
+
 ## Key folders
 - `src/config` – environment/bootstrap helpers shared across the server.
 - `src/lib` – low-level shared clients (for now just the Supabase service client).
@@ -247,14 +251,28 @@ Env knobs:
 
 ## Tests
 
-Run backend unit tests with:
+Run backend unit tests from the repository root with:
+
+```bash
+npm run backend:test
+```
+
+Run backend tests with coverage from the repository root with:
+
+```bash
+npm run backend:test:coverage
+```
+
+From inside `backend/`, run:
 
 ```bash
 npm run test
 ```
 
-Run backend tests with coverage percentage:
+Coverage:
 
 ```bash
 npm run test:coverage
 ```
+
+The backend test script targets `test/**/*.test.js`, which is compatible with Node 24's built-in test runner.

@@ -2,14 +2,18 @@
 
 ## Requirements
 
-- Node.js 20 (run `nvm use` if you have nvm installed).
+- Node.js 24 LTS. The repo pins `v24.16.0` in `.nvmrc`; run `nvm use` if you have nvm installed.
 - Supabase account with an active project.
+
+On Windows PowerShell, if `npm` is blocked by the local execution policy, use `npm.cmd ...` (for example `npm.cmd run dev:all`) or allow local scripts for your user with `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
 
 ## Quick start
 
 ```bash
 npm install
-npm run dev
+npm --prefix ui install
+npm --prefix backend install
+npm run dev:all
 ```
 
 ## Run locally
@@ -20,12 +24,16 @@ Use these commands from the repository root:
 # Development mode (frontend with HMR)
 npm run dev
 
+# Development mode (frontend + backend together)
+npm run dev:all
+
 # Alias to start the app locally (currently maps to dev)
 npm run start
 ```
 
 Current behavior of root scripts:
 - `npm run dev` runs the frontend dev server (`ui`).
+- `npm run dev:all` runs the frontend and backend together.
 - `npm run start` is an alias of `npm run dev`.
 
 If you also want to run the backend locally:
@@ -282,8 +290,13 @@ The script checks:
 ## Useful commands
 
 - `npm run dev`: start the Vite frontend.
+- `npm run dev:all`: start frontend and backend together.
 - `npm run build`: create a production build.
 - `npm run preview`: preview the production build locally.
+- `npm run ui:test`: run frontend unit tests (Vitest).
+- `npm run ui:test:watch`: run frontend unit tests in watch mode.
+- `npm run backend:test`: run backend unit tests.
+- `npm run backend:test:coverage`: run backend unit tests with coverage.
 - `npm run verify:prod`: smoke-check deployed frontend + backend URLs.
 - `npm run import:gcd`: run the internal guided GCD series importer CLI (backend tool).
 - `npm run import:gcd:issue`: run the internal guided GCD single-issue importer CLI (backend tool).

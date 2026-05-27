@@ -163,7 +163,7 @@
       eyebrow: 'How it works',
       title: 'From shelf to timeline in four focused actions.',
       description:
-        'IssueLine keeps collector workflows simple while preserving the editorial context that makes each issue matter.',
+        'IssueLine keeps collector workflows simple while preserving the editorial context that  matters in  each issue.',
       steps: {
         track: {
           title: 'Track collection',
@@ -185,7 +185,7 @@
     },
     collectors: {
       eyebrow: 'Built for collectors',
-      title: 'Designed for the feeling of opening an archive box.',
+      title: 'Gives the feeling of opening an archive box.',
       description:
         'The experience should feel nostalgic, precise, and alive: part museum catalog, part reading map, part collector checklist.',
       quote:
@@ -219,7 +219,7 @@
       eyebrow: 'Collected editions',
       title: 'Singles are only one part of the shelf.',
       description:
-        'IssueLine is ready to show omnibus, trade paperbacks, deluxe editions, Marvel Gold style lines, and future collected-format coverage beside the timeline.',
+        'IssueLine shows omnibus, trade paperbacks, deluxe editions, Marvel Gold style lines, and future collected-format coverage beside the timeline.',
       note: 'Static showcase today, dynamic collected-edition mapping tomorrow.',
       cta: 'See timeline context',
       items: {
