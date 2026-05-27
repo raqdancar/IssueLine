@@ -392,32 +392,32 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                                 {meta.number ? <span>{t('timeline.noPrefix', { number: meta.number })}</span> : null}
                                 {meta.volume ? <span>{t('timeline.volume')} {meta.volume}</span> : null}
                               </div>
-                              <h4 className="title-sm text-white">{entry.headline}</h4>
-                              {entry.summary ? <p className="body-sm text-slate-200/80">{entry.summary}</p> : null}
+                              <h4 className="text-base font-semibold leading-tight text-slate-50 sm:text-lg">{entry.headline}</h4>
+                              {entry.summary ? <p className="text-sm leading-relaxed text-slate-100/90">{entry.summary}</p> : null}
                               {stageSummary ? (
                                 <p className="text-xs text-emerald-100/80">{stageSummary}</p>
                               ) : null}
-                              <dl className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
+                              <dl className="grid gap-2 text-xs text-slate-100 sm:grid-cols-2">
                                   <div>
                                   <dt className="font-semibold text-slate-100">{t('timeline.release')}</dt>
-                                  <dd>{formatDate(entry.issue_date, locale, t)}</dd>
+                                  <dd className="font-semibold text-amber-100">{formatDate(entry.issue_date, locale, t)}</dd>
                                 </div>
                                 {meta.price ? (
                                   <div>
                                     <dt className="font-semibold text-slate-100">{t('timeline.price')}</dt>
-                                    <dd>{meta.price}</dd>
+                                    <dd className="font-semibold text-amber-100">{meta.price}</dd>
                                   </div>
                                 ) : null}
                                 {pageCount ? (
                                   <div>
                                     <dt className="font-semibold text-slate-100">{t('timeline.pages')}</dt>
-                                    <dd>{pageCount}</dd>
+                                    <dd className="font-semibold text-amber-100">{pageCount}</dd>
                                   </div>
                                 ) : null}
                                 {meta.rating ? (
                                   <div>
                                     <dt className="font-semibold text-slate-100">{t('timeline.rating')}</dt>
-                                    <dd>{meta.rating}</dd>
+                                    <dd className="font-semibold text-amber-100">{meta.rating}</dd>
                                   </div>
                                 ) : null}
                               </dl>

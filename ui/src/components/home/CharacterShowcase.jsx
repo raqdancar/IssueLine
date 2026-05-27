@@ -2,6 +2,7 @@ import { ArrowRight, CalendarRange, Layers3, LibraryBig } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { useSessionContext } from '@/lib/sessionContext.jsx'
 import SectionHeading from './SectionHeading'
 import {
   estimateCompletion,
@@ -12,11 +13,14 @@ import {
   heroAccentPalettes,
 } from './homeData'
 
-function CharacterVisual({ hero, palette, index }) {
+function CharacterVisual({ hero, palette, index, href }) {
   const image = getHeroImage(hero)
 
   return (
-    <div className={`relative h-48 overflow-hidden bg-linear-to-br ${palette.panel}`}>
+    <Link
+      to={href}
+      className={`relative block h-48 overflow-hidden bg-linear-to-br ${palette.panel} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2`}
+    >
       {image ? (
         <img
           src={image}
@@ -43,12 +47,13 @@ function CharacterVisual({ hero, palette, index }) {
         <span className="text-xs font-bold uppercase tracking-[0.24em] text-white/70">Archive {index + 1}</span>
         <h3 className={`mt-1 text-2xl font-black leading-none ${palette.ink}`}>{hero.name}</h3>
       </div>
-    </div>
+    </Link>
   )
 }
 
 function CharacterShowcase({ heroes, heroesStatus }) {
   const { t } = useI18n()
+  const { isAuthenticated } = useSessionContext()
   const displayHeroes = getDisplayHeroes(heroes)
 
   return (
@@ -80,7 +85,7 @@ function CharacterShowcase({ heroes, heroesStatus }) {
                 key={hero.api_id ?? hero.name}
                 className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-300/70"
               >
-                <CharacterVisual hero={hero} palette={palette} index={index} />
+                <CharacterVisual hero={hero} palette={palette} index={index} href={detailHref} />
                 <div className="space-y-5 p-5">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -95,10 +100,12 @@ function CharacterShowcase({ heroes, heroesStatus }) {
                       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{t('home.showcase.stages')}</p>
                       <p className="mt-1 font-bold text-slate-900">{estimateStageCount(hero, index)}</p>
                     </div>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{t('home.showcase.collected')}</p>
-                      <p className="mt-1 font-bold text-slate-900">{hero.collectedEditionsCount ?? index + 4}</p>
-                    </div>
+                    {isAuthenticated ? (
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{t('home.showcase.collected')}</p>
+                        <p className="mt-1 font-bold text-slate-900">{hero.collectedEditionsCount ?? index + 4}</p>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div>
