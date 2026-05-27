@@ -10,28 +10,15 @@ import { TimelineLoadingSkeleton } from './timeline/TimelineLoadingSkeleton'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
 import IssueDetailsDialog from './issue-details/IssueDetailsDialog'
 import IssueOwnershipFormatDialog from './issue-details/IssueOwnershipFormatDialog'
-import { isAnnualIssueEntry } from './timeline/utils'
-import {
-  compareTimelineEntries,
-  getEntryDomId,
-  getIssueKey,
-  getStageKey,
-  resolveMonthBucket,
-  resolveTimelineOrder,
-  resolveYearBucket,
-} from '../utils/timeline'
+import { buildTimelineViewModel } from './timeline/timelineViewModel'
 import { backendBaseUrl } from '@/utils/backend.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
-import { useTimelineFullscreen } from '@/hooks/useTimelineFullscreen.js'
+import { useTimelineControls } from '@/hooks/useTimelineControls.js'
 import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import {
-  COMPACT_DENSITY_THRESHOLD,
-  MAX_ZOOM_LEVEL,
-  MICRO_DENSITY_THRESHOLD,
-  MIN_ZOOM_LEVEL,
   ZOOM_STEP,
   indexModeOptions,
   severityVariants,
@@ -44,17 +31,9 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const { t } = useI18n()
   const sectionRef = useRef(null)
   const apiBaseUrl = backendBaseUrl
-  const [sortDirection, setSortDirection] = useState('desc')
-  const [timelineOrderMode, setTimelineOrderMode] = useState('canonical')
-  const [indexMode, setIndexMode] = useState('month')
-  const [publicationFilter, setPublicationFilter] = useState('all')
-  const [collectionFilters, setCollectionFilters] = useState({
-    ownedOnly: false,
-    readOnly: false,
-  })
+  const controls = useTimelineControls({ sectionRef, resetKey: slug })
   const [activeAnchor, setActiveAnchor] = useState(null)
   const [isNavigatorVisible, setIsNavigatorVisible] = useState(true)
-  const [zoomLevel, setZoomLevel] = useState(1)
   const [highlightedEntryDomId, setHighlightedEntryDomId] = useState(null)
   const [coverViewer, setCoverViewer] = useState({ open: false, src: null, alt: '' })
   const [selectedIssueId, setSelectedIssueId] = useState(null)
@@ -90,201 +69,33 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
   const [isMobileViewport, setIsMobileViewport] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const flashTimeoutRef = useRef(null)
-  const { isFullscreen, fullscreenEnabled, toggleFullscreen } = useTimelineFullscreen(sectionRef)
 
   useEffect(() => {
-    // Reset filters and selected issue when switching heroes.
-    setPublicationFilter('all')
-    setCollectionFilters({ ownedOnly: false, readOnly: false })
     setSelectedIssueId(null)
   }, [slug])
 
   const severityLookup = useMemo(() => severityVariants, [])
-  const hasCanonicalTimelineOrder = useMemo(
-    () => entries.some((entry) => resolveTimelineOrder(entry) !== null),
-    [entries],
-  )
-  const orderedEntries = useMemo(() => {
-    const useCanonicalOrder = hasCanonicalTimelineOrder && timelineOrderMode === 'canonical'
-    return [...entries].sort((a, b) =>
-      compareTimelineEntries(a, b, useCanonicalOrder ? 'asc' : sortDirection, {
-        useTimelineOrder: useCanonicalOrder,
+  const timelineView = useMemo(
+    () =>
+      buildTimelineViewModel({
+        entries,
+        sortDirection: controls.sortDirection,
+        timelineOrderMode: controls.timelineOrderMode,
+        publicationFilter: controls.publicationFilter,
+        collectionFilters: controls.collectionFilters,
+        issueStatesById,
+        t,
       }),
-    )
-  }, [entries, hasCanonicalTimelineOrder, sortDirection, timelineOrderMode])
-  const filteredEntries = useMemo(() => {
-    // Combine publication filters with user collection/read filters.
-    const publicationFilterMatch = (entry) => {
-      if (publicationFilter === 'all') return true
-      if (publicationFilter === 'annuals') return isAnnualIssueEntry(entry)
-      return true
-    }
-
-    const personalFilterMatch = (entry) => {
-      const issueState = entry?.id ? issueStatesById?.[entry.id] : null
-      const haveIt = Boolean(issueState?.haveIt)
-      const readIt = Boolean(issueState?.readIt)
-
-      if (collectionFilters.ownedOnly && !haveIt) return false
-      if (collectionFilters.readOnly && !readIt) return false
-      return true
-    }
-
-    return orderedEntries.filter((entry) => publicationFilterMatch(entry) && personalFilterMatch(entry))
-  }, [orderedEntries, collectionFilters, publicationFilter, issueStatesById])
-
-  const monthAnchors = useMemo(() => {
-    const orderedKeys = []
-    const groups = new Map()
-
-    filteredEntries.forEach((entry, index) => {
-      const bucket = resolveMonthBucket(entry)
-      if (!groups.has(bucket.key)) {
-        orderedKeys.push(bucket.key)
-        groups.set(bucket.key, {
-          ...bucket,
-          count: 0,
-          targetId: getEntryDomId(entry, index),
-        })
-      }
-      const group = groups.get(bucket.key)
-      group.count += 1
-    })
-
-    return orderedKeys.map((key) => groups.get(key))
-  }, [filteredEntries])
-
-  const stageAnchors = useMemo(() => {
-    const resolveIssueNumberRank = (entry) => {
-      const rawIssueNumber =
-        entry?.metadata?.number ??
-        entry?.metadata?.issue_number ??
-        entry?.metadata?.issueNumber ??
-        entry?.issue_code ??
-        ''
-      const match = String(rawIssueNumber).match(/\d+/)
-      return match ? Number(match[0]) : Number.POSITIVE_INFINITY
-    }
-
-    const resolveStageRank = (entry, index) => {
-      const parsedDate = new Date(entry?.issue_date ?? '').getTime()
-      return {
-        date: Number.isNaN(parsedDate) ? Number.POSITIVE_INFINITY : parsedDate,
-        issueNumber: resolveIssueNumberRank(entry),
-        index,
-      }
-    }
-
-    const isBetterStageStart = (candidate, current) => {
-      if (!current) return true
-      if (candidate.date !== current.date) return candidate.date < current.date
-      if (candidate.issueNumber !== current.issueNumber) return candidate.issueNumber < current.issueNumber
-      return candidate.index < current.index
-    }
-
-    const orderedKeys = []
-    const groups = new Map()
-    // Choose one stable target issue per stage for index navigation.
-    filteredEntries.forEach((entry, index) => {
-      const stage = getStageKey(entry)
-      if (!stage) return
-      if (!groups.has(stage.key)) {
-        orderedKeys.push(stage.key)
-        groups.set(stage.key, {
-          key: stage.key,
-          label: stage.label,
-          summary:
-            entry.metadata?.stage_summary ??
-            entry.metadata?.stageSummary ??
-            entry.metadata?.stage?.short_summary ??
-            entry.metadata?.stage?.summary ??
-            null,
-          count: 0,
-          targetId: getEntryDomId(entry, index),
-          _startRank: resolveStageRank(entry, index),
-        })
-      }
-      const group = groups.get(stage.key)
-      group.count += 1
-
-      const candidateRank = resolveStageRank(entry, index)
-      if (isBetterStageStart(candidateRank, group._startRank)) {
-        group.targetId = getEntryDomId(entry, index)
-        group._startRank = candidateRank
-      }
-    })
-    return orderedKeys.map((key) => {
-      const { _startRank: _ignoredStartRank, ...group } = groups.get(key)
-      return group
-    })
-  }, [filteredEntries])
-
-  const yearAnchors = useMemo(() => {
-    const orderedKeys = []
-    const groups = new Map()
-    filteredEntries.forEach((entry, index) => {
-      const bucket = resolveYearBucket(entry)
-      if (!groups.has(bucket.key)) {
-        orderedKeys.push(bucket.key)
-        groups.set(bucket.key, {
-          ...bucket,
-          count: 0,
-          targetId: getEntryDomId(entry, index),
-        })
-      }
-      const group = groups.get(bucket.key)
-      group.count += 1
-    })
-    return orderedKeys.map((key) => groups.get(key))
-  }, [filteredEntries])
-
-  const { issueAnchors, issueAnchorsByStage } = useMemo(() => {
-    const stageOrder = []
-    const stages = new Map()
-    const flattened = []
-
-    filteredEntries.forEach((entry, index) => {
-      const issue = getIssueKey(entry)
-      if (!issue) return
-
-      const stage = getStageKey(entry)
-      const stageKey = stage?.key ?? 'uncategorized-stage'
-      const stageLabel = stage?.label ?? t('timeline.uncategorizedStage')
-
-      if (!stages.has(stageKey)) {
-        stageOrder.push(stageKey)
-        stages.set(stageKey, {
-          key: stageKey,
-          label: stageLabel,
-          anchors: [],
-        })
-      }
-
-      const anchor = {
-        key: entry?.id ? `issue-${entry.id}` : `issue-${issue.key}-${index}`,
-        label: issue.label,
-        count: 1,
-        targetId: getEntryDomId(entry, index),
-      }
-
-      stages.get(stageKey).anchors.push(anchor)
-      flattened.push(anchor)
-    })
-
-    return {
-      issueAnchors: flattened,
-      issueAnchorsByStage: stageOrder.map((key) => stages.get(key)),
-    }
-  }, [filteredEntries, t])
-
-  const anchorLookup = useMemo(() => {
-    return {
-      month: monthAnchors,
-      year: yearAnchors,
-      stage: stageAnchors,
-      issue: issueAnchors,
-    }
-  }, [monthAnchors, yearAnchors, stageAnchors, issueAnchors])
+    [
+      controls.collectionFilters,
+      controls.publicationFilter,
+      controls.sortDirection,
+      controls.timelineOrderMode,
+      entries,
+      issueStatesById,
+      t,
+    ],
+  )
 
   const triggerFlash = useCallback((entryDomId) => {
     if (flashTimeoutRef.current) {
@@ -353,7 +164,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     }
   }, [isMobileViewport])
 
-  const availableAnchors = anchorLookup[indexMode] ?? []
+  const availableAnchors = timelineView.anchorLookup[controls.indexMode] ?? []
 
   useEffect(() => {
     if (!availableAnchors.length) {
@@ -512,22 +323,6 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     [apiBaseUrl, isAuthenticated, issueStateMutation, openOwnershipDialog],
   )
 
-  const adjustZoomLevel = (delta) => {
-    setZoomLevel((current) => {
-      const next = Number((current + delta).toFixed(2))
-      if (next < MIN_ZOOM_LEVEL) return MIN_ZOOM_LEVEL
-      if (next > MAX_ZOOM_LEVEL) return MAX_ZOOM_LEVEL
-      return next
-    })
-  }
-
-  const zoomPercentage = Math.round(zoomLevel * 100)
-  const isZoomedOut = zoomLevel <= MIN_ZOOM_LEVEL + 0.001
-  const isZoomedIn = zoomLevel >= MAX_ZOOM_LEVEL - 0.001
-  const timelineDensity =
-    zoomLevel <= MICRO_DENSITY_THRESHOLD ? 'micro' : zoomLevel <= COMPACT_DENSITY_THRESHOLD ? 'compact' : 'detailed'
-  const timelineListSpacing =
-    timelineDensity === 'micro' ? 'space-y-1.5' : timelineDensity === 'compact' ? 'space-y-2' : 'space-y-4'
   const openCoverViewer = (src, alt) => {
     if (!src || typeof window === 'undefined') return
     if (!window.matchMedia('(max-width: 767px)').matches) return
@@ -543,9 +338,6 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     setSelectedIssueId(null)
   }, [])
 
-  const navigatorHasContent =
-    monthAnchors.length > 0 || stageAnchors.length > 0 || issueAnchors.length > 0
-  const canShowNavigator = navigatorHasContent
   const handleBackToTop = useCallback(() => {
     sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
@@ -571,7 +363,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     <section
       ref={sectionRef}
       className={`relative mt-8 w-full border p-4 transition ${
-        isFullscreen
+        controls.isFullscreen
           ? 'h-full min-h-screen overflow-auto rounded-none border-slate-900/20 bg-[radial-gradient(circle_at_20%_0%,rgba(99,102,241,0.22),transparent_42%),radial-gradient(circle_at_85%_10%,rgba(236,72,153,0.14),transparent_34%),linear-gradient(155deg,rgba(248,250,252,0.96)_0%,rgba(241,245,249,0.94)_38%,rgba(255,255,255,0.98)_100%)] shadow-2xl'
           : 'rounded-2xl border-slate-100 bg-linear-to-br from-white to-slate-50'
       }`}
@@ -584,60 +376,60 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         isSyncingIssueStates={isSyncingIssueStates}
         issueStatesError={issueStatesQuery.isError}
         sortOptions={timelineSortOptions}
-        sortDirection={sortDirection}
-        onSortChange={setSortDirection}
-        timelineOrderMode={hasCanonicalTimelineOrder ? timelineOrderMode : 'publication'}
+        sortDirection={controls.sortDirection}
+        onSortChange={controls.setSortDirection}
+        timelineOrderMode={timelineView.hasCanonicalTimelineOrder ? controls.timelineOrderMode : 'publication'}
         timelineOrderOptions={timelineOrderModeOptions}
-        onTimelineOrderModeChange={setTimelineOrderMode}
-        hasCanonicalTimelineOrder={hasCanonicalTimelineOrder}
-        zoomPercentage={zoomPercentage}
-        onZoomIn={() => adjustZoomLevel(ZOOM_STEP)}
-        onZoomOut={() => adjustZoomLevel(-ZOOM_STEP)}
-        isZoomedIn={isZoomedIn}
-        isZoomedOut={isZoomedOut}
-        publicationFilter={publicationFilter}
+        onTimelineOrderModeChange={controls.setTimelineOrderMode}
+        hasCanonicalTimelineOrder={timelineView.hasCanonicalTimelineOrder}
+        zoomPercentage={controls.zoomPercentage}
+        onZoomIn={() => controls.adjustZoomLevel(ZOOM_STEP)}
+        onZoomOut={() => controls.adjustZoomLevel(-ZOOM_STEP)}
+        isZoomedIn={controls.isZoomedIn}
+        isZoomedOut={controls.isZoomedOut}
+        publicationFilter={controls.publicationFilter}
         publicationFilterOptions={timelinePublicationFilterOptions}
-        onPublicationFilterChange={setPublicationFilter}
-        collectionFilters={collectionFilters}
-        onCollectionFilterChange={(key, nextValue) =>
-          setCollectionFilters((current) => ({ ...current, [key]: nextValue }))
-        }
-        fullscreenEnabled={fullscreenEnabled}
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={toggleFullscreen}
-        showcaseMode={isFullscreen}
+        onPublicationFilterChange={controls.setPublicationFilter}
+        collectionFilters={controls.collectionFilters}
+        onCollectionFilterChange={controls.updateCollectionFilter}
+        fullscreenEnabled={controls.fullscreenEnabled}
+        isFullscreen={controls.isFullscreen}
+        onToggleFullscreen={controls.toggleFullscreen}
+        showcaseMode={controls.isFullscreen}
       />
       <div className="mt-6 space-y-4">
         {status === 'loading' ? (
           <TimelineLoadingSkeleton variant="light" showNavigator cardCount={6} />
         ) : status === 'error' ? (
           <p className="body-sm text-rose-600">{error}</p>
-        ) : orderedEntries.length === 0 ? (
+        ) : timelineView.orderedEntries.length === 0 ? (
           <p className="body-sm text-slate-500">{t('timeline.noIssuesLogged')}</p>
-        ) : filteredEntries.length === 0 ? (
+        ) : timelineView.filteredEntries.length === 0 ? (
           <p className="body-sm text-slate-500">
-            {publicationFilter === 'annuals' && !collectionFilters.ownedOnly && !collectionFilters.readOnly
+            {controls.publicationFilter === 'annuals' &&
+            !controls.collectionFilters.ownedOnly &&
+            !controls.collectionFilters.readOnly
               ? t('timeline.noAnnualIssues')
               : t('timeline.noIssuesForFilter')}
           </p>
         ) : (
-          isFullscreen ? (
+          controls.isFullscreen ? (
             <TimelineFullscreenShowcase
-              canShowNavigator={canShowNavigator}
+              canShowNavigator={timelineView.canShowNavigator}
               isNavigatorVisible={isNavigatorVisible}
-              indexMode={indexMode}
-              onIndexModeChange={setIndexMode}
+              indexMode={controls.indexMode}
+              onIndexModeChange={controls.setIndexMode}
               indexOptions={indexModeOptions}
-              anchorLookup={anchorLookup}
-              issueAnchorsByStage={issueAnchorsByStage}
+              anchorLookup={timelineView.anchorLookup}
+              issueAnchorsByStage={timelineView.issueAnchorsByStage}
               activeAnchor={activeAnchor}
               onAnchorClick={handleAnchorClick}
               onHideNavigator={() => setIsNavigatorVisible(false)}
               onShowNavigator={() => setIsNavigatorVisible(true)}
-              entries={filteredEntries}
-              zoomLevel={zoomLevel}
-              listSpacingClass={timelineListSpacing}
-              timelineDensity={timelineDensity}
+              entries={timelineView.filteredEntries}
+              zoomLevel={controls.zoomLevel}
+              listSpacingClass={controls.timelineListSpacing}
+              timelineDensity={controls.timelineDensity}
               severityLookup={severityLookup}
               issueStatesById={issueStatesById}
               canUseIssueStateActions={canUseIssueStateActions}
@@ -656,13 +448,13 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
             />
           ) : (
             <div className="flex flex-col gap-4 md:grid md:h-[calc(100vh-13rem)] md:min-h-[38rem] md:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] md:items-start md:overflow-hidden">
-              {canShowNavigator && isNavigatorVisible ? (
+              {timelineView.canShowNavigator && isNavigatorVisible ? (
                 <TimelineNavigatorPanel
-                  indexMode={indexMode}
-                  onIndexModeChange={setIndexMode}
+                  indexMode={controls.indexMode}
+                  onIndexModeChange={controls.setIndexMode}
                   indexOptions={indexModeOptions}
-                  anchorLookup={anchorLookup}
-                  issueAnchorsByStage={issueAnchorsByStage}
+                  anchorLookup={timelineView.anchorLookup}
+                  issueAnchorsByStage={timelineView.issueAnchorsByStage}
                   activeAnchor={activeAnchor}
                   onAnchorClick={handleAnchorClick}
                   onToggleVisibility={() => setIsNavigatorVisible(false)}
@@ -670,17 +462,17 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
               ) : null}
               <div
                 className={`min-w-0 flex-1 md:h-full md:overflow-y-auto md:pr-1 ${
-                  !canShowNavigator || !isNavigatorVisible ? 'md:col-span-2' : ''
+                  !timelineView.canShowNavigator || !isNavigatorVisible ? 'md:col-span-2' : ''
                 }`}
               >
-                {canShowNavigator && !isNavigatorVisible ? (
+                {timelineView.canShowNavigator && !isNavigatorVisible ? (
                   <TimelineNavigatorToggle onClick={() => setIsNavigatorVisible(true)} />
                 ) : null}
                 <TimelineList
-                  entries={filteredEntries}
-                  zoomLevel={zoomLevel}
-                  listSpacingClass={timelineListSpacing}
-                  timelineDensity={timelineDensity}
+                  entries={timelineView.filteredEntries}
+                  zoomLevel={controls.zoomLevel}
+                  listSpacingClass={controls.timelineListSpacing}
+                  timelineDensity={controls.timelineDensity}
                   severityLookup={severityLookup}
                   issueStatesById={issueStatesById}
                   canUseIssueStateActions={canUseIssueStateActions}
@@ -706,14 +498,14 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         open={coverViewer.open}
         src={coverViewer.src}
         alt={coverViewer.alt}
-        portalContainer={isFullscreen ? sectionRef.current : undefined}
+        portalContainer={controls.isFullscreen ? sectionRef.current : undefined}
         onClose={() => setCoverViewer({ open: false, src: null, alt: '' })}
       />
       <IssueDetailsDialog
         open={Boolean(selectedIssueId)}
         heroSlug={slug}
         issueId={selectedIssueId}
-        portalContainer={isFullscreen ? sectionRef.current : undefined}
+        portalContainer={controls.isFullscreen ? sectionRef.current : undefined}
         timelineEntries={entries}
         onIssueNavigate={(nextIssueId) => setSelectedIssueId(nextIssueId)}
         fallbackImage={fallbackImage}
@@ -729,7 +521,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       />
       <IssueOwnershipFormatDialog
         open={ownershipDialogState.open}
-        portalContainer={isFullscreen ? sectionRef.current : undefined}
+        portalContainer={controls.isFullscreen ? sectionRef.current : undefined}
         issueTitle={ownershipDialogState.issueTitle}
         editions={ownershipDialogState.editions}
         selectedEditionIds={ownershipDialogState.selectedEditionIds}
