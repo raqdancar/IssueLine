@@ -28,7 +28,6 @@ import {
   buildStageCoverageMap,
   buildStageGroups,
   buildStageTimelineIssuesByKey,
-  getCollectedEditionTimelineIssueIds,
   isCollectedEditionOwned as resolveCollectedEditionOwned,
   isCollectedEditionRead as resolveCollectedEditionRead,
   resolveCollectedCoverImage,
