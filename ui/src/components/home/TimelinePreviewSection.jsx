@@ -151,6 +151,12 @@ function TimelinePreviewEntry({ entry, index }) {
 
 function TimelinePreviewSection() {
   const { t } = useI18n()
+  const callouts = [
+    { label: t('home.timelinePreview.calloutCovers'), className: 'bg-amber-300' },
+    { label: t('home.timelinePreview.calloutGaps'), className: 'bg-red-400' },
+    { label: t('home.timelinePreview.calloutStages'), className: 'bg-indigo-300' },
+    { label: t('home.timelinePreview.calloutProgress'), className: 'bg-emerald-300' },
+  ]
 
   return (
     <section id="timeline-preview" className="relative overflow-hidden bg-slate-950 px-4 py-18 text-white sm:px-6 lg:px-10 lg:py-24 xl:px-16 2xl:px-24">
@@ -165,12 +171,14 @@ function TimelinePreviewSection() {
             description={t('home.timelinePreview.description')}
             className="[&_h2]:text-white [&_p:not(:first-child)]:text-slate-300 [&_p:first-child]:text-amber-200"
           />
-          <div className="mt-8 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
-            <span className="rounded-md border border-white/15 bg-white/10 px-4 py-3">{t('home.timelinePreview.calloutCovers')}</span>
-            <span className="rounded-md border border-white/15 bg-white/10 px-4 py-3">{t('home.timelinePreview.calloutGaps')}</span>
-            <span className="rounded-md border border-white/15 bg-white/10 px-4 py-3">{t('home.timelinePreview.calloutStages')}</span>
-            <span className="rounded-md border border-white/15 bg-white/10 px-4 py-3">{t('home.timelinePreview.calloutProgress')}</span>
-          </div>
+          <ul className="mt-8 grid gap-x-8 gap-y-4 border-l border-white/15 pl-5 text-sm text-slate-200 sm:grid-cols-2">
+            {callouts.map((item) => (
+              <li key={item.label} className="relative flex min-w-0 items-start gap-3 border-b border-white/10 pb-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0">
+                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_0.35rem_rgba(255,255,255,0.22)] ${item.className}`} aria-hidden="true" />
+                <span className="leading-6 text-slate-200">{item.label}</span>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="relative rounded-lg border border-white/15 bg-white/10 p-4 shadow-2xl shadow-slate-950/50 backdrop-blur sm:p-6">
