@@ -224,10 +224,10 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   return (
     <section
       ref={sectionRef}
-      className={`relative mt-4 overflow-hidden border bg-slate-900 p-6 text-slate-100 shadow-2xl transition ${
+      className={`relative mt-4 border bg-slate-900 p-6 text-slate-100 shadow-2xl transition ${
         isFullscreen
-          ? 'h-full min-h-screen rounded-none border-slate-700/60 bg-[radial-gradient(circle_at_15%_0%,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_88%_8%,rgba(56,189,248,0.16),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.98)_0%,rgba(15,23,42,0.98)_40%,rgba(2,6,23,0.98)_100%)]'
-          : 'rounded-3xl border-slate-900/10'
+          ? 'h-screen min-h-screen overflow-y-auto rounded-none border-slate-700/60 bg-[radial-gradient(circle_at_15%_0%,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_88%_8%,rgba(56,189,248,0.16),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.98)_0%,rgba(15,23,42,0.98)_40%,rgba(2,6,23,0.98)_100%)]'
+          : 'overflow-hidden rounded-3xl border-slate-900/10'
       }`}
     >
       <div className="pointer-events-none absolute inset-0 opacity-30" aria-hidden>

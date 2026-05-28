@@ -222,38 +222,40 @@ function HeroDetail() {
                   </ul>
                   <p className="text-slate-800">{t('heroDetail.spotlightClosing')}</p>
                 </div>
-                <div className="space-y-3">
-                  {alignment ? (
-                    <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">
-                      {t('heroDetail.alignment', { value: alignment })}
-                    </span>
-                  ) : null}
-                  {hero.full_name ? (
-                    <p className="body-sm">
-                      <span className="body-xs text-slate-400">{t('heroDetail.fullName')}</span> {hero.full_name}
-                    </p>
-                  ) : null}
-                  {hero.biography?.['place-of-birth'] ? (
-                    <p className="body-sm">
-                      <span className="body-xs text-slate-400">{t('heroDetail.origin')}</span> {hero.biography['place-of-birth']}
-                    </p>
-                  ) : null}
-                  {hero.work?.occupation ? (
-                    <p className="body-sm">
-                      <span className="body-xs text-slate-400">{t('heroDetail.occupation')}</span> {hero.work.occupation}
-                    </p>
-                  ) : null}
+                <div className="flex flex-col gap-5 md:flex-row md:items-start">
+                  <div className="min-w-0 space-y-3 md:w-[38%] md:shrink-0">
+                    {alignment ? (
+                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                        {t('heroDetail.alignment', { value: alignment })}
+                      </span>
+                    ) : null}
+                    {hero.full_name ? (
+                      <p className="body-sm">
+                        <span className="body-xs text-slate-400">{t('heroDetail.fullName')}</span> {hero.full_name}
+                      </p>
+                    ) : null}
+                    {hero.biography?.['place-of-birth'] ? (
+                      <p className="body-sm">
+                        <span className="body-xs text-slate-400">{t('heroDetail.origin')}</span> {hero.biography['place-of-birth']}
+                      </p>
+                    ) : null}
+                    {hero.work?.occupation ? (
+                      <p className="body-sm">
+                        <span className="body-xs text-slate-400">{t('heroDetail.occupation')}</span> {hero.work.occupation}
+                      </p>
+                    ) : null}
+                  </div>
+                  <dl className="grid min-w-0 flex-1 grid-cols-2 gap-3 text-sm text-slate-600">
+                    {statLabelKeys.map((label) => (
+                      <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 shadow-inner">
+                        <dt className="eyebrow text-slate-400">{t(`heroDetail.stats.${label}`)}</dt>
+                        <dd className="title-xs text-slate-800">
+                          {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? t('heroDetail.noStatValue')}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-                <dl className="grid grid-cols-2 gap-3 text-sm text-slate-600">
-                  {statLabelKeys.map((label) => (
-                    <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/80 px-3 py-2 shadow-inner">
-                      <dt className="eyebrow text-slate-400">{t(`heroDetail.stats.${label}`)}</dt>
-                      <dd className="title-xs text-slate-800">
-                        {Number.isFinite(Number(stats[label])) ? Number(stats[label]) : stats[label] ?? t('heroDetail.noStatValue')}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
               </aside>
               <div className="min-w-0 space-y-5">
                 <Suspense fallback={<TimelineInsightsSkeleton />}>
