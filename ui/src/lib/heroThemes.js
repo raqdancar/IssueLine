@@ -63,6 +63,38 @@ const moonKnightTheme = {
   '--ring': '#ED2924',
 }
 
+const blackAdamTheme = {
+  '--color-slate-50': '#FFF7D6',
+  '--color-slate-100': '#F8E7A1',
+  '--color-slate-200': '#F2C84B',
+  '--color-slate-300': '#E5B72E',
+  '--color-slate-400': '#C99716',
+  '--color-slate-500': '#9B7410',
+  '--color-slate-600': '#4A3508',
+  '--color-slate-700': '#211A0A',
+  '--color-slate-800': '#111111',
+  '--color-slate-900': '#070707',
+  '--color-slate-950': '#000000',
+  '--background': '#080808',
+  '--foreground': '#FFF7D6',
+  '--card': '#15110A',
+  '--card-foreground': '#FFF7D6',
+  '--popover': '#15110A',
+  '--popover-foreground': '#FFF7D6',
+  '--primary': '#F2C84B',
+  '--primary-foreground': '#070707',
+  '--secondary': '#111111',
+  '--secondary-foreground': '#F2C84B',
+  '--muted': '#211A0A',
+  '--muted-foreground': '#F8E7A1',
+  '--accent': '#FFE45C',
+  '--accent-foreground': '#070707',
+  '--destructive': '#B91C1C',
+  '--border': '#C99716',
+  '--input': '#C99716',
+  '--ring': '#FFE45C',
+}
+
 const tintinTheme = {
   '--color-slate-50': '#F5E7C8',
   '--color-slate-100': '#F5E7C8',
@@ -98,6 +130,7 @@ const tintinTheme = {
 const heroThemesBySlug = {
   'doctor-strange': doctorStrangeTheme,
   'moon-knight': moonKnightTheme,
+  'black-adam': blackAdamTheme,
   "tintin": tintinTheme,
 }
 
