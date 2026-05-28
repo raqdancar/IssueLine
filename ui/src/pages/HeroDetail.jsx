@@ -5,10 +5,13 @@ import HeroTimeline from '@/components/HeroTimeline'
 import { TimelineInsightsSkeleton, TimelineLoadingSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
 import { Button } from '@/components/ui/button'
 import { isSupabaseConfigured, supabase } from '@/lib/supabaseClient'
+import TimelineArchiveBriefing from '@/components/hero-detail/TimelineArchiveBriefing'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { fetchHeroBySlugWithImages } from '@/lib/heroesApi.js'
 import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
+import { useIssueStatesQuery } from '@/hooks/useIssueStates.js'
+import { useSessionContext } from '@/lib/sessionContext.jsx'
 
 const HeroTimelineCinematic = lazy(() => import('@/components/HeroTimelineCinematic'))
 const HeroTimelineInsights = lazy(() => import('@/components/HeroTimelineInsights'))
@@ -96,7 +99,9 @@ function HeroDetail() {
   const timelineLogoSrc = hero?.slug ? `${timelineLogoBaseUrl}/${hero.slug}.png` : null
   const timelineLogoAlt = hero?.name ? `${hero.name} timeline logo` : null
   const hasTimelineLogo = Boolean(timelineLogoSrc) && !timelineLogoUnavailable
-  const timelineBackdropQuery = useHeroTimelineQuery(slug, { enabled: hasTimelineLogo })
+  const timelineBackdropQuery = useHeroTimelineQuery(slug, { enabled: Boolean(slug) })
+  const { isAuthenticated } = useSessionContext()
+  const issueStatesQuery = useIssueStatesQuery(slug, { enabled: Boolean(slug) && isAuthenticated })
   const showcaseImageSrc = hasTimelineLogo ? timelineLogoSrc : imageSrc
   const showcaseImageAlt = hasTimelineLogo ? timelineLogoAlt : imageAlt
   const alignment = hero?.alignment?.toLowerCase()
@@ -209,19 +214,15 @@ function HeroDetail() {
                     />
                   )}
                 </div>
-                <div className="space-y-4 rounded-3xl border border-slate-100 bg-linear-to-br from-white/90 via-slate-50/80 to-white/60 p-5 text-sm text-slate-600 shadow-inner">
-                  <p className="text-sm font-semibold text-slate-800">{t('heroDetail.spotlightTitle')}</p>
-                  <p>{t('heroDetail.spotlightP1')}</p>
-                  <p>{t('heroDetail.spotlightP2')}</p>
-                  <p className="font-semibold text-slate-800">{t('heroDetail.spotlightResult')}</p>
-                  <p>{t('heroDetail.spotlightP3')}</p>
-                  <ul className="list-disc space-y-1 pl-5 text-slate-500">
-                    <li>{t('heroDetail.spotlightBullet1')}</li>
-                    <li>{t('heroDetail.spotlightBullet2')}</li>
-                    <li>{t('heroDetail.spotlightBullet3')}</li>
-                  </ul>
-                  <p className="text-slate-800">{t('heroDetail.spotlightClosing')}</p>
-                </div>
+                <TimelineArchiveBriefing
+                  heroName={hero.name}
+                  status={timelineBackdropQuery.status}
+                  errorMessage={timelineBackdropQuery.errorMessage}
+                  entries={timelineBackdropQuery.entries}
+                  collectedEditions={timelineBackdropQuery.collectedEditionsOverview}
+                  statesByIssueId={issueStatesQuery.statesByIssueId}
+                  isAuthenticated={isAuthenticated}
+                />
                 <div className="flex flex-col gap-5 md:flex-row md:items-start">
                   <div className="min-w-0 space-y-3 md:w-[38%] md:shrink-0">
                     {alignment ? (
