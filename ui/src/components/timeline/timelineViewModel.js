@@ -1,5 +1,5 @@
 // Pure timeline derivations used by the main timeline view.
-import { isAnnualIssueEntry } from '@/components/timeline/utils'
+import { isAnnualIssueEntry, isSpecialTimelineEventEntry } from '@/components/timeline/utils'
 import {
   compareTimelineEntries,
   getEntryDomId,
@@ -124,6 +124,8 @@ const buildIssueAnchors = (entries, t) => {
   const flattened = []
 
   entries.forEach((entry, index) => {
+    if (isSpecialTimelineEventEntry(entry)) return
+
     const issue = getIssueKey(entry)
     if (!issue) return
 
@@ -186,10 +188,12 @@ export const buildTimelineViewModel = ({
     return true
   })
 
-  const monthAnchors = buildMonthAnchors(filteredEntries)
-  const yearAnchors = buildYearAnchors(filteredEntries)
+  const navigableEntries = filteredEntries.filter((entry) => !isSpecialTimelineEventEntry(entry))
+
+  const monthAnchors = buildMonthAnchors(navigableEntries)
+  const yearAnchors = buildYearAnchors(navigableEntries)
   const stageAnchors = buildStageAnchors(filteredEntries)
-  const { issueAnchors, issueAnchorsByStage } = buildIssueAnchors(filteredEntries, t)
+  const { issueAnchors, issueAnchorsByStage } = buildIssueAnchors(navigableEntries, t)
   const anchorLookup = {
     month: monthAnchors,
     year: yearAnchors,

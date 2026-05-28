@@ -31,7 +31,7 @@ function RandomCoverFan({ covers = [], emptyLabel }) {
 
   if (!visibleCovers.length) {
     return (
-      <div className="flex h-44 w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+      <div className="flex h-56 w-full items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400 lg:h-64">
         {emptyLabel}
       </div>
     )
@@ -40,14 +40,14 @@ function RandomCoverFan({ covers = [], emptyLabel }) {
   const slots = getCenteredSlots(visibleCovers.length)
 
   return (
-    <div className="relative h-48 w-full overflow-hidden sm:h-52" aria-hidden="true">
-      <div className="absolute inset-x-0 bottom-0 h-12 bg-linear-to-t from-white/80 to-transparent" />
+    <div className="relative h-60 w-full overflow-hidden sm:h-68 lg:h-76" aria-hidden="true">
+      <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-white/85 to-transparent" />
       {visibleCovers.map((cover, index) => {
         const slot = slots[index]
         return (
           <div
             key={`${cover}-${index}`}
-            className="absolute left-1/2 top-5 w-24 origin-bottom overflow-hidden rounded-md border border-white bg-slate-100 shadow-xl shadow-slate-300/70 ring-1 ring-slate-900/10 transition duration-300 sm:w-28"
+            className="absolute left-1/2 top-6 w-30 origin-bottom overflow-hidden rounded-md border border-white bg-slate-100 shadow-2xl shadow-slate-300/80 ring-1 ring-slate-900/10 transition duration-300 sm:w-36 lg:w-42"
             style={{
               opacity: slot.opacity,
               zIndex: slot.zIndex,

@@ -27,6 +27,8 @@ import {
   timelineSortOptions,
 } from './timeline/constants'
 
+const EMPTY_ANCHORS = []
+
 function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, timelineLogoAlt = null }) {
   const { t } = useI18n()
   const sectionRef = useRef(null)
@@ -164,7 +166,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     }
   }, [isMobileViewport])
 
-  const availableAnchors = timelineView.anchorLookup[controls.indexMode] ?? []
+  const availableAnchors = timelineView.anchorLookup[controls.indexMode] ?? EMPTY_ANCHORS
 
   useEffect(() => {
     if (!availableAnchors.length) {

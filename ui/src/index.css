@@ -251,6 +251,32 @@
     display: none;
   }
 
+  .editorial-route-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) color-mix(in srgb, var(--primary) 14%, transparent);
+  }
+
+  .editorial-route-scroll::-webkit-scrollbar {
+    height: 0.55rem;
+  }
+
+  .editorial-route-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+
+  .editorial-route-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: var(--primary);
+    background-clip: padding-box;
+  }
+
+  .editorial-route-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--ring);
+    background-clip: padding-box;
+  }
+
   .stage-issues-timeline-wrap {
     overflow-x: auto;
     overflow-y: hidden;

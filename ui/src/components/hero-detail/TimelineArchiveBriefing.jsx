@@ -1,6 +1,6 @@
 // Render a compact, data-led archive snapshot for a character detail page.
 import { BookOpenCheck, CalendarRange, Layers3, LibraryBig } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   buildStageGroups,
   resolveEntryTimestamp,
@@ -64,6 +64,9 @@ function TimelineArchiveBriefing({
   const totalIssues = entries.length
   const readPercent = totalIssues > 0 ? Math.round((readCount / totalIssues) * 100) : 0
   const ownedPercent = totalIssues > 0 ? Math.round((ownedCount / totalIssues) * 100) : 0
+  const routeStages = stageGroups
+  const [activeRouteIndex, setActiveRouteIndex] = useState(0)
+  const activeRouteStage = routeStages[activeRouteIndex] ?? routeStages[0] ?? null
 
   if (status === 'disabled') {
     return (
@@ -133,8 +136,6 @@ function TimelineArchiveBriefing({
     },
   ]
 
-  const routeStages = stageGroups.slice(0, 5)
-
   return (
     <section className="relative overflow-hidden border-y border-slate-100 py-5">
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(180deg,rgba(15,23,42,0.03)_1px,transparent_1px)] bg-[size:28px_28px]" aria-hidden="true" />
@@ -201,18 +202,70 @@ function TimelineArchiveBriefing({
           ) : null}
 
           {routeStages.length ? (
-            <div className="rounded-2xl border border-slate-100 bg-white/75 px-4 py-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">{t('heroDetail.archiveRoute')}</p>
-              <ol className="mt-3 flex flex-wrap items-center gap-2">
-                {routeStages.map((stage, index) => (
-                  <li key={stage.key} className="flex min-w-0 items-center gap-2">
-                    {index > 0 ? <span className="h-px w-5 bg-slate-200" aria-hidden="true" /> : null}
-                    <span className="max-w-44 truncate rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">
-                      {stage.name}
+            <div className="relative z-10 overflow-hidden rounded-2xl border border-primary/35 bg-white/75 px-4 py-4 shadow-sm">
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(15,23,42,0.035)_1px,transparent_1px),linear-gradient(180deg,rgba(15,23,42,0.035)_1px,transparent_1px)] bg-[size:24px_24px]" aria-hidden="true" />
+              <div className="relative flex items-center justify-between gap-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-muted-foreground">{t('heroDetail.archiveRoute')}</p>
+                <span className="rounded-full border border-primary/35 bg-background/80 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
+                  {numberFormatter.format(routeStages.length)}
+                </span>
+              </div>
+              <div className="editorial-route-scroll relative mt-5 overflow-x-auto pb-4">
+                <div className="pointer-events-none absolute left-0 right-0 top-5 h-px bg-linear-to-r from-transparent via-primary/70 to-transparent" aria-hidden="true" />
+                <ol className="relative flex min-w-max items-start gap-4 pr-2">
+                  {routeStages.map((stage, index) => (
+                    <li key={stage.key} className="w-34 shrink-0">
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActiveRouteIndex(index)}
+                        onFocus={() => setActiveRouteIndex(index)}
+                        onClick={() => setActiveRouteIndex(index)}
+                        aria-pressed={activeRouteIndex === index}
+                        className={`group flex w-full flex-col items-center gap-2 text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+                          activeRouteIndex === index ? 'text-slate-950' : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <span
+                          className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border text-xs font-black shadow-sm transition ${
+                            activeRouteIndex === index
+                              ? 'border-slate-950 bg-slate-950 text-amber-200 shadow-primary/30'
+                              : 'border-primary/50 bg-background text-foreground group-hover:border-primary group-hover:bg-primary/15'
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="block w-full text-[11px] font-black uppercase tracking-[0.16em]">
+                          {stage.yearLabel}
+                        </span>
+                        <span className="block w-full text-xs font-bold leading-snug break-words">
+                          {stage.name}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              {activeRouteStage ? (
+                <div className="relative mt-4 grid overflow-hidden rounded-xl border border-slate-950/80 bg-slate-950 text-amber-50 shadow-sm sm:grid-cols-[minmax(0,1fr)_8rem]">
+                  <div className="min-w-0 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-400">
+                      {activeRouteStage.yearLabel}
+                    </p>
+                    <h4 className="mt-1 text-base font-black leading-snug break-words">{activeRouteStage.name}</h4>
+                    <p className="mt-3 max-h-24 overflow-y-auto pr-1 text-sm leading-6 text-amber-100/90">
+                      {activeRouteStage.summary ?? t('timeline.noStageSummary')}
+                    </p>
+                  </div>
+                  <aside className="flex min-h-24 flex-row items-center justify-between gap-3 border-t border-amber-300/20 bg-amber-300/10 px-4 py-3 sm:flex-col sm:items-center sm:justify-center sm:border-l sm:border-t-0">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-300">
+                      {t('timeline.issuesTracked')}
                     </span>
-                  </li>
-                ))}
-              </ol>
+                    <span className="text-3xl font-medium leading-none text-amber-100/95 sm:text-4xl">
+                      {numberFormatter.format(activeRouteStage.issueCount)}
+                    </span>
+                  </aside>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
