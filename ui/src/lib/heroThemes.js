@@ -86,7 +86,7 @@ const blackAdamTheme = {
   '--secondary': '#111111',
   '--secondary-foreground': '#F2C84B',
   '--muted': '#211A0A',
-  '--muted-foreground': '#F8E7A1',
+  '--muted-foreground': '#6B4E08',
   '--accent': '#FFE45C',
   '--accent-foreground': '#070707',
   '--destructive': '#B91C1C',
