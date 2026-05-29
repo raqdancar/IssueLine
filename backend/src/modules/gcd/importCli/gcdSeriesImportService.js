@@ -1,5 +1,5 @@
 ﻿// Import a full GCD series into hero issues, timeline rows, and optional cover links.
-import { mapIssueToTimelineEntry } from '../issueMapper.js'
+import { extractIssueIdFromUrl, mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import {
   deleteHeroTimelineEntriesByGcdIssueIds,
@@ -232,7 +232,7 @@ const fetchSeriesIssues = async ({ seriesId, logger = console }) => {
 const resolveDistinctGcdIssueIds = (issues) => {
   const values = new Set()
   for (const issue of issues ?? []) {
-    const raw = issue?.id
+    const raw = issue?.id ?? extractIssueIdFromUrl(issue?.api_url)
     const numeric = Number(raw)
     if (!Number.isSafeInteger(numeric) || numeric <= 0) continue
     values.add(numeric)

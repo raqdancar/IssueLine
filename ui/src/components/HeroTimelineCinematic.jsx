@@ -9,6 +9,7 @@ import TimelineStageTab from './timeline/TimelineStageTab'
 import CoverFullscreenViewer from './CoverFullscreenViewer'
 import TimelineIssueToolbar from './timeline/TimelineIssueToolbar'
 import { TimelineLoadingSkeleton } from './timeline/TimelineLoadingSkeleton'
+import { isSpecialTimelineEventEntry } from './timeline/utils'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
@@ -340,7 +341,8 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                   const issueLabel = meta.issueLabel ?? entry.issue_code ?? entry.headline
                   const issueId = entry.id ?? null
                   const issueState = issueId ? issueStatesById[issueId] : undefined
-                  const showIssueToolbar = isAuthenticated && Boolean(issueId)
+                  const isSpecialEvent = isSpecialTimelineEventEntry(entry)
+                  const showIssueToolbar = isAuthenticated && Boolean(issueId) && !isSpecialEvent
                   const coverImage = resolveIssueCoverImage(meta, fallbackImage)
                   const stageName =
                     meta.stage_name ?? meta.stageName ?? meta.stage?.name ?? meta.stage?.label ?? null
@@ -421,7 +423,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                                   </div>
                                 ) : null}
                               </dl>
-                              {entry.source_url ? (
+                              {entry.source_url && !isSpecialEvent ? (
                                 <a
                                   href={entry.source_url}
                                   target="_blank"

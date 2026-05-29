@@ -109,13 +109,15 @@ function TimelineIssueCardDetailed({
         style={gradientStyle}
       >
         <div className="flex">
-          {stageName ? <TimelineStageTab label={stageName} /> : null}
           <div className="flex-1 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className={`inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm ${showcaseMode ? 'hidden md:inline-flex' : ''}`}>
-                <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-                {issueDateLabel}
-              </span>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                {stageName ? <TimelineStageTab label={stageName} layout="inline" /> : null}
+                <span className={`inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm ${showcaseMode ? 'hidden md:inline-flex' : ''}`}>
+                  <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                  {issueDateLabel}
+                </span>
+              </div>
               {seriesName || number || legacyNumber ? (
                 <div className="ml-auto flex flex-wrap items-center gap-2">
                   {seriesName || number ? (

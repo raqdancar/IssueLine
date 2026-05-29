@@ -27,27 +27,14 @@ function TimelineSpecialEventCard({
   viewModel,
   density = 'detailed',
   showcaseMode = false,
-  onIssueSelect,
   isHighlighted = false,
   isFlashing = false,
-  onEntryHighlight,
 }) {
   const { t } = useI18n()
   const { entry, entryDomId, isLast, issueDateLabel, stageName, stageSummary, specialEventCode, meta } = viewModel
   const { seriesName, number, publicationDate } = meta
   const densityClasses = densityClassMap[density] ?? densityClassMap.detailed
   const title = entry.headline ?? specialEventCode ?? t('timeline.specialEventFallbackTitle')
-
-  const handleHighlight = () => {
-    onEntryHighlight?.(entryDomId)
-    onIssueSelect?.(entry)
-  }
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      handleHighlight()
-    }
-  }
 
   const highlightClasses = isHighlighted ? 'ring-2 ring-amber-400/70 shadow-xl shadow-amber-200/60' : 'shadow-sm'
   const flashClasses = isFlashing ? 'animate-pulse ring-4 ring-amber-300/50' : ''
@@ -78,11 +65,7 @@ function TimelineSpecialEventCard({
         <span className="absolute left-[0.45rem] top-6 block h-full w-[2px] rounded-full bg-gradient-to-b from-amber-400 via-orange-300/90 to-transparent shadow-[0_0_0.45rem_rgba(251,191,36,0.3)]" />
       ) : null}
       <article
-        role="button"
-        tabIndex={0}
-        onClick={handleHighlight}
-        onKeyDown={handleKeyDown}
-        className={`rounded-xl border border-amber-300 bg-[linear-gradient(135deg,rgba(255,251,235,1)_0%,rgba(254,243,199,0.86)_46%,rgba(255,237,213,0.92)_100%)] transition hover:-translate-y-0.5 ${densityClasses.panel} ${articleEmphasis}`}
+        className={`rounded-xl border border-amber-300 bg-[linear-gradient(135deg,rgba(255,251,235,1)_0%,rgba(254,243,199,0.86)_46%,rgba(255,237,213,0.92)_100%)] ${densityClasses.panel} ${articleEmphasis}`}
       >
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -109,16 +92,6 @@ function TimelineSpecialEventCard({
             {number ? <span>#{number}</span> : null}
             {publicationDate ? <span>{publicationDate}</span> : null}
           </div>
-          {entry.source_url ? (
-            <a
-              href={entry.source_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 underline decoration-amber-500/70 underline-offset-2"
-            >
-              {t('timeline.viewOnComicsOrg')}
-            </a>
-          ) : null}
         </div>
       </article>
     </li>

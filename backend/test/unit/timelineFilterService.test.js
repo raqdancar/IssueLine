@@ -65,6 +65,44 @@ test('keeps only canonical entry when duplicates share canonical key and one is 
   assert.equal(result.excludedEntries[0].metadata.gcdIssueId, 2002)
 })
 
+test('excludes second and third printings even when they are the only candidate for that issue number', () => {
+  const secondPrinting = makeEntry({
+    gcdIssueId: 2501,
+    issueLabel: 'Sample #1 Second Printing',
+    issueCode: '1 [Second Printing]',
+    headline: 'Sample 1 Second Printing',
+  })
+  const thirdPrinting = makeEntry({
+    gcdIssueId: 2502,
+    number: '2',
+    issueLabel: 'Sample #2 Third Printing',
+    issueCode: '2 [Third Printing]',
+    headline: 'Sample 2 Third Printing',
+  })
+  const canonical = makeEntry({
+    gcdIssueId: 2503,
+    number: '3',
+    issueLabel: 'Sample #3',
+    issueCode: '3',
+    headline: 'Sample 3',
+  })
+
+  const result = buildTimelineVisibilityPlan({
+    entries: [secondPrinting, thirdPrinting, canonical],
+    excludeVariantsFromTimeline: true,
+  })
+
+  assert.equal(result.variantFilteringApplied, true)
+  assert.deepEqual(
+    result.selectedEntries.map((entry) => entry.metadata.gcdIssueId),
+    [2503],
+  )
+  assert.deepEqual(
+    result.excludedEntries.map((entry) => entry.metadata.gcdIssueId),
+    [2501, 2502],
+  )
+})
+
 test('breaks score ties by lowest gcdIssueId', () => {
   const a = makeEntry({
     gcdIssueId: 3002,

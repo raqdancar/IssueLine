@@ -211,10 +211,10 @@ function TimelineArchiveBriefing({
                 </span>
               </div>
               <div className="editorial-route-scroll relative mt-5 overflow-x-auto pb-4">
-                <div className="pointer-events-none absolute left-0 right-0 top-5 h-px bg-linear-to-r from-transparent via-primary/70 to-transparent" aria-hidden="true" />
                 <ol className="relative flex min-w-max items-start gap-4 pr-2">
+                  <span className="pointer-events-none absolute left-0 right-0 top-5 h-px bg-linear-to-r from-transparent via-primary/70 to-transparent" aria-hidden="true" />
                   {routeStages.map((stage, index) => (
-                    <li key={stage.key} className="w-34 shrink-0">
+                    <li key={stage.key} className="relative z-10 w-34 shrink-0">
                       <button
                         type="button"
                         onMouseEnter={() => setActiveRouteIndex(index)}
