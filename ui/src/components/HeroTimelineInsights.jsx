@@ -1,4 +1,4 @@
-﻿// Render stage/collection insight panels and progress actions for a hero timeline.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useMemo, useState } from 'react'
 import { BookOpen, CheckCircle2, Info, Loader2 } from 'lucide-react'
 import {

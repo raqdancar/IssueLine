@@ -1,4 +1,4 @@
-// Provide shared Supabase access helpers for hero catalog/detail payloads.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 
 const resolveTimelineStageKey = (row) => {
   const metadata = row?.metadata ?? {}

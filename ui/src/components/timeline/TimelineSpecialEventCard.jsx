@@ -1,4 +1,4 @@
-// Render timeline milestone cards for special non-issue events.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { CalendarDays, Flag, Sparkles } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

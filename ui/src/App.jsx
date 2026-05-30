@@ -1,4 +1,4 @@
-// Compose the main frontend application shell and route views.
+﻿// Compon l'estructura principal del frontend i connecta rutes, sessio i navegacio.
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Route, Routes, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import AppHeader from '@/components/AppHeader'

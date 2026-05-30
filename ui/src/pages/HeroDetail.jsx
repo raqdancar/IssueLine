@@ -1,4 +1,4 @@
-// Render the HeroDetail page container.
+﻿// Renderitza una pagina principal de l'aplicacio.
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import HeroTimeline from '@/components/HeroTimeline'

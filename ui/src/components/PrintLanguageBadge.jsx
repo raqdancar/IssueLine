@@ -1,3 +1,4 @@
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { resolvePrintLanguageBadge } from '@/lib/printLanguage'
 import flagEs from 'flagpack-core/lib/flags/s/724.svg'
 import flagGb from 'flagpack-core/lib/flags/s/836.svg'

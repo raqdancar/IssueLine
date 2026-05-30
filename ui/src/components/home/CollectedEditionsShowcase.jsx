@@ -1,3 +1,4 @@
+﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 import { ArrowRight, BookMarked } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import SectionHeading from './SectionHeading'

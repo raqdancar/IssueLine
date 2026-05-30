@@ -1,4 +1,4 @@
-// Render the public privacy and local storage notice.
+﻿// Renderitza una pagina principal de l'aplicacio.
 import { Link } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'

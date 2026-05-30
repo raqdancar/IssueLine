@@ -1,4 +1,4 @@
-// Inform users about the local storage currently required by IssueLine.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useEffect, useState } from 'react'
 import { Database, X } from 'lucide-react'
 import { Link } from 'react-router-dom'

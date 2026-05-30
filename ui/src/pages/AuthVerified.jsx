@@ -1,4 +1,4 @@
-// Render the confirmation landing screen after Supabase email verification.
+﻿// Renderitza una pagina principal de l'aplicacio.
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, MailCheck, ShieldAlert } from 'lucide-react'

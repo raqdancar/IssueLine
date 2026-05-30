@@ -1,3 +1,4 @@
+﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 import { ArrowDown, ArrowRight, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'

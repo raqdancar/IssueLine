@@ -1,3 +1,4 @@
+﻿// Renderitza una pagina principal de l'aplicacio.
 import CharacterShowcase from '@/components/home/CharacterShowcase'
 import CollectedEditionsShowcase from '@/components/home/CollectedEditionsShowcase'
 import CollectorsSection from '@/components/home/CollectorsSection'

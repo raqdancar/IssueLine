@@ -1,4 +1,4 @@
-﻿// Render one hero card with stats, timeline coverage, and edition count summary.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/i18n/I18nProvider.jsx'

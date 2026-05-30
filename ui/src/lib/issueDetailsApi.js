@@ -1,4 +1,4 @@
-// Provide the issueDetailsApi shared library helpers.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 import { backendBaseUrl } from '@/utils/backend.js'
 import { parseJsonResponse } from '@/lib/httpClient.js'
 

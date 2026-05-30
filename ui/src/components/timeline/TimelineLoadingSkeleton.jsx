@@ -1,4 +1,4 @@
-// Reusable loading placeholders for timeline views while backend data is in-flight.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { cn } from '@/lib/utils'
 
 const barClassesByVariant = {

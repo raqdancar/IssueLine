@@ -1,3 +1,4 @@
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 const KNOWN_FORMAT_LABELS = {
   deluxe: 'Deluxe',
   epic_collection: 'Epic Collection',

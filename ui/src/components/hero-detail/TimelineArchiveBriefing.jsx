@@ -1,4 +1,4 @@
-// Render a compact, data-led archive snapshot for a character detail page.
+﻿// Renderitza blocs visuals de la pagina de detall d'un personatge.
 import { BookOpenCheck, CalendarRange, Layers3, LibraryBig } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import {

@@ -1,4 +1,4 @@
-﻿// Render the global app header with auth actions, locale switcher, and mobile nav.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'

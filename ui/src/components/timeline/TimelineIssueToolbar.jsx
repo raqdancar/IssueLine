@@ -1,4 +1,4 @@
-﻿// Render the detailed card toolbar for collection/read toggles.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { BookOpen, CheckCircle2, Loader2 } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

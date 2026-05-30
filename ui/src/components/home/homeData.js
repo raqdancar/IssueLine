@@ -1,3 +1,4 @@
+﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 export const fallbackHeroes = [
   {
     api_id: 'landing-doctor-strange',
@@ -184,7 +185,7 @@ export const estimateCompletion = (hero, index = 0) => {
 export const getDisplayHeroes = (heroes = []) => {
   const liveHeroes = heroes.filter((hero) => hero?.hasTimelineIssues || hero?.timelineCoverage?.count > 0)
   const source = liveHeroes.length ? liveHeroes : heroes.length ? heroes : fallbackHeroes
-  return source.slice(0, 4)
+  return source
 }
 
 export const buildGlobalStats = (heroes = [], t) => {

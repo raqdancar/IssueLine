@@ -1,4 +1,4 @@
-// Render the stage details modal with summary and related issue strip.
+﻿// Renderitza el dialeg i la navegacio d'una etapa editorial.
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'

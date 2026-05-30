@@ -1,4 +1,4 @@
-﻿// Render an empty-state card when no collected editions are linked to an issue.
+﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
 // Empty-state card shown when an issue has no linked collected editions yet.

@@ -1,4 +1,4 @@
-﻿// Render timeline controls: title, sorting, zoom, and collection filters.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { useEffect, useState } from 'react'
 import { BookOpen, CheckCircle2, Maximize2, Minimize2, Minus, Plus } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'

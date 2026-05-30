@@ -1,4 +1,4 @@
-﻿// Render the horizontal timeline of issues shown inside the stage modal.
+﻿// Renderitza el dialeg i la navegacio d'una etapa editorial.
 import { Timeline } from 'primereact/timeline'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

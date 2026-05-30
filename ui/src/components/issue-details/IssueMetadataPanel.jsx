@@ -1,4 +1,4 @@
-﻿// Render normalized issue metadata fields for the details modal.
+﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { useMemo } from 'react'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { useI18n } from '@/i18n/I18nProvider.jsx'

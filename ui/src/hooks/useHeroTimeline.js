@@ -1,4 +1,4 @@
-// React Query wrapper for the shared hero timeline payload.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 import { useQuery } from '@tanstack/react-query'
 import { fetchHeroTimeline } from '@/lib/heroTimelineApi.js'
 import { isBackendConfigured } from '@/utils/backend.js'

@@ -1,4 +1,4 @@
-﻿// Render collected-edition cards linked to the selected issue.
+﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
 import { buildPublicStorageUrl } from '@/lib/issueImages'

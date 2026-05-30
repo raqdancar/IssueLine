@@ -1,4 +1,4 @@
-﻿// Render the cinematic timeline grouped by year with rich issue cards.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Maximize2, Minimize2 } from 'lucide-react'

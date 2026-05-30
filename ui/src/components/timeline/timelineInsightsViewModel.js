@@ -1,4 +1,4 @@
-// Pure derivations for the hero timeline insights panel.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
 import { buildPublicStorageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
 import { resolvePrintLanguageBadge } from '@/lib/printLanguage'

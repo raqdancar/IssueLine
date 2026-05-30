@@ -1,4 +1,4 @@
-// Provide shared modal behavior for Escape handling and body scroll locking.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 
 import { useEffect } from 'react'
 

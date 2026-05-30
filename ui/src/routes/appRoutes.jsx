@@ -1,4 +1,4 @@
-// Define route metadata and page rendering for the application shell.
+﻿// Defineix la configuracio de rutes i metadades de navegacio.
 import { lazy } from 'react'
 
 const HomePage = lazy(() => import('@/pages/HomePage'))
@@ -6,6 +6,7 @@ const HeroDetail = lazy(() => import('@/pages/HeroDetail'))
 const AccountSettings = lazy(() => import('@/pages/AccountSettings'))
 const AuthVerified = lazy(() => import('@/pages/AuthVerified'))
 const StoragePolicy = lazy(() => import('@/pages/StoragePolicy'))
+const DataSources = lazy(() => import('@/pages/DataSources'))
 
 const formatSlugTitle = (slug) =>
   decodeURIComponent(slug)
@@ -48,6 +49,12 @@ export const appRoutes = [
     path: '/privacy',
     title: ({ appName, t }) => `${appName} | ${t('privacy.title')}`,
     render: () => <StoragePolicy />,
+  },
+  {
+    id: 'dataSources',
+    path: '/data-sources',
+    title: ({ appName, t }) => `${appName} | ${t('dataSources.title')}`,
+    render: () => <DataSources />,
   },
 ]
 

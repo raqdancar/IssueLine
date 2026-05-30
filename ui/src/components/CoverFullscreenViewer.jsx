@@ -1,4 +1,4 @@
-// Render a mobile-only fullscreen cover preview modal with escape/overlay close.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'

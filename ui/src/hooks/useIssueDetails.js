@@ -1,4 +1,4 @@
-// Provide the useIssueDetails hook for shared state/query behavior.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 import { useQuery } from '@tanstack/react-query'
 import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
 import { isBackendConfigured } from '@/utils/backend.js'

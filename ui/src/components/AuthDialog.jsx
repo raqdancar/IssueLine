@@ -1,4 +1,4 @@
-// Render the auth modal with sign-in/sign-up flows and validation feedback.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

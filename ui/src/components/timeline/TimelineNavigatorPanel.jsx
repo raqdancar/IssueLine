@@ -1,4 +1,4 @@
-﻿// Render the timeline index panel and anchor jump controls.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { EyeOff } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

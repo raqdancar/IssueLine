@@ -1,4 +1,4 @@
-// Pure visual primitives for timeline insights.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { useEffect, useMemo, useRef } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'

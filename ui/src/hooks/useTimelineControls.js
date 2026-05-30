@@ -1,4 +1,4 @@
-// Stateful controls for the main hero timeline.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 import { useEffect, useMemo, useState } from 'react'
 import { useTimelineFullscreen } from '@/hooks/useTimelineFullscreen.js'
 import {

@@ -1,4 +1,4 @@
-﻿// Build the normalized view model consumed by all timeline issue card densities.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { getEntryDomId, getStageKey } from '../../utils/timeline'

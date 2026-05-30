@@ -1,4 +1,4 @@
-// Provide hero catalog loading state for dashboard pages.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'

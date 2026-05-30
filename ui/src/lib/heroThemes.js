@@ -1,4 +1,4 @@
-// Provide the heroThemes shared library helpers.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 const doctorStrangeTheme = {
   '--color-slate-50': '#fff8e8',
   '--color-slate-100': '#fff8e8',

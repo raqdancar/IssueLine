@@ -1,4 +1,4 @@
-﻿// Select and render the timeline issue card variant for the active density mode.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useMemo } from 'react'
 import TimelineIssueCardDetailed from './timeline/TimelineIssueCardDetailed'
 import TimelineIssueCardCompact from './timeline/TimelineIssueCardCompact'

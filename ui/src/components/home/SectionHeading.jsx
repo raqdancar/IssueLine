@@ -1,3 +1,4 @@
+﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 function SectionHeading({ eyebrow, title, description, align = 'left', className = '' }) {
   const alignClasses = align === 'center' ? 'mx-auto text-center' : ''
 

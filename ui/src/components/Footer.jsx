@@ -1,4 +1,5 @@
-﻿// Render footer branding, legal copy, and localized external links.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
+import { Link } from 'react-router-dom'
 import { footerLinks } from '@/lib/footerConfig'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 
@@ -17,22 +18,29 @@ function Footer() {
         </div>
 
         <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 lg:justify-center" aria-label={t('footer.ariaFooterLinks')}>
-          {footerLinks.map((link) => (
-            <a
-              key={link.labelKey}
-              href={link.href}
-              className={linkBaseClasses}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noreferrer noopener' : undefined}
-            >
-              {t(link.labelKey)}
-            </a>
-          ))}
+          {footerLinks.map((link) =>
+            link.external ? (
+              <a
+                key={link.labelKey}
+                href={link.href}
+                className={linkBaseClasses}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {t(link.labelKey)}
+              </a>
+            ) : (
+              <Link key={link.labelKey} to={link.href} className={linkBaseClasses}>
+                {t(link.labelKey)}
+              </Link>
+            ),
+          )}
         </nav>
 
-        <div className="space-y-1 lg:text-right">
+        <div className="space-y-2 lg:text-right">
           <p className="font-semibold text-slate-200">{t('footer.legal')}</p>
           <p className="leading-6 text-slate-400">{t('footer.disclaimer')}</p>
+          <p className="leading-6 text-slate-500">{t('footer.gcdAttribution')}</p>
         </div>
       </div>
     </footer>

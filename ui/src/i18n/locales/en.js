@@ -1,4 +1,5 @@
-﻿const messages = {
+﻿// Gestiona proveidors i textos localitzats de la interfície.
+const messages = {
   common: {
     appName: 'IssueLine',
     account: 'Account',
@@ -78,12 +79,34 @@
     manageBody: 'You can delete this data from your browser settings by clearing site data. When you sign out, Supabase removes the active session from the app.',
     backHome: 'Back to homepage',
   },
+  dataSources: {
+    eyebrow: 'Data sources and licenses',
+    title: 'Data sources and cover-use notes',
+    intro:
+      'IssueLine combines manually curated archive data with comic metadata sourced in part from the Grand Comics Database.',
+    gcdTitle: 'Grand Comics Database metadata',
+    gcdBody:
+      'Comic metadata is sourced in part from the Grand Comics Database (GCD). GCD database portions are licensed under Creative Commons Attribution-ShareAlike 4.0 International.',
+    coversTitle: 'Cover thumbnails',
+    coversBody:
+      'Cover thumbnails are used only to identify comics and issues. Rights to cover artwork remain with the respective copyright holders.',
+    independentTitle: 'Independent archive',
+    independentBody:
+      'IssueLine is an unofficial archival project and is not affiliated with, sponsored by, or endorsed by GCD, publishers, creators, or rights holders.',
+    linksTitle: 'Reference links',
+    gcdLink: 'Grand Comics Database',
+    ccLink: 'CC BY-SA 4.0',
+    ccBadgeAlt: 'Creative Commons Attribution-ShareAlike 4.0 license badge',
+    backHome: 'Back to homepage',
+  },
   footer: {
     ariaSiteFooter: 'Site footer',
     ariaFooterLinks: 'Footer links',
     tagline: 'An editorial archive for timelines, collected editions, and the long memory of comic book continuity.',
     legal: '© 2026 IssueLine',
     disclaimer: 'Unofficial archival project. Data and artwork belong to their respective owners.',
+    gcdAttribution:
+      'Comic metadata is sourced in part from the Grand Comics Database under CC BY-SA 4.0. Cover thumbnails are used for identification only.',
     about: 'About',
     feedback: 'Feedback',
     privacy: 'Privacy',

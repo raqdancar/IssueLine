@@ -1,4 +1,4 @@
-﻿// Render timeline entries with density-aware cards and state wiring.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import TimelineIssueCard from '../TimelineIssueCard'
 import { hasSpecialIssueCode } from './utils'
 

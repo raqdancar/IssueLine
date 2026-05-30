@@ -1,4 +1,4 @@
-// Modal used to select which collected editions the user owns for one issue.
+﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, PackageCheck, X } from 'lucide-react'

@@ -1,4 +1,4 @@
-﻿// Render the minimal timeline issue card for dense mobile views.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { CalendarDays } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

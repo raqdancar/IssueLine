@@ -1,4 +1,4 @@
-// Cross-browser fullscreen helpers (standard + webkit-prefixed fallbacks).
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 
 const getFullscreenElement = (doc) => doc?.fullscreenElement ?? doc?.webkitFullscreenElement ?? null
 

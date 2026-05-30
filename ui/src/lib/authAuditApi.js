@@ -1,4 +1,4 @@
-// Provide login-audit persistence helper.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 
 export const recordLoginAudit = async (supabaseClient, user) => {
   const payload = {

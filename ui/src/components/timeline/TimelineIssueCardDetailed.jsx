@@ -1,4 +1,4 @@
-﻿// Render the full-detail timeline issue card with metadata and actions.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { useEffect, useState } from 'react'
 import { CalendarDays } from 'lucide-react'
 import TimelineStageTab from './TimelineStageTab'

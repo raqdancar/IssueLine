@@ -1,4 +1,4 @@
-// Provide shared helpers for JSON HTTP requests to backend endpoints.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 import { sanitizeMojibakeDeep } from '@/lib/textSanitizer.js'
 
 const buildRequestError = (payload, response) => {

@@ -1,4 +1,4 @@
-// Centralize backend reads for hero timeline payloads.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 import { parseJsonResponse } from '@/lib/httpClient.js'
 import { backendBaseUrl } from '@/utils/backend.js'
 

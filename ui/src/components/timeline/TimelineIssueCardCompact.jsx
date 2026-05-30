@@ -1,4 +1,4 @@
-﻿// Render the medium-density timeline issue card layout.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { CalendarDays } from 'lucide-react'
 import IssueStateActions from './IssueStateActions'
 import { useI18n } from '@/i18n/I18nProvider.jsx'

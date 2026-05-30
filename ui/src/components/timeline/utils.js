@@ -1,4 +1,4 @@
-﻿// Provide helpers to detect annual and special issues from timeline entry metadata.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 const textIncludes = (value, keyword) => {
   if (typeof value !== 'string') return false
   return value.toLowerCase().includes(keyword)

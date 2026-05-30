@@ -1,4 +1,4 @@
-﻿// Centralize timeline visual variants, filters, and zoom thresholds.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 export const severityVariants = {
   info: {
     dot: 'border-slate-300 bg-white',

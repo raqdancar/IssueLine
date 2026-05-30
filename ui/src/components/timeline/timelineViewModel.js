@@ -1,4 +1,4 @@
-// Pure timeline derivations used by the main timeline view.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { isAnnualIssueEntry, isSpecialTimelineEventEntry } from '@/components/timeline/utils'
 import {
   compareTimelineEntries,

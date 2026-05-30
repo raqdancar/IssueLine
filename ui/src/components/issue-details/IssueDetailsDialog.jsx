@@ -1,4 +1,4 @@
-// Render the issue details modal with metadata, actions, and collected editions.
+﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BookOpen, CheckCircle2 } from 'lucide-react'

@@ -1,4 +1,4 @@
-// Provide session and navbar avatar state sourced from Supabase auth.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'

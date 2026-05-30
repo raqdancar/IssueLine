@@ -1,4 +1,4 @@
-﻿// Render compact issue state toggle actions for list cards.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { BookOpen, CheckCircle2, Loader2 } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

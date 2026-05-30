@@ -1,4 +1,4 @@
-﻿// Timeline covers live in the hero-images bucket
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 export const ISSUE_IMAGE_BUCKET = 'issue-images'
 const ABSOLUTE_URL_REGEX = /^https?:\/\//i
 

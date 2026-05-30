@@ -1,3 +1,4 @@
+﻿// Gestiona proveidors i textos localitzats de la interfície.
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import {
   DEFAULT_LOCALE,

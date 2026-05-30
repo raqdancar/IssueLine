@@ -1,3 +1,4 @@
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import TimelineNavigatorPanel from './TimelineNavigatorPanel'
 import TimelineNavigatorToggle from './TimelineNavigatorToggle'
 import TimelineList from './TimelineList'

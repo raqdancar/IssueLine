@@ -1,4 +1,4 @@
-// Provide the sessionContext shared library helpers.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 import { createContext, useContext } from 'react'
 
 export const SessionContext = createContext({

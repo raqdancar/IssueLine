@@ -1,3 +1,4 @@
+﻿// Defineix primitives UI reutilitzables per formularis i accions.
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 

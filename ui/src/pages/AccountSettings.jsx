@@ -1,4 +1,4 @@
-// Render the AccountSettings page container.
+﻿// Renderitza una pagina principal de l'aplicacio.
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

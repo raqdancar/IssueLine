@@ -1,3 +1,4 @@
+﻿// Gestiona proveidors i textos localitzats de la interfície.
 import es from './es.js'
 import ca from './ca.js'
 import en from './en.js'

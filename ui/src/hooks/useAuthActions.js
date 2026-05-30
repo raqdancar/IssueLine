@@ -1,4 +1,4 @@
-// Provide auth form state and Supabase auth actions for the UI shell.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'

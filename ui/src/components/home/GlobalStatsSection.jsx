@@ -1,3 +1,4 @@
+﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { buildGlobalStats } from './homeData'
 

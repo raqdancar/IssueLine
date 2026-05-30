@@ -1,4 +1,4 @@
-﻿// Render the main timeline experience with filters, anchors, issue states, and details.
+﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import TimelineHeader from './timeline/TimelineHeader'

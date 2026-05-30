@@ -1,3 +1,4 @@
+﻿// Defineix primitives UI reutilitzables per formularis i accions.
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

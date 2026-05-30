@@ -1,4 +1,4 @@
-﻿// Render the button that reveals the collapsed timeline index panel.
+﻿// Construeix peces visuals i derivacions de la cronologia d'issues.
 import { Eye } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

@@ -1,3 +1,4 @@
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 import { useCallback, useEffect, useState } from 'react'
 import { canUseFullscreen, exitDocumentFullscreen, isElementFullscreen, requestElementFullscreen } from '@/lib/fullscreen.js'
 

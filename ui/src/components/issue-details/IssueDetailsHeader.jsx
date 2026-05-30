@@ -1,4 +1,4 @@
-﻿// Render the issue-details modal header and quick have/read action controls.
+﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { Loader2, X } from 'lucide-react'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 

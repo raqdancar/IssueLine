@@ -1,3 +1,4 @@
+﻿// Defineix primitives UI reutilitzables per formularis i accions.
 "use client"
 
 import * as React from "react"

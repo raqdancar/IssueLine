@@ -1,4 +1,4 @@
-// Render a randomized layered cover fan for archive-style character panels.
+﻿// Renderitza blocs visuals de la pagina de detall d'un personatge.
 import { useMemo } from 'react'
 
 const shuffleArray = (input) => {
