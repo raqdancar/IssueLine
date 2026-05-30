@@ -16,15 +16,15 @@ export function CollectedFilterSelect({ label, value, allLabel, options, onChang
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="flex h-11 w-full items-center justify-between gap-3 rounded-2xl border border-amber-300/80 bg-white px-4 text-left text-sm font-semibold text-red-800 shadow-sm shadow-amber-100/60 transition hover:border-amber-400 hover:bg-amber-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/50"
+            className="flex h-11 w-full items-center justify-between gap-3 rounded-2xl border border-primary/35 bg-white px-4 text-left text-sm font-semibold text-primary shadow-sm shadow-primary/10 transition hover:border-primary/60 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <span className="min-w-0 truncate">{selectedLabel}</span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-red-700" aria-hidden="true" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
           </button>
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="w-[var(--radix-popover-trigger-width)] rounded-2xl border border-amber-200 bg-white/98 p-1.5 shadow-xl shadow-slate-900/12"
+          className="w-[var(--radix-popover-trigger-width)] rounded-2xl border border-primary/25 bg-white/98 p-1.5 shadow-xl shadow-slate-900/12"
         >
           <div className="max-h-72 overflow-y-auto">
             {normalizedOptions.map((option) => {
@@ -35,11 +35,11 @@ export function CollectedFilterSelect({ label, value, allLabel, options, onChang
                   type="button"
                   onClick={() => onChange(option.value)}
                   className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${
-                    selected ? 'bg-red-50 text-red-800' : 'text-slate-700 hover:bg-amber-50 hover:text-red-800'
+                    selected ? 'bg-accent/40 text-primary' : 'text-slate-700 hover:bg-accent/30 hover:text-primary'
                   }`}
                 >
                   <span className="min-w-0 truncate">{option.label}</span>
-                  {selected ? <Check className="h-4 w-4 shrink-0 text-red-700" aria-hidden="true" /> : null}
+                  {selected ? <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /> : null}
                 </button>
               )
             })}
@@ -165,7 +165,7 @@ export const AutoScrollIssueStrip = ({ editionId, issues = [] }) => {
             const isSequenceEnd = normalizedIssues.length > 0 && (index + 1) % normalizedIssues.length === 0
             return (
               <div key={`${editionId}-issue-${issueKey}-${isDuplicatedToken ? 'dup' : 'src'}-${index}`} className="inline-flex items-center gap-2 shrink-0">
-                <span className="shrink-0 rounded-full border border-indigo-200 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-sm" aria-hidden={isDuplicatedToken}>
+                <span className="shrink-0 rounded-full border border-primary/25 bg-white px-2.5 py-1 text-xs font-semibold text-primary shadow-sm" aria-hidden={isDuplicatedToken}>
                   #{issue.number ?? issue.gcdIssueId}
                 </span>
                 {isSequenceEnd ? <span className="h-2.5 w-2.5 rounded-full bg-primary/40 ring-2 ring-card shadow-[0_0_0_1px_rgba(15,23,42,0.08)]" aria-hidden="true" /> : null}

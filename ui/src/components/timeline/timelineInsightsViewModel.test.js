@@ -1,6 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest'
 import {
   ALL_FILTER_VALUE,
+  buildCollectedEditionFormatGroups,
   buildFilteredCollectedEditions,
   buildFilterOptions,
   buildStageCoverageMap,
@@ -81,6 +82,18 @@ describe('timeline insights view model', () => {
         collectedFormatFilter: ALL_FILTER_VALUE,
       }),
     ).toHaveLength(3)
+  })
+
+  it('groups collected editions by publication type', () => {
+    const groups = buildCollectedEditionFormatGroups([
+      { id: 'a', format: 'tpb' },
+      { id: 'b', format: 'omnibus' },
+      { id: 'c', format: 'tpb' },
+      { id: 'd' },
+    ])
+
+    expect(groups.map((group) => group.label)).toEqual(['Omnibus', 'TPB', 'Unknown'])
+    expect(groups.find((group) => group.key === 'tpb')?.editions.map((edition) => edition.id)).toEqual(['a', 'c'])
   })
 
   it('resolves timeline coverage and collected edition ownership/read state', () => {

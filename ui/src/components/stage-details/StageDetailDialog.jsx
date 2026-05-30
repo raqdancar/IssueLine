@@ -3,18 +3,21 @@ import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { resolveHeroThemeStyle } from '@/lib/heroThemes'
 import StageIssuesTimeline from './StageIssuesTimeline'
 
 // Modal dialog that shows one stage summary and its issue timeline strip.
-function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSelect, portalContainer }) {
+function StageDetailDialog({ open, onClose, stage = null, issues = [], onIssueSelect, portalContainer, heroSlug }) {
   const { t } = useI18n()
   useModalLayer({ open, onClose, lockScroll: true, closeOnEscape: true })
 
   if (!open || typeof document === 'undefined' || !stage) return null
   const portalTarget = portalContainer ?? document.body
+  const heroThemeStyle = resolveHeroThemeStyle(heroSlug)
 
   return createPortal(
     <div
+      style={heroThemeStyle}
       className="fixed inset-0 z-[130] flex items-start justify-center bg-slate-950/70 px-3 py-4 md:items-center md:px-6 md:py-8"
       onClick={(event) => {
         event.stopPropagation()

@@ -13,7 +13,7 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
   const hasItems = Array.isArray(collectedEditions) && collectedEditions.length > 0
 
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 lg:min-h-0 lg:overflow-y-auto">
       <div>
         <h3 className="title-xs text-slate-900">{t('issueDetails.collected.title')}</h3>
         <p className="body-sm text-slate-600">{t('issueDetails.collected.description')}</p>
@@ -21,7 +21,7 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
 
       {/* Real collected-edition items linked to this issue. */}
       {hasItems ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
           {collectedEditions.map((edition) => {
             // Support either absolute URLs or storage paths from import pipelines.
             const resolvedCoverImage = buildPublicStorageUrl(edition.coverImageUrl, COLLECTED_EDITION_IMAGE_BUCKET)
@@ -63,7 +63,7 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
                     {edition.title ?? t('issueDetails.collected.placeholderTitle')}
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
+                    <span className="inline-flex rounded-full border border-primary/30 bg-accent/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                       {formatCollectedEditionFormat(edition.format)}
                     </span>
                     <PrintLanguageBadge value={edition.printLanguage ?? edition.print_language} />
@@ -82,7 +82,7 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
                       href={edition.sourceUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="body-xs font-semibold text-indigo-700 underline"
+                      className="body-xs font-semibold text-primary underline"
                     >
                       {t('issueDetails.openSource')}
                     </a>
@@ -98,7 +98,7 @@ function IssueCollectedEditionsSection({ collectedEditions }) {
           })}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           <IssueCollectedEditionPlaceholderCard />
           <IssueCollectedEditionPlaceholderCard />
           <IssueCollectedEditionPlaceholderCard />

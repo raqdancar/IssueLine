@@ -199,6 +199,29 @@ export const buildFilteredCollectedEditions = ({
     return languageMatches && formatMatches
   })
 
+export const buildCollectedEditionFormatGroups = (collectedEditions = []) => {
+  const groupsByFormat = new Map()
+
+  for (const edition of collectedEditions) {
+    const formatOption = resolveEditionFormatFilter(edition) ?? {
+      value: 'unknown',
+      label: formatCollectedEditionFormat('unknown'),
+    }
+
+    if (!groupsByFormat.has(formatOption.value)) {
+      groupsByFormat.set(formatOption.value, {
+        key: formatOption.value,
+        label: formatOption.label,
+        editions: [],
+      })
+    }
+
+    groupsByFormat.get(formatOption.value).editions.push(edition)
+  }
+
+  return Array.from(groupsByFormat.values()).sort((a, b) => a.label.localeCompare(b.label))
+}
+
 export const buildStageCoverageMap = (stages = []) =>
   stages.reduce((acc, stage) => {
     if (!stage?.key) return acc

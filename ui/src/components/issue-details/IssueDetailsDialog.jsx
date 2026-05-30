@@ -3,10 +3,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BookOpen, CheckCircle2 } from 'lucide-react'
 import { buildIssueImageUrl, resolveIssueCoverImage } from '@/lib/issueImages'
+import { resolveHeroThemeStyle } from '@/lib/heroThemes'
+import { isSpecialTimelineEventEntry } from '@/components/timeline/utils'
 import { useIssueDetailsQuery } from '@/hooks/useIssueDetails.js'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
+import { compareTimelineEntries } from '@/utils/timeline'
 import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
 import IssueDetailsHeader from './IssueDetailsHeader'
 import IssueMetadataPanel from './IssueMetadataPanel'
@@ -77,6 +80,26 @@ const resolveStageYearLabel = (issues, t) => {
   const minYear = Math.min(...years)
   const maxYear = Math.max(...years)
   return minYear === maxYear ? `${minYear}` : `${minYear} - ${maxYear}`
+}
+
+const buildTimelineIssueNavigation = ({ issueId, timelineEntries }) => {
+  if (!issueId || !Array.isArray(timelineEntries) || !timelineEntries.length) {
+    return { previousIssueId: null, nextIssueId: null }
+  }
+
+  const navigableEntries = timelineEntries
+    .filter((entry) => entry?.id && !isSpecialTimelineEventEntry(entry))
+    .sort((a, b) => compareTimelineEntries(a, b, 'asc'))
+  const currentIndex = navigableEntries.findIndex((entry) => String(entry.id) === String(issueId))
+
+  if (currentIndex === -1) {
+    return { previousIssueId: null, nextIssueId: null }
+  }
+
+  return {
+    previousIssueId: navigableEntries[currentIndex - 1]?.id ?? null,
+    nextIssueId: navigableEntries[currentIndex + 1]?.id ?? null,
+  }
 }
 
 const buildStageContext = ({ issue, issueId, timelineEntries, t }) => {
@@ -160,7 +183,12 @@ function IssueDetailsDialog({
 
   const issue = query.data?.issue ?? null
   const collectedEditions = query.data?.collectedEditions ?? []
+  const heroThemeStyle = resolveHeroThemeStyle(heroSlug)
   const coverImage = useMemo(() => resolveCoverImage(issue, fallbackImage), [issue, fallbackImage])
+  const issueNavigation = useMemo(
+    () => buildTimelineIssueNavigation({ issueId, timelineEntries }),
+    [issueId, timelineEntries],
+  )
   const stageContext = useMemo(
     () => buildStageContext({ issue, issueId, timelineEntries, t }),
     [issue, issueId, timelineEntries, t],
@@ -179,14 +207,18 @@ function IssueDetailsDialog({
 
   return createPortal(
     <div
+      style={heroThemeStyle}
       className="fixed inset-0 z-[120] flex items-start justify-center bg-slate-950/75 px-3 py-4 md:items-center md:px-6 md:py-8"
       onClick={onClose}
     >
-      <div className="w-full max-w-5xl" onClick={(event) => event.stopPropagation()}>
-        <div className="max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/30 sm:p-6">
+      <div className="w-full max-w-[1480px]" onClick={(event) => event.stopPropagation()}>
+        <div className="max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/30 sm:p-6 lg:flex lg:h-[92vh] lg:flex-col lg:overflow-hidden">
           <IssueDetailsHeader
             issue={issue}
             onClose={onClose}
+            previousIssueId={issueNavigation.previousIssueId}
+            nextIssueId={issueNavigation.nextIssueId}
+            onIssueNavigate={onIssueNavigate}
             actionButtons={[
               {
                 key: 'haveIt',
@@ -223,9 +255,9 @@ function IssueDetailsDialog({
           ) : !issue ? (
             <p className="body-sm py-6 text-slate-500">{t('issueDetails.empty')}</p>
           ) : (
-            <div className="space-y-6 py-4">
-              <section className="grid gap-5 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
-                <div className="mx-auto w-full max-w-[180px] sm:max-w-[210px] lg:mx-0 lg:max-w-[200px]">
+            <div className="space-y-6 py-4 lg:grid lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5 lg:space-y-0 lg:overflow-hidden xl:grid-cols-[minmax(0,1fr)_360px]">
+              <section className="grid gap-5 lg:min-h-0 lg:grid-cols-[160px_minmax(0,1fr)] lg:items-start lg:overflow-y-auto lg:pr-1 xl:grid-cols-[180px_minmax(0,1fr)]">
+                <div className="mx-auto w-full max-w-[180px] sm:max-w-[210px] lg:mx-0 lg:max-w-[180px]">
                   <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                     <div className="aspect-2/3">
                       {coverImage ? (
@@ -241,13 +273,13 @@ function IssueDetailsDialog({
                 <div className="min-w-0">
                   <IssueMetadataPanel issue={issue} />
                   {stageContext?.stage ? (
-                    <section className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3">
-                      <p className="body-xs font-semibold uppercase tracking-wide text-indigo-700">{t('timeline.stage')}</p>
-                      <p className="mt-1 text-base font-semibold text-indigo-950">{stageContext.stage.name}</p>
-                      <p className="body-xs mt-1 text-indigo-800">
+                    <section className="mt-4 rounded-xl border border-primary/30 bg-accent/50 p-3">
+                      <p className="body-xs font-semibold uppercase tracking-wide text-primary">{t('timeline.stage')}</p>
+                      <p className="mt-1 text-base font-semibold text-foreground">{stageContext.stage.name}</p>
+                      <p className="body-xs mt-1 text-muted-foreground">
                         {stageContext.stage.yearLabel} - {t('timeline.trackedIssues', { count: stageContext.stage.issueCount })}
                       </p>
-                      <p className="body-sm mt-2 text-indigo-900">
+                      <p className="body-sm mt-2 text-foreground">
                         {stageContext.stage.summary ?? t('timeline.noStageSummary')}
                       </p>
                       <Button type="button" size="sm" variant="outline" className="mt-3" onClick={() => setIsStageDialogOpen(true)}>
@@ -267,6 +299,7 @@ function IssueDetailsDialog({
         onClose={() => setIsStageDialogOpen(false)}
         stage={stageContext?.stage ?? null}
         issues={stageContext?.issues ?? []}
+        heroSlug={heroSlug}
         portalContainer={portalContainer}
         onIssueSelect={(stageIssue) => {
           if (!stageIssue?.issueId) return

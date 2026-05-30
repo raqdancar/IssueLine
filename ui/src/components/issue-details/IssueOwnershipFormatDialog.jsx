@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { Loader2, PackageCheck, X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
+import { resolveHeroThemeStyle } from '@/lib/heroThemes'
 import { buildPublicStorageUrl } from '@/lib/issueImages'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import PrintLanguageBadge from '@/components/PrintLanguageBadge'
@@ -14,6 +15,7 @@ const resolveCollectedCoverImage = (value) => buildPublicStorageUrl(value, COLLE
 
 function IssueOwnershipFormatDialog({
   open,
+  heroSlug,
   portalContainer,
   issueTitle,
   editions = [],
@@ -42,11 +44,13 @@ function IssueOwnershipFormatDialog({
   if (!open) return null
   if (typeof document === 'undefined') return null
   const portalTarget = portalContainer ?? document.body
+  const heroThemeStyle = resolveHeroThemeStyle(heroSlug)
 
   const selectedSet = new Set(selectedEditionIds)
 
   return createPortal(
     <div
+      style={heroThemeStyle}
       className="fixed inset-0 z-130 flex items-center justify-center bg-slate-950/65 px-3 py-4"
       onClick={() => {
         if (!canCloseBackdrop) return

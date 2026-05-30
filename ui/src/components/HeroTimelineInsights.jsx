@@ -23,6 +23,7 @@ import {
 } from '@/components/timeline/TimelineInsightPrimitives'
 import {
   ALL_FILTER_VALUE,
+  buildCollectedEditionFormatGroups,
   buildFilteredCollectedEditions,
   buildFilterOptions,
   buildStageCoverageMap,
@@ -70,7 +71,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const collectedEditionReadMutation = useCollectedEditionReadMutation(heroSlug)
 
   const totalIssues = state.entries.length
-  const collectedEditions = state.collectedEditions ?? []
+  const collectedEditions = useMemo(() => state.collectedEditions ?? [], [state.collectedEditions])
   const collectedLanguageOptions = useMemo(
     () => buildFilterOptions(collectedEditions, resolveEditionLanguageFilter),
     [collectedEditions],
@@ -87,6 +88,10 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
         collectedFormatFilter,
       }),
     [collectedEditions, collectedFormatFilter, collectedLanguageFilter],
+  )
+  const collectedEditionFormatGroups = useMemo(
+    () => buildCollectedEditionFormatGroups(filteredCollectedEditions),
+    [filteredCollectedEditions],
   )
   const stageGroups = useMemo(
     () => buildStageGroups(state.entries, statesByIssueId ?? {}, t, locale),
@@ -397,8 +402,22 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                         total: collectedEditions.length,
                       })}
                     </p>
-                    <div className="grid min-w-0 gap-3 lg:grid-cols-2">
-                  {filteredCollectedEditions.map((edition) => {
+                    <div className="space-y-5">
+                  {collectedEditionFormatGroups.map((formatGroup) => (
+                    <section
+                      key={formatGroup.key}
+                      className="overflow-hidden rounded-[22px] border border-primary/20 bg-linear-to-br from-accent/25 via-white/80 to-white shadow-sm"
+                    >
+                      <header className="flex items-center gap-3 border-b border-primary/15 bg-accent/20 px-3 py-2.5 sm:px-4">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary ring-4 ring-primary/15" aria-hidden="true" />
+                        <h4 className="text-sm font-black uppercase tracking-[0.16em] text-primary">{formatGroup.label}</h4>
+                        <span className="h-px min-w-4 flex-1 bg-linear-to-r from-primary/35 to-transparent" aria-hidden="true" />
+                        <span className="shrink-0 rounded-full border border-primary/20 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                          {t('timeline.collectedFormatGroupCount', { count: formatGroup.editions.length })}
+                        </span>
+                      </header>
+                      <div className="grid min-w-0 gap-3 p-3 lg:grid-cols-2">
+                  {formatGroup.editions.map((edition) => {
                     const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
                     const stageCoverage = buildStageCoverageMap(edition.stages)
                     const coveredStageCount = edition.stages?.length ?? 0
@@ -416,7 +435,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                       !editionTimelineIssueIds.length
 
                     return (
-                      <article key={edition.id} className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <article key={edition.id} className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white/75 p-3 shadow-sm">
                         <div className="flex min-w-0 gap-3">
                           <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white">
                             {coverImage ? (
@@ -514,7 +533,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                                 return (
                                   <div
                                     key={`${edition.id}-${stage.key}`}
-                                    className={`h-2 flex-1 rounded-full ${count > 0 ? 'bg-indigo-500' : 'bg-slate-200'}`}
+                                    className={`h-2 flex-1 rounded-full ${count > 0 ? 'bg-primary' : 'bg-slate-200'}`}
                                     title={`${stage.name}: ${count} ${t('timeline.indexIssues').toLowerCase()}`}
                                   />
                                 )
@@ -524,7 +543,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                               {(edition.stages ?? []).map((stage) => (
                                 <span
                                   key={`${edition.id}-stage-${stage.key}`}
-                                  className="inline-flex max-w-full rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold leading-tight whitespace-normal break-words text-indigo-700"
+                                  className="inline-flex max-w-full rounded-full border border-primary/25 bg-accent/35 px-2 py-0.5 text-[11px] font-semibold leading-tight whitespace-normal break-words text-primary"
                                 >
                                   {stage.name} ({stage.count})
                                 </span>
@@ -537,6 +556,9 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
                       </article>
                     )
                   })}
+                      </div>
+                    </section>
+                  ))}
                     </div>
                   </>
                 ) : (
@@ -559,6 +581,7 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
         onClose={handleCloseStageDetail}
         stage={selectedStage}
         issues={selectedStageIssues}
+        heroSlug={heroSlug}
         onIssueSelect={handleOpenIssueDetail}
       />
       <IssueDetailsDialog

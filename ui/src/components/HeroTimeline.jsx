@@ -523,6 +523,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       />
       <IssueOwnershipFormatDialog
         open={ownershipDialogState.open}
+        heroSlug={slug}
         portalContainer={controls.isFullscreen ? sectionRef.current : undefined}
         issueTitle={ownershipDialogState.issueTitle}
         editions={ownershipDialogState.editions}

@@ -43,20 +43,20 @@ function IssueMetadataPanel({ issue }) {
   }, [issue, locale])
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-2.5">
       {issue?.summary ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5">
           <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">{t('issueDetails.summaryLabel')}</p>
-          <p className="body-sm mt-1 text-slate-700">{issue.summary}</p>
+          <p className="body-sm mt-0.5 text-slate-700">{issue.summary}</p>
         </div>
       ) : null}
 
       {metadataItems.length ? (
-        <dl className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+        <dl className="grid gap-x-3 gap-y-1.5 sm:grid-cols-2">
           {metadataItems.map(([labelKey, value]) => (
-            <div key={`${labelKey}-${value}`} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+            <div key={`${labelKey}-${value}`} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5">
               <dt className="body-xs font-semibold text-slate-500">{t(labelKey)}</dt>
-              <dd className="body-sm mt-1 text-slate-800 break-words">{String(value)}</dd>
+              <dd className="body-sm mt-0.5 text-slate-800 break-words">{String(value)}</dd>
             </div>
           ))}
         </dl>
@@ -69,7 +69,7 @@ function IssueMetadataPanel({ issue }) {
           href={issue.sourceUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex body-sm font-semibold text-indigo-700 underline"
+          className="inline-flex body-sm font-semibold text-primary underline"
         >
           {t('issueDetails.openSource')}
         </a>
