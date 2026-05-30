@@ -1,4 +1,4 @@
-﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
+// Encapsula estat, efectes i consultes reutilitzables del frontend.
 /**
  * Hooks de React Query per consultar i mutar l'estat d'issues d'un personatge.
  *
@@ -71,9 +71,9 @@ export const useIssueStatesQuery = (heroSlug, { enabled = true } = {}) => {
 /**
  * MutaciÃ³ per actualitzar l'estat d'una issue individual.
  *
- * Inclou estratÃ¨gia optimista per evitar latÃ¨ncia visual:
- * - aplica el canvi a cachÃ© abans de la resposta,
- * - fa rollback automÃ tic en cas d'error,
+ * Inclou estrategia optimista per evitar latencia visual:
+ * - aplica el canvi a cache abans de la resposta,
+ * - fa rollback automatic en cas d'error,
  * - invalida la query per absorbir propagacions de backend.
  *
  * @param {string} heroSlug Slug del personatge.
@@ -96,7 +96,7 @@ export const useIssueStateMutation = (heroSlug) => {
     },
     onMutate: async ({ issueId, patch }) => {
       // S'atura temporalment la query per evitar que una resposta antiga
-      // sobrescrigui l'estat optimista que es mostrarÃ  immediatament a UI.
+      // sobrescrigui l'estat optimista que es mostrara immediatament a UI.
       await queryClient.cancelQueries({ queryKey })
       const previous = queryClient.getQueryData(queryKey)
       const optimistic = buildStateIndex(previous)

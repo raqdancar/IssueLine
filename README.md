@@ -35,6 +35,7 @@ Current behavior of root scripts:
 - `npm run dev` runs the frontend dev server (`ui`).
 - `npm run dev:all` runs the frontend and backend together.
 - `npm run start` is an alias of `npm run dev`.
+- `npm run check` runs the project quality gate: UI lint, backend tests, UI tests, and the UI production build.
 
 If you also want to run the backend locally:
 
@@ -45,6 +46,16 @@ npm run backend:dev
 # Backend without auto-reload (node)
 npm run backend:start
 ```
+
+## Quality gate
+
+Before opening a PR or deploying, run:
+
+```bash
+npm run check
+```
+
+The repository also includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs the same lint, test, and build flow on pull requests and pushes to `main`.
 
 ## Deploy: Render (backend) + Vercel (frontend)
 
