@@ -1,4 +1,4 @@
-﻿// Resolve legacy numbering from known series rules and issue notes.
+﻿// Gestiona dades de personatges, imatges i cronologies dins del backend.
 const legacySeriesRules = [
   {
     test: (row) => row.series_name === 'Doctor Strange (2018 series)',

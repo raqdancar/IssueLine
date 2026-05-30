@@ -1,4 +1,4 @@
-﻿// Expose authenticated endpoints for per-issue and per-stage collection state updates.
+﻿// Exposa rutes REST del backend i delega la logica als serveis corresponents.
 
 import express from 'express'
 import { z } from 'zod'

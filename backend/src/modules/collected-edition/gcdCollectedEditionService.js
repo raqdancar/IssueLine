@@ -1,4 +1,4 @@
-﻿// Fetch one GCD issue and transform it into a collected-edition draft payload.
+﻿// Gestiona el model i la persistencia de les edicions recopilatories.
 import { getIssueById } from '../gcd/issueService.js'
 import { parseGcdIssueIdentifier } from '../gcd/importCli/issueIdentifierUtils.js'
 import { normalizeGcdCollectedEdition } from './gcdCollectedEditionMapper.js'

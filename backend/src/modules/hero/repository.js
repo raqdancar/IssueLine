@@ -1,4 +1,4 @@
-// Persistence helpers for hero and timeline domain data.
+﻿// Gestiona dades de personatges, imatges i cronologies dins del backend.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 const throwSupabaseError = (message, error) => {

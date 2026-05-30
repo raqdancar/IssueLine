@@ -1,4 +1,4 @@
-﻿// Collect and validate interactive answers for single-issue import scripts.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { searchHeroes } from './heroSelectionService.js'

@@ -1,4 +1,4 @@
-﻿// Parse and validate GCD issue identifiers from ids or issue URLs.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 export const parseGcdIssueIdentifier = (value) => {
   const input = String(value ?? '').trim()
   if (!input) return null

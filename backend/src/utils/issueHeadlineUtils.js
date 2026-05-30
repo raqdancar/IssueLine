@@ -1,4 +1,4 @@
-// Build consistent issue headline labels from series and issue identifiers.
+﻿// Agrupa funcions auxiliars reutilitzables dins del backend.
 import { normalizeSeriesName } from './seriesNameUtils.js'
 
 const stripHashPrefix = (value) => {

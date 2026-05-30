@@ -1,4 +1,4 @@
-// Expose GCD search/sync endpoints and timeline maintenance operations.
+﻿// Exposa rutes REST del backend i delega la logica als serveis corresponents.
 import express from 'express'
 import { z } from 'zod'
 import { environment } from '../config/environment.js'

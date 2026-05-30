@@ -1,4 +1,4 @@
-// Provide the errorHandler Express middleware behavior.
+﻿// Defineix middleware compartit per al tractament de peticions del backend.
 export const errorHandler = (error, _req, res, _next) => {
   const status = error.status ?? 500
   const message = error.message ?? 'Unexpected error'

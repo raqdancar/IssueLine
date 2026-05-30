@@ -1,4 +1,4 @@
-﻿// Match imported cover files to hero issues and persist cover paths in Supabase.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 import { supabaseServiceClient } from '../../../lib/supabaseClient.js'
 
 const DEFAULT_BUCKET = process.env.ISSUE_IMAGE_BUCKET ?? 'issue-images'

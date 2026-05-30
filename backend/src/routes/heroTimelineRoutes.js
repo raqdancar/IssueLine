@@ -1,4 +1,4 @@
-﻿// Expose hero timeline read/detail/create endpoints for frontend and admin flows.
+﻿// Exposa rutes REST del backend i delega la logica als serveis corresponents.
 
 import express from 'express'
 import { z } from 'zod'

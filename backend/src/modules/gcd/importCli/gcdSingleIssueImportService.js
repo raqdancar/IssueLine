@@ -1,4 +1,4 @@
-﻿// Import one GCD issue into hero issues and optionally into the hero timeline.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 import { mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import { upsertHeroTimelineEntriesByGcdIssueId } from '../../hero/timelineService.js'

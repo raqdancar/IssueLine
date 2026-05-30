@@ -1,4 +1,4 @@
-﻿// Track GCD request quotas and warn or stop near configured limits.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 import { environment } from '../../config/environment.js'
 
 const minuteWindowMs = 60 * 1000

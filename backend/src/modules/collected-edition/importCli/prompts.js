@@ -1,4 +1,4 @@
-﻿// Collect validated CLI input for collected-edition import workflows.
+﻿// Dona suport al flux CLI d'importacio d'edicions recopilatories.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { searchHeroes } from '../../hero/heroSelectionService.js'

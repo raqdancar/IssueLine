@@ -1,4 +1,4 @@
-﻿// Import a full GCD series into hero issues, timeline rows, and optional cover links.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 import { extractIssueIdFromUrl, mapIssueToTimelineEntry } from '../issueMapper.js'
 import { upsertHeroIssues } from '../../hero/issuesService.js'
 import {

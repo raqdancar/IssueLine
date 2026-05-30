@@ -1,4 +1,4 @@
-﻿// Fetch GCD issues by series, id, or direct issue URL.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 import { gcdGet } from './client.js'
 
 const normalizeIssueUrls = (seriesResults) => {

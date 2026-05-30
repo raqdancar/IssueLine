@@ -1,4 +1,4 @@
-﻿// Sync filtered GCD series issues into hero issues and timeline rows.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 const BRITISH_REGEX = /\\[british]/i
 const DIRECT_REGEX = /direct/i
 const NEWSSTAND_REGEX = /(newsstand|newstand)/i

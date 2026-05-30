@@ -1,4 +1,4 @@
-﻿// Map raw GCD issue payloads into normalized timeline entry objects.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 import { normalizeCoverUrl } from './coverUtils.js'
 import { normalizeSeriesName } from '../../utils/seriesNameUtils.js'
 import { buildIssueHeadline } from '../../utils/issueHeadlineUtils.js'

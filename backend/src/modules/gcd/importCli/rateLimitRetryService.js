@@ -1,4 +1,4 @@
-﻿// Retry GCD requests on minute limits with configurable backoff and attempt caps.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 import { setTimeout as delay } from 'node:timers/promises'
 import { gcdGet } from '../client.js'
 

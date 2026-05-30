@@ -1,6 +1,6 @@
-// Normalize common mojibake artifacts coming from mixed text encodings.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 
-const hasMojibakeMarkers = (value) => /[ÃÂâ\uFFFD]/.test(value)
+const hasMojibakeMarkers = (value) => /[ÃƒÃ‚Ã¢\uFFFD]/.test(value)
 
 const canDecodeAsLatin1Bytes = (value) => {
   for (let index = 0; index < value.length; index += 1) {
@@ -20,14 +20,14 @@ const decodeLatin1AsUtf8 = (value) => {
 }
 
 const manualReplacements = [
-  ['â€¢', '•'],
-  ['â€”', '—'],
-  ['â€“', '–'],
-  ['â€˜', '‘'],
-  ['â€™', '’'],
-  ['â€œ', '“'],
-  ['â€\u009d', '”'],
-  ['â€¦', '…'],
+  ['Ã¢â‚¬Â¢', 'â€¢'],
+  ['Ã¢â‚¬â€', 'â€”'],
+  ['Ã¢â‚¬â€œ', 'â€“'],
+  ['Ã¢â‚¬Ëœ', 'â€˜'],
+  ['Ã¢â‚¬â„¢', 'â€™'],
+  ['Ã¢â‚¬Å“', 'â€œ'],
+  ['Ã¢â‚¬\u009d', 'â€'],
+  ['Ã¢â‚¬Â¦', 'â€¦'],
 ]
 
 export const sanitizeMojibakeText = (value) => {
@@ -46,8 +46,8 @@ export const sanitizeMojibakeText = (value) => {
     normalized = normalized.split(from).join(to)
   })
 
-  // Remove stray "Â" artifacts and replace unknown replacement chars with a readable dash.
-  normalized = normalized.replace(/Â/g, '').replace(/\uFFFD/g, '-')
+  // Remove stray "Ã‚" artifacts and replace unknown replacement chars with a readable dash.
+  normalized = normalized.replace(/Ã‚/g, '').replace(/\uFFFD/g, '-')
 
   return normalized
 }

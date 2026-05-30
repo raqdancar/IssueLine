@@ -1,4 +1,4 @@
-﻿// Search and cache GCD series matches for hero names.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 import { environment } from '../../config/environment.js'
 import { gcdGet } from './client.js'
 

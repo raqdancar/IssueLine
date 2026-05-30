@@ -1,4 +1,4 @@
-﻿// Normalize hero issues, upsert them, and map rows back into timeline entries.
+﻿// Gestiona dades de personatges, imatges i cronologies dins del backend.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 import { normalizeCoverUrl } from '../gcd/coverUtils.js'
 import { coerceIsoDate, pickBestDate, mapIssueToTimelineEntry } from '../gcd/issueMapper.js'

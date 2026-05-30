@@ -1,4 +1,4 @@
-﻿// Configure the GCD HTTP client, auth headers, and guarded GET requests.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 import { Agent, fetch, Headers, Request, Response } from 'undici'
 import { environment } from '../../config/environment.js'
 import { registerGcdRequest } from './requestTracker.js'

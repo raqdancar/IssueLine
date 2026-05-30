@@ -1,4 +1,4 @@
-﻿// Read/write collected-edition records and edition-to-issue links in Supabase.
+﻿// Gestiona el model i la persistencia de les edicions recopilatories.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 const escapeIlike = (value) => String(value ?? '').replace(/[%_,]/g, '').trim()

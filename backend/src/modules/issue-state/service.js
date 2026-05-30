@@ -1,10 +1,11 @@
+﻿// Gestiona la persistencia de l'estat de col-leccio dels issues.
 /**
- * Servei de persistència i regles de negoci per als estats d'issues d'un usuari.
+ * Servei de persistÃ¨ncia i regles de negoci per als estats d'issues d'un usuari.
  *
  * Responsabilitats principals:
- * - Gestionar els flags `en possessió` (`have_it`) i `llegit` (`read_it`).
- * - Mantenir la relació entre una issue i els recopilatoris que l'usuari declara tenir.
- * - Propagar la possessió quan es marca un recopilatori, aplicant-la als números que conté.
+ * - Gestionar els flags `en possessiÃ³` (`have_it`) i `llegit` (`read_it`).
+ * - Mantenir la relaciÃ³ entre una issue i els recopilatoris que l'usuari declara tenir.
+ * - Propagar la possessiÃ³ quan es marca un recopilatori, aplicant-la als nÃºmeros que contÃ©.
  * - Retornar estats normalitzats per al frontend amb un format estable.
  */
 
@@ -348,7 +349,7 @@ const propagateHaveItForCollectedEditions = async ({ userId, heroApiId, collecte
 /**
  * Llegeix els estats d'issues d'un usuari per una llista concreta d'issues.
  *
- * A més dels flags d'estat, també resol els recopilatoris seleccionats per cada issue.
+ * A mÃ©s dels flags d'estat, tambÃ© resol els recopilatoris seleccionats per cada issue.
  *
  * @param {{ userId: string, issueIds: string[] }} params
  * @returns {Promise<Array<{issueId:string,haveIt:boolean,readIt:boolean,collectedEditionIds:string[],updatedAt:string|null}>>}
@@ -374,8 +375,8 @@ export const getUserIssueStatesByIssueIds = async ({ userId, issueIds }) => {
  *
  * Regles clau:
  * - Si `haveIt=false` i `readIt=false`, s'elimina el registre (estat buit).
- * - Si arriben `collectedEditionIds`, es validen contra els recopilatoris enllaçats a la issue.
- * - Si es marca `haveIt=true` amb recopilatoris, es propaga la possessió als números continguts.
+ * - Si arriben `collectedEditionIds`, es validen contra els recopilatoris enllaÃ§ats a la issue.
+ * - Si es marca `haveIt=true` amb recopilatoris, es propaga la possessiÃ³ als nÃºmeros continguts.
  *
  * @param {{ userId: string, issueId: string, patch: { haveIt?: boolean, readIt?: boolean, collectedEditionIds?: string[] } }} params
  * @returns {Promise<{issueId:string,haveIt:boolean,readIt:boolean,collectedEditionIds:string[],updatedAt:string|null,propagatedIssueIds:string[]}>}
@@ -469,7 +470,7 @@ export const applyIssueStatePatch = async ({ userId, issueId, patch }) => {
 /**
  * Marca com a `llegit` totes les issues d'una etapa de cronologia.
  *
- * Aquest procés preserva el valor de `haveIt` existent per cada issue.
+ * Aquest procÃ©s preserva el valor de `haveIt` existent per cada issue.
  *
  * @param {{ userId: string, heroApiId: number, stageKey: string }} params
  * @returns {Promise<{stageKey:string, issueIds:string[], states:Array}>}
@@ -535,9 +536,9 @@ export const markStageIssuesAsRead = async ({ userId, heroApiId, stageKey }) => 
 }
 
 /**
- * Activa o desactiva la possessió d'un recopilatori per a totes les issues vinculades.
+ * Activa o desactiva la possessiÃ³ d'un recopilatori per a totes les issues vinculades.
  *
- * Aquesta operació es fa en bloc al backend per evitar tempestes de peticions
+ * Aquesta operaciÃ³ es fa en bloc al backend per evitar tempestes de peticions
  * quan el frontend marca/desmarca omnibus amb moltes issues.
  *
  * @param {{ userId:string, heroApiId:number, collectedEditionId:string, haveIt:boolean }} params
@@ -682,8 +683,8 @@ export const toggleCollectedEditionOwnership = async ({ userId, heroApiId, colle
 /**
  * Activa o desactiva la lectura d'un recopilatori per a totes les issues vinculades.
  *
- * A diferència de la possessió, aquesta operació no modifica els enllaços de
- * recopilatoris seleccionats; només propaga `read_it` conservant `have_it`.
+ * A diferÃ¨ncia de la possessiÃ³, aquesta operaciÃ³ no modifica els enllaÃ§os de
+ * recopilatoris seleccionats; nomÃ©s propaga `read_it` conservant `have_it`.
  *
  * @param {{ userId:string, heroApiId:number, collectedEditionId:string, readIt:boolean }} params
  * @returns {Promise<{collectedEditionId:string,readIt:boolean,issueIds:string[],states:Array}>}

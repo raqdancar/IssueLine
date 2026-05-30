@@ -1,12 +1,13 @@
+﻿// Gestiona dades de personatges, imatges i cronologies dins del backend.
 /**
  * Servei de domini per construir i consultar la cronologia d'un personatge.
  *
- * Aquest mòdul agrega dades de múltiples fonts internes:
- * - `hero_timelines` (línia temporal canònica),
- * - `hero_issues` (metadades enriquides de números),
- * - `collected_editions` i enllaços (recopilatoris i cobertura).
+ * Aquest mÃ²dul agrega dades de mÃºltiples fonts internes:
+ * - `hero_timelines` (lÃ­nia temporal canÃ²nica),
+ * - `hero_issues` (metadades enriquides de nÃºmeros),
+ * - `collected_editions` i enllaÃ§os (recopilatoris i cobertura).
  *
- * L'objectiu és retornar payloads preparats per al frontend, mantenint
+ * L'objectiu Ã©s retornar payloads preparats per al frontend, mantenint
  * compatibilitat amb dades parcials i diferents versions de metadades.
  */
 
@@ -131,7 +132,7 @@ const sortTimelineEntries = (entries = []) =>
   })
 
 /**
- * Cerca un personatge per `slug` i retorna la seva informació bàsica.
+ * Cerca un personatge per `slug` i retorna la seva informaciÃ³ bÃ sica.
  *
  * @param {string} slug Slug URL del personatge.
  * @returns {Promise<{api_id:number,name:string,slug:string,publisher:string}|null>}
@@ -144,9 +145,9 @@ export const getHeroBySlug = async (slug) => {
 /**
  * Retorna la cronologia completa d'un personatge, ordenada per data.
  *
- * A més, intenta enriquir les entrades amb `coverImagePath` a partir de la taula
- * de números importats. Si l'enriquiment falla, retorna igualment les entrades
- * per no bloquejar la visualització de la cronologia.
+ * A mÃ©s, intenta enriquir les entrades amb `coverImagePath` a partir de la taula
+ * de nÃºmeros importats. Si l'enriquiment falla, retorna igualment les entrades
+ * per no bloquejar la visualitzaciÃ³ de la cronologia.
  *
  * @param {number} heroApiId Identificador API del personatge.
  * @returns {Promise<Array>} Entrades de cronologia preparades per al frontend.

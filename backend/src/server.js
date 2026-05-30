@@ -1,4 +1,4 @@
-// Bootstrap the backend HTTP server and register API routes.
+﻿// Inicialitza el servidor HTTP del backend i registra les rutes de l'API.
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'

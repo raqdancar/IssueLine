@@ -1,4 +1,4 @@
-// Provide the numberFormatters utility helpers.
+﻿// Agrupa utilitats pures compartides pel frontend.
 export const normalizeIntegerText = (value) => {
   if (value === null || value === undefined || value === '') {
     return null

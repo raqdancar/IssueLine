@@ -1,4 +1,4 @@
-// Provide the supabaseClient shared library helpers.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL

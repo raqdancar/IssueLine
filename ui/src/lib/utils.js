@@ -1,4 +1,4 @@
-// Provide the utils shared library helpers.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge"
 

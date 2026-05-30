@@ -1,4 +1,4 @@
-﻿// Build timeline inclusion plans that filter duplicate and variant-like issue entries.
+﻿// Dona suport als fluxos CLI d'importacio de dades provinents de GCD.
 const VARIANT_TAG_REGEX =
   /\b(variant|cover\s*[b-z]|alt(\.|ernate)?\s*cover|2nd\s*print|3rd\s*print|second\s*print(ing)?|third\s*print(ing)?|printing|newsstand|direct\s*edition|incentive)\b/i
 

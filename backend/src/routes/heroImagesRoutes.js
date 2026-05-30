@@ -1,4 +1,4 @@
-// Expose hero image upload/list/update endpoints backed by Supabase Storage.
+﻿// Exposa rutes REST del backend i delega la logica als serveis corresponents.
 import express from 'express'
 import multer from 'multer'
 import { z } from 'zod'

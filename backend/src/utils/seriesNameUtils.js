@@ -1,4 +1,4 @@
-// Normalize series names into stable labels used across timeline and import flows.
+﻿// Agrupa funcions auxiliars reutilitzables dins del backend.
 // Override verbose upstream series titles with compact canonical labels.
 const SERIES_NAME_OVERRIDES = new Map([
   ['Doctor Strange (1968 series)', 'Doctor Strange 1968'],

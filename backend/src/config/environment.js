@@ -1,4 +1,4 @@
-// Define environment runtime configuration helpers.
+﻿// Centralitza la configuracio d'entorn utilitzada pel backend.
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'

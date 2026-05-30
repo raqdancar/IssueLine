@@ -1,4 +1,4 @@
-﻿// Resolve target hero issues and create collected-edition link records.
+﻿// Dona suport al flux CLI que vincula recopilatoris amb issues individuals.
 import {
   getCollectedEditionById,
   getExistingCollectedEditionLinks,

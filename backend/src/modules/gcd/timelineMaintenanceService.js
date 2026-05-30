@@ -1,4 +1,4 @@
-﻿// Repair timeline cover metadata by refetching missing or malformed GCD covers.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 import { gcdGet } from './client.js'
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 import { normalizeCoverUrl } from './coverUtils.js'

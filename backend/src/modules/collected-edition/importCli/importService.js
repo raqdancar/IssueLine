@@ -1,4 +1,4 @@
-﻿// Prepare and persist collected-edition imports sourced from GCD identifiers.
+﻿// Dona suport al flux CLI d'importacio d'edicions recopilatories.
 import { fetchCollectedEditionFromGcd } from '../gcdCollectedEditionService.js'
 import { findCollectedEditionDuplicate, insertCollectedEdition } from '../repository.js'
 

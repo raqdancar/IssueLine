@@ -1,4 +1,4 @@
-﻿// Normalize GCD cover URLs and enforce a consistent image size token.
+﻿// Gestiona la integracio amb GCD i la normalitzacio de dades editorials.
 export const collapseExtraSlashes = (value) => {
   if (!value) return value
   return value.replace(/\/{2,}/g, '/').replace(/^\/+/, '/')

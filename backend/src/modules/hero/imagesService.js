@@ -1,4 +1,4 @@
-﻿// Manage hero image upload, bucket checks, quotas, and metadata persistence.
+﻿// Gestiona dades de personatges, imatges i cronologies dins del backend.
 import crypto from 'node:crypto'
 import path from 'node:path'
 import { promisify } from 'node:util'

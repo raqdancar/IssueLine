@@ -1,4 +1,4 @@
-﻿// Query and resolve heroes from Supabase by search text, slug, or API id.
+﻿// Gestiona dades de personatges, imatges i cronologies dins del backend.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 const DEFAULT_LIMIT = 20

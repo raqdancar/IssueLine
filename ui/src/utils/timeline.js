@@ -1,4 +1,4 @@
-// Provide the timeline utility helpers.
+﻿// Agrupa utilitats pures compartides pel frontend.
 const monthFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' })
 
 export const resolveMonthBucket = (entry) => {

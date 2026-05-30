@@ -1,4 +1,4 @@
-// Account settings API helpers around Supabase Auth and Storage.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 export const AVATAR_BUCKET = import.meta.env.VITE_SUPABASE_AVATAR_BUCKET || 'avatars'
 export const MAX_AVATAR_BYTES = 5 * 1024 * 1024
 export const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']

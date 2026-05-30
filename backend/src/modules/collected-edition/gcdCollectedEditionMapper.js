@@ -1,4 +1,4 @@
-﻿// Normalize GCD issue payloads into collected-edition records for persistence.
+﻿// Gestiona el model i la persistencia de les edicions recopilatories.
 import { normalizeCoverUrl } from '../gcd/coverUtils.js'
 import { coerceIsoDate } from '../gcd/issueMapper.js'
 

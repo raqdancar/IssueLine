@@ -1,4 +1,4 @@
-// Provide the backend utility helpers.
+﻿// Agrupa utilitats pures compartides pel frontend.
 const rawBackendUrl = import.meta.env.VITE_BACKEND_URL ?? null
 
 export const backendBaseUrl = rawBackendUrl ? rawBackendUrl.replace(/\/+$/, '') : null

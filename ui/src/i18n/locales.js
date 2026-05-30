@@ -1,3 +1,4 @@
+﻿// Gestiona proveidors i textos localitzats de la interfície.
 export {
   DEFAULT_LOCALE,
   LOCALE_STORAGE_KEY,

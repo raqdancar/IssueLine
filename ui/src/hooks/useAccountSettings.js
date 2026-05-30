@@ -1,4 +1,4 @@
-// State and side effects for the account settings page.
+﻿// Encapsula estat, efectes i consultes reutilitzables del frontend.
 import { useEffect, useMemo, useState } from 'react'
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient'
 import { useSessionContext } from '@/lib/sessionContext.jsx'

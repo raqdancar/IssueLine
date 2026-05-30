@@ -1,4 +1,4 @@
-// Provide the authenticate Express middleware behavior.
+﻿// Defineix middleware compartit per al tractament de peticions del backend.
 import { supabaseServiceClient } from '../lib/supabaseClient.js'
 
 const parseBearerToken = (authorizationHeader = '') => {

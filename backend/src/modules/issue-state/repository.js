@@ -1,4 +1,4 @@
-// Persistence helpers for user issue-state workflows.
+﻿// Gestiona la persistencia de l'estat de col-leccio dels issues.
 import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 export const ISSUE_STATES_TABLE = 'user_issue_states'

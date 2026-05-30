@@ -1,4 +1,4 @@
-﻿// Parse numeric selector expressions (lists/ranges) used by CLI link commands.
+﻿// Dona suport al flux CLI que vincula recopilatoris amb issues individuals.
 const parsePositiveInteger = (value) => {
   const numeric = Number(value)
   if (!Number.isSafeInteger(numeric) || numeric <= 0) return null

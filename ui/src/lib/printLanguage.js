@@ -1,4 +1,4 @@
-// Resolve print-language badges for the only supported publication languages.
+﻿// Agrupa funcions compartides per accedir a dades i normalitzar informacio.
 
 const normalizeValue = (value) =>
   String(value ?? '')

@@ -1,4 +1,4 @@
-// Provide supabaseClient backend shared client/helpers.
+﻿// Agrupa clients i utilitats compartides per la capa de backend.
 import { createClient } from '@supabase/supabase-js'
 import { fetch, Headers, Request, Response } from 'undici'
 import { environment } from '../config/environment.js'

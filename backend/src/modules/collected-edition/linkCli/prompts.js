@@ -1,4 +1,4 @@
-﻿// Collect validated CLI input for collected-edition linking workflows.
+﻿// Dona suport al flux CLI que vincula recopilatoris amb issues individuals.
 import process from 'node:process'
 import { createInterface } from 'node:readline/promises'
 import { getCollectedEditionById, getHeroIssueSeriesForHero, searchCollectedEditionsByTitle } from '../repository.js'
