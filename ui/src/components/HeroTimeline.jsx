@@ -57,7 +57,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     enabled: status === 'success' && Boolean(apiBaseUrl) && isAuthenticated,
   })
   const issueStateMutation = useIssueStateMutation(slug)
-  const issueStatesById = issueStatesQuery.statesByIssueId ?? {}
+  const issueStatesById = issueStatesQuery.statesByIssueId
   const canUseIssueStateActions = Boolean(apiBaseUrl) && isAuthenticated
   const pendingIssueId = issueStateMutation.isPending ? issueStateMutation.variables?.issueId : null
   const isSyncingIssueStates = issueStatesQuery.isFetching
@@ -105,7 +105,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
       flashTimeoutRef.current = null
     }
     if (!entryDomId) {
-      setFlashState({ id: null, token: 0 })
+      setFlashState((current) => (current.id === null && current.token === 0 ? current : { id: null, token: 0 }))
       return
     }
     const token = Date.now()

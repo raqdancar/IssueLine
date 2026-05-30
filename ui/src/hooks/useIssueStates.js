@@ -19,6 +19,7 @@ import {
 import { isBackendConfigured } from '@/utils/backend.js'
 
 const issueStatesQueryKey = (heroSlug) => ['issue-states', heroSlug ?? 'unknown']
+const EMPTY_STATE_INDEX = Object.freeze({})
 
 const buildStateIndex = (input) => {
   const source = Array.isArray(input)
@@ -62,7 +63,7 @@ export const useIssueStatesQuery = (heroSlug, { enabled = true } = {}) => {
 
   return {
     ...query,
-    statesByIssueId: query.data ?? {},
+    statesByIssueId: query.data ?? EMPTY_STATE_INDEX,
     canFetchStates: canFetch,
     queryKey: issueStatesQueryKey(heroSlug),
   }

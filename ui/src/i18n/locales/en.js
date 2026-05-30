@@ -564,7 +564,7 @@ const messages = {
       title: 'How do you own this issue?',
       loading: 'Loading collected editions...',
       loadError: 'Unable to load collected editions for this issue.',
-      noCollectedEditions: 'No collected editions are linked to this issue yet. You can still save ownership.',
+      noCollectedEditions: 'No collected editions are linked to this issue yet. You can still save ownership if you have it as a single issue.',
       confirm: 'Save ownership',
     },
   },

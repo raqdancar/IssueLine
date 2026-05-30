@@ -3,10 +3,39 @@ import { supabaseServiceClient } from '../../lib/supabaseClient.js'
 
 export const ISSUE_STATES_TABLE = 'user_issue_states'
 export const ISSUE_COLLECTED_EDITIONS_TABLE = 'user_issue_collected_editions'
+const ISSUE_ID_FILTER_BATCH_SIZE = 200
 
 const throwSupabaseError = (message, error) => {
   if (error) {
     throw new Error(`${message}: ${error.message}`)
+  }
+}
+
+const listRowsByIssueIds = async ({ table, select, userId, issueIds }) => {
+  const uniqueIssueIds = Array.from(new Set(issueIds ?? []))
+  if (!uniqueIssueIds.length) {
+    return { data: [], error: null }
+  }
+
+  const batches = []
+  for (let index = 0; index < uniqueIssueIds.length; index += ISSUE_ID_FILTER_BATCH_SIZE) {
+    batches.push(uniqueIssueIds.slice(index, index + ISSUE_ID_FILTER_BATCH_SIZE))
+  }
+
+  const results = await Promise.all(
+    batches.map((batch) =>
+      supabaseServiceClient
+        .from(table)
+        .select(select)
+        .eq('user_id', userId)
+        .in('issue_id', batch)
+    )
+  )
+
+  const error = results.find((result) => result.error)?.error ?? null
+  return {
+    data: results.flatMap((result) => result.data ?? []),
+    error,
   }
 }
 
@@ -52,13 +81,12 @@ export const findTimelineIssue = async (issueId) => {
 }
 
 export const listCollectedEditionSelections = async ({ userId, issueIds }) => {
-  const { data, error } = await supabaseServiceClient
-    .from(ISSUE_COLLECTED_EDITIONS_TABLE)
-    .select('issue_id, collected_edition_id')
-    .eq('user_id', userId)
-    .in('issue_id', issueIds)
-
-  return { data: data ?? [], error }
+  return listRowsByIssueIds({
+    table: ISSUE_COLLECTED_EDITIONS_TABLE,
+    select: 'issue_id, collected_edition_id',
+    userId,
+    issueIds,
+  })
 }
 
 export const deleteCollectedEditionSelectionsForIssue = async ({ userId, issueId }) => {
@@ -80,11 +108,12 @@ export const insertCollectedEditionSelections = async (payload) => {
 }
 
 export const listIssueStates = async ({ userId, issueIds }) => {
-  const { data, error } = await supabaseServiceClient
-    .from(ISSUE_STATES_TABLE)
-    .select('issue_id, have_it, read_it, updated_at')
-    .eq('user_id', userId)
-    .in('issue_id', issueIds)
+  const { data, error } = await listRowsByIssueIds({
+    table: ISSUE_STATES_TABLE,
+    select: 'issue_id, have_it, read_it, updated_at',
+    userId,
+    issueIds,
+  })
 
   throwSupabaseError('Failed to load issue states', error)
   return data ?? []
