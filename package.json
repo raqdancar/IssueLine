@@ -25,6 +25,7 @@
     "import:collected-edition": "npm --prefix backend run import:collected-edition",
     "link:collected-edition-issues": "npm --prefix backend run link:collected-edition-issues",
     "upload:collected-cover": "npm --prefix backend run upload:collected-cover --",
+    "test-users:create": "npm --prefix backend run test-users:create --",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
     "supabase:status": "npx supabase status"
@@ -32,5 +33,8 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "supabase": "^2.92.1"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^2.0.0"
   }
 }
