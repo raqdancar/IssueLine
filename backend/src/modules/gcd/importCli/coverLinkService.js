@@ -222,7 +222,7 @@ const updateHeroIssueCoverPath = async ({ issueId, coverPath }) => {
 const loadTimelineRows = async (heroApiId) => {
   const { data: timelineRows, error: loadError } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, metadata')
+    .select('id, hero_issue_id, metadata')
     .eq('hero_api_id', heroApiId)
 
   if (loadError) {
@@ -241,6 +241,7 @@ const applyCoverToTimelineMetadata = async ({ timelineRows, gcdIssueId, coverPat
   } = storage.getPublicUrl(coverPath)
 
   const targets = rows.filter((row) => {
+    if (row.hero_issue_id) return false
     const rowIssueId = Number(row?.metadata?.gcdIssueId ?? row?.metadata?.gcd_issue_id)
     return Number.isFinite(rowIssueId) && rowIssueId === Number(gcdIssueId)
   })

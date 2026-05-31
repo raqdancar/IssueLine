@@ -535,7 +535,7 @@ const messages = {
       coverMissing: 'No hi ha portada disponible per a aquest numero encara.',
       summaryLabel: 'Resum',
       noMetadata: 'No hi ha metadades addicionals disponibles per a aquest numero.',
-      openSource: 'Obrir pagina d origen',
+      openSource: 'Obrir pagina de origen',
       fields: {
         issueTitle: 'Titol del numero',
         issueNumber: 'Numero del numero',

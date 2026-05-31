@@ -72,7 +72,7 @@ export const findUserIssueStateRecord = async ({ userId, issueId }) => {
 export const findTimelineIssue = async (issueId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, hero_api_id, metadata')
+    .select('id, hero_api_id, hero_issue_id, metadata')
     .eq('id', issueId)
     .maybeSingle()
 

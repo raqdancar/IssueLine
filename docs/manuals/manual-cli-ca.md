@@ -36,6 +36,10 @@ Des de l'arrel del repo:
 - `npm run supabase:start`
 - `npm run supabase:stop`
 - `npm run supabase:status`
+- `npm run supabase:link -- --project-ref <project-ref>`
+- `npm run supabase:migration:new -- descriu_el_canvi`
+- `npm run supabase:push:dry`
+- `npm run supabase:push`
 
 Comandes avançades (backend):
 
@@ -282,6 +286,11 @@ Variables:
 - `npm run supabase:start`
 - `npm run supabase:stop`
 - `npm run supabase:status`
+- `npm run supabase:link -- --project-ref <project-ref>`
+- `npm run supabase:migration:new -- descriu_el_canvi`
+- `npm run supabase:migrations:list`
+- `npm run supabase:push:dry`
+- `npm run supabase:push`
 
 ## 9. Errors habituals i solucions ràpides
 

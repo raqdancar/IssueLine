@@ -51,6 +51,25 @@ export const extractIssueIdFromUrl = (url) => {
   return match ? Number(match[1]) : null
 }
 
+export const toHumanGcdIssueUrl = (url, fallbackIssueId = null) => {
+  const issueId = extractIssueIdFromUrl(url) ?? Number(fallbackIssueId)
+  if (!Number.isSafeInteger(issueId) || issueId <= 0) return url ?? null
+  if (!url) return `https://www.comics.org/issue/${issueId}/`
+
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname === 'comics.org' || parsed.hostname.endsWith('.comics.org')) {
+      return `https://www.comics.org/issue/${issueId}/`
+    }
+  } catch {
+    if (/^\/(?:api\/)?issue\/\d+\//.test(url)) {
+      return `/issue/${issueId}/`
+    }
+  }
+
+  return url
+}
+
 export const mapIssueToTimelineEntry = (issue) => {
   const isoDate = coerceIsoDate(pickBestDate(issue))
   if (!isoDate) {
@@ -102,7 +121,7 @@ export const mapIssueToTimelineEntry = (issue) => {
       coverImagePath,
       cover_image_path: coverImagePath,
     },
-    sourceUrl: issue.api_url?.replace('?format=json', '') ?? null,
+    sourceUrl: toHumanGcdIssueUrl(issue.api_url, gcdIssueId),
   }
 }
 

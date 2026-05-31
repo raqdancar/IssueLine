@@ -163,7 +163,11 @@ npm run upload:collected-cover -- --collected-id=&lt;uuid&gt; --file=&lt;ruta&gt
 npm run verify:prod
 npm run supabase:start
 npm run supabase:stop
-npm run supabase:status</code></pre>
+npm run supabase:status
+npm run supabase:link -- --project-ref &lt;project-ref&gt;
+npm run supabase:migration:new -- descriu_el_canvi
+npm run supabase:push:dry
+npm run supabase:push</code></pre>
       </section>
 
       <section id="personatges">
@@ -270,7 +274,12 @@ npm --prefix backend run link:issue-covers -- --apply --verbose</code></pre>
         <h2>8. Gestió Supabase local</h2>
         <pre><code>npm run supabase:start
 npm run supabase:stop
-npm run supabase:status</code></pre>
+npm run supabase:status
+npm run supabase:link -- --project-ref &lt;project-ref&gt;
+npm run supabase:migration:new -- descriu_el_canvi
+npm run supabase:migrations:list
+npm run supabase:push:dry
+npm run supabase:push</code></pre>
       </section>
 
       <section id="errors">

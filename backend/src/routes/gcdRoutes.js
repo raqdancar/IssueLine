@@ -10,7 +10,7 @@ import { fetchSeriesIssues, getIssueById } from '../modules/gcd/issueService.js'
 import { refreshHeroTimelineCovers } from '../modules/gcd/timelineMaintenanceService.js'
 import { mapIssueToTimelineEntry } from '../modules/gcd/issueMapper.js'
 import { syncSeriesIssuesForHero } from '../modules/gcd/issueSyncService.js'
-import { getHeroIssuesByNumberRange, mapHeroIssueRowToTimelineEntry } from '../modules/hero/issuesService.js'
+import { getHeroIssuesByNumberRange, mapHeroIssueRowToTimelineEntry, upsertHeroIssues } from '../modules/hero/issuesService.js'
 
 const searchSchema = z.object({
   name: z.string().min(1).max(200),
@@ -95,11 +95,12 @@ gcdRouter.post('/heroes/:slug/issues', authenticateRequest, requireAdminRequest,
     }
 
     const existingIds = await getExistingGcdIssueIds(hero.api_id)
-    if (existingIds.has(issueId)) {
+    if (existingIds.has(String(issueId))) {
       return res.status(409).json({ error: `Issue ${issueId} already exists in the hero timeline.` })
     }
 
     const issue = await getIssueById(issueId)
+    await upsertHeroIssues(hero.api_id, [issue])
     const entry = mapIssueToTimelineEntry(issue)
 
     if (!entry) {
@@ -140,6 +141,7 @@ gcdRouter.post('/heroes/:slug/issues/sync', authenticateRequest, requireAdminReq
     const seriesProfile = await getSeriesMatchesForHero(hero.name)
     const seriesSubset = seriesProfile.results.slice(0, options.seriesLimit)
     const issues = await fetchSeriesIssues({ seriesResults: seriesSubset, limit: options.limit })
+    await upsertHeroIssues(hero.api_id, issues)
     const existingIds = await getExistingGcdIssueIds(hero.api_id)
 
     const newEntries = issues

@@ -187,7 +187,9 @@ Daily hard-limit errors still abort the run.
 ### Re-import behavior
 
 - `hero_issues` rows are upserted by `(hero_api_id, gcd_issue_id)`.
-- Timeline rows are upserted by `metadata.gcdIssueId` for the same hero.
+- Timeline rows keep a nullable `hero_issue_id` foreign key. Imported issues write this link; manual milestones may leave it empty.
+- Legacy timeline rows still fall back to `metadata.gcdIssueId` during the gradual migration.
+- Cover updates write to `hero_issues`; timeline metadata is updated only for unlinked legacy rows.
 - When variant exclusion is enabled, duplicate/variant timeline rows are filtered from the canonical timeline and deleted from `hero_timelines` (source issue data remains in `hero_issues` for audit fidelity).
 
 ## Internal GCD collected-edition import CLI
@@ -215,7 +217,8 @@ Duplicate handling:
 Data model:
 - `collected_editions` is intentionally separate from `hero_issues`.
 - `collected_edition_issue_links` is created for future manual linking to contained single issues (not used by this first CLI version).
-- Apply migration: `supabase/sql/20260420_collected_editions.sql`
+- Apply migrations with `npm run supabase:push`.
+- Existing projects should follow the one-time migration baseline instructions in the root `README.md`.
 
 ### Linking collected editions to single issues (manual CLI)
 

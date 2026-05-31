@@ -172,6 +172,38 @@ export const getHeroIssueCoverPathMap = async (heroApiId, gcdIssueIds) => {
   return lookup
 }
 
+export const getHeroIssueCoverMetadataMap = async (heroApiId, gcdIssueIds) => {
+  if (!heroApiId || !gcdIssueIds?.length) {
+    return new Map()
+  }
+
+  const identifiers = normalizeGcdIssueIds(gcdIssueIds)
+  if (!identifiers.length) {
+    return new Map()
+  }
+
+  const { data, error } = await supabaseServiceClient
+    .from('hero_issues')
+    .select('gcd_issue_id, cover_image_path, cover, cover_original')
+    .eq('hero_api_id', heroApiId)
+    .in('gcd_issue_id', identifiers)
+
+  if (error) {
+    throw new Error(`Failed to load hero issue cover metadata: ${error.message}`)
+  }
+
+  return new Map(
+    (data ?? []).map((row) => [
+      row.gcd_issue_id,
+      {
+        coverImagePath: row.cover_image_path ?? null,
+        cover: row.cover ?? null,
+        coverOriginal: row.cover_original ?? null,
+      },
+    ])
+  )
+}
+
 export const getHeroIssueTimelineOrderMap = async (heroApiId, gcdIssueIds) => {
   if (!heroApiId || !gcdIssueIds?.length) {
     return new Map()

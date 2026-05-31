@@ -140,6 +140,8 @@ const getCollectedEditionSelectionsForIssue = async ({ userId, issueId }) => {
 }
 
 const resolveHeroIssueIdForTimelineIssue = async (timelineIssue) => {
+  if (timelineIssue?.hero_issue_id) return timelineIssue.hero_issue_id
+
   const gcdIssueId = resolveGcdIssueIdFromMetadata(timelineIssue?.metadata ?? {})
   if (!gcdIssueId || !timelineIssue?.hero_api_id) return null
 
@@ -229,17 +231,21 @@ const mapHeroIssueIdsToTimelineIssueIds = async ({ heroApiId, heroIssueIds }) =>
     throw new Error(`Failed to load hero issues for ownership propagation: ${heroIssueError.message}`)
   }
 
-  const timelineRows = await listTimelineRowsForHero(heroApiId, 'id, metadata')
+  const timelineRows = await listTimelineRowsForHero(heroApiId, 'id, hero_issue_id, metadata')
 
+  const timelineIssueIdByHeroIssueId = new Map()
   const timelineIssueIdByGcdIssueId = new Map()
   for (const row of timelineRows ?? []) {
+    if (row.hero_issue_id && !timelineIssueIdByHeroIssueId.has(row.hero_issue_id)) {
+      timelineIssueIdByHeroIssueId.set(row.hero_issue_id, row.id)
+    }
     const gcdIssueId = resolveGcdIssueIdFromMetadata(row?.metadata ?? {})
     if (!gcdIssueId || timelineIssueIdByGcdIssueId.has(gcdIssueId)) continue
     timelineIssueIdByGcdIssueId.set(gcdIssueId, row.id)
   }
 
-  const timelineIssueIdByHeroIssueId = new Map()
   for (const heroIssue of heroIssueRows ?? []) {
+    if (timelineIssueIdByHeroIssueId.has(heroIssue.id)) continue
     const timelineIssueId = timelineIssueIdByGcdIssueId.get(heroIssue.gcd_issue_id)
     if (!timelineIssueId) continue
     timelineIssueIdByHeroIssueId.set(heroIssue.id, timelineIssueId)

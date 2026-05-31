@@ -11,10 +11,12 @@
  * compatibilitat amb dades parcials i diferents versions de metadades.
  */
 
-import { getHeroIssueCoverPathMap, getHeroIssueTimelineOrderMap } from './issuesService.js'
+import { getHeroIssueCoverMetadataMap, getHeroIssueTimelineOrderMap } from './issuesService.js'
+import { toHumanGcdIssueUrl } from '../gcd/issueMapper.js'
 import {
   deleteTimelineRowsByIds,
   findHeroBySlug,
+  findHeroIssueById,
   findHeroIssueByGcdIssueId,
   findTimelineEntryById,
   insertTimelineRow,
@@ -23,6 +25,7 @@ import {
   listCollectedEditionsByHero,
   listCollectedEditionsForHeroIssue,
   listHeroIssuesByIds,
+  listHeroIssuesByGcdIssueIds,
   listStageRowsById,
   listStageRowsByIds,
   listTimelineEntries,
@@ -155,7 +158,10 @@ export const getHeroBySlug = async (slug) => {
 
 export const getHeroTimelineEntries = async (heroApiId) => {
   const entries = await listTimelineEntries(heroApiId)
-  let enrichedEntries = entries
+  let enrichedEntries = entries.map((entry) => {
+    const sourceUrl = toHumanGcdIssueUrl(entry.source_url, resolveEntryGcdIssueId(entry))
+    return sourceUrl === entry.source_url ? entry : { ...entry, source_url: sourceUrl }
+  })
   const gcdIssueIds = entries
     .map((entry) => resolveEntryGcdIssueId(entry))
     .filter((value) => Number.isFinite(value))
@@ -164,7 +170,7 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   let timelineOrderLookup = new Map()
   if (gcdIssueIds.length) {
     try {
-      coverLookup = await getHeroIssueCoverPathMap(heroApiId, gcdIssueIds)
+      coverLookup = await getHeroIssueCoverMetadataMap(heroApiId, gcdIssueIds)
     } catch (coverLookupError) {
       // Timeline data should still render even when cover enrichment fails in a partial deploy/migration state.
       console.warn(
@@ -185,13 +191,14 @@ export const getHeroTimelineEntries = async (heroApiId) => {
   }
 
   if (coverLookup.size || timelineOrderLookup.size) {
-    enrichedEntries = entries.map((entry) => {
+    enrichedEntries = enrichedEntries.map((entry) => {
       const metadata = entry.metadata ?? null
       if (!metadata) return entry
       const gcdIssueId = resolveEntryGcdIssueId(entry)
-      const coverPath = coverLookup.get(Number(gcdIssueId))
+      const coverMetadata = coverLookup.get(Number(gcdIssueId))
+      const coverPath = coverMetadata?.coverImagePath
       const timelineOrder = timelineOrderLookup.get(Number(gcdIssueId))
-      if (!coverPath && !timelineOrder) {
+      if (!coverMetadata && !timelineOrder) {
         return entry
       }
       return {
@@ -204,6 +211,8 @@ export const getHeroTimelineEntries = async (heroApiId) => {
                 cover_image_path: coverPath,
               }
             : {}),
+          ...(coverMetadata?.cover ? { cover: coverMetadata.cover } : {}),
+          ...(coverMetadata?.coverOriginal ? { cover_original: coverMetadata.coverOriginal } : {}),
           ...(timelineOrder
             ? {
                 timelineOrder,
@@ -284,11 +293,12 @@ const resolveTimelineIssueDetailPayload = (timelineEntry, heroIssueRow) => {
   const stageName = metadata.stage_name ?? metadata.stageName ?? metadata.stage?.name ?? metadata.stage?.label ?? null
   const stageSummary =
     metadata.stage_summary ?? metadata.stageSummary ?? metadata.stage?.short_summary ?? metadata.stage?.summary ?? null
-  const sourceUrl =
+  const sourceUrl = toHumanGcdIssueUrl(
     timelineEntry.source_url ??
-    metadata.source_url ??
-    metadata.sourceUrl ??
-    (gcdIssueId ? `https://www.comics.org/issue/${gcdIssueId}/` : null)
+      metadata.source_url ??
+      metadata.sourceUrl,
+    gcdIssueId
+  )
 
   return {
     id: timelineEntry.id,
@@ -484,15 +494,22 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
   }
 
   const issueById = new Map((heroIssueRows ?? []).map((row) => [row.id, row]))
+  const timelineStageByHeroIssueId = new Map()
+  const timelineIssueIdByHeroIssueId = new Map()
   const timelineStageByGcdIssueId = new Map()
   const timelineIssueIdByGcdIssueId = new Map()
   for (const row of timelineRows ?? []) {
     const metadata = row.metadata ?? {}
     const gcdIssueId = resolveGcdIssueIdFromMetadata(metadata)
-    if (!gcdIssueId || timelineStageByGcdIssueId.has(gcdIssueId)) continue
     const stage = resolveStageIdentityFromTimelineEntry(row, stageIdentityById)
-    timelineStageByGcdIssueId.set(gcdIssueId, stage)
-    timelineIssueIdByGcdIssueId.set(gcdIssueId, row.id)
+    if (row.hero_issue_id && !timelineStageByHeroIssueId.has(row.hero_issue_id)) {
+      timelineStageByHeroIssueId.set(row.hero_issue_id, stage)
+      timelineIssueIdByHeroIssueId.set(row.hero_issue_id, row.id)
+    }
+    if (gcdIssueId && !timelineStageByGcdIssueId.has(gcdIssueId)) {
+      timelineStageByGcdIssueId.set(gcdIssueId, stage)
+      timelineIssueIdByGcdIssueId.set(gcdIssueId, row.id)
+    }
   }
 
   const linksByEditionId = new Map()
@@ -511,7 +528,9 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
     for (const link of relatedLinks) {
       const issue = issueById.get(link.hero_issue_id)
       if (!issue) continue
-      const stage = timelineStageByGcdIssueId.get(issue.gcd_issue_id)
+      const stage =
+        timelineStageByHeroIssueId.get(issue.id) ??
+        timelineStageByGcdIssueId.get(issue.gcd_issue_id)
 
       if (stage?.key) {
         const current = stageMap.get(stage.key) ?? { key: stage.key, name: stage.name, count: 0 }
@@ -525,7 +544,10 @@ export const getHeroCollectedEditionsOverview = async (heroApiId) => {
         : issue.title ?? issue.series_name ?? `Issue ${issue.gcd_issue_id}`
 
       issues.push({
-        timelineIssueId: timelineIssueIdByGcdIssueId.get(issue.gcd_issue_id) ?? null,
+        timelineIssueId:
+          timelineIssueIdByHeroIssueId.get(issue.id) ??
+          timelineIssueIdByGcdIssueId.get(issue.gcd_issue_id) ??
+          null,
         heroIssueId: issue.id,
         gcdIssueId: issue.gcd_issue_id,
         number: issueNumber,
@@ -587,9 +609,12 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
   const metadata = timelineEntry.metadata ?? {}
   const gcdIssueId = toSafeInteger(metadata.gcdIssueId ?? metadata.gcd_issue_id)
   let heroIssueRow = null
-  let heroIssueId = null
+  let heroIssueId = timelineEntry.hero_issue_id ?? null
 
-  if (gcdIssueId) {
+  if (heroIssueId) {
+    heroIssueRow = await findHeroIssueById({ heroApiId, heroIssueId })
+  }
+  if (!heroIssueRow && gcdIssueId) {
     heroIssueRow = await findHeroIssueByGcdIssueId({ heroApiId, gcdIssueId })
     heroIssueId = heroIssueRow?.id ?? null
   }
@@ -657,7 +682,10 @@ export const getExistingGcdIssueIds = async (heroApiId) => {
 
   const identifiers = new Set()
   for (const row of data ?? []) {
-    const gcdIssueId = row?.metadata?.gcdIssueId || row?.metadata?.metronIssueId
+    const gcdIssueId =
+      row?.metadata?.gcdIssueId ??
+      row?.metadata?.gcd_issue_id ??
+      row?.metadata?.metronIssueId
     if (gcdIssueId) {
       identifiers.add(String(gcdIssueId))
     }
@@ -676,16 +704,8 @@ export const insertHeroTimelineEntries = async (heroApiId, entries) => {
     return []
   }
 
-  const payload = entries.map((entry) => ({
-    hero_api_id: heroApiId,
-    headline: entry.headline,
-    summary: entry.summary ?? null,
-    issue_code: entry.issueCode ?? null,
-    issue_date: normalizeIssueDate(entry.issueDate),
-    source_url: entry.sourceUrl ?? null,
-    severity: entry.severity ?? 'info',
-    metadata: entry.metadata ?? null,
-  }))
+  const resolvedEntries = await attachHeroIssueIds(heroApiId, entries)
+  const payload = resolvedEntries.map((entry) => buildTimelinePayload(heroApiId, entry))
 
   return insertTimelineRows(payload)
 }
@@ -700,6 +720,7 @@ const chunk = (values, size = 100) => {
 
 const buildTimelinePayload = (heroApiId, entry) => ({
   hero_api_id: heroApiId,
+  hero_issue_id: entry.heroIssueId ?? entry.hero_issue_id ?? null,
   headline: entry.headline,
   summary: entry.summary ?? null,
   issue_code: entry.issueCode ?? null,
@@ -708,6 +729,27 @@ const buildTimelinePayload = (heroApiId, entry) => ({
   severity: entry.severity ?? 'info',
   metadata: entry.metadata ?? null,
 })
+
+const attachHeroIssueIds = async (heroApiId, entries) => {
+  const gcdIssueIds = entries
+    .map((entry) => resolveEntryGcdIssueId(entry))
+    .filter(Boolean)
+  if (!gcdIssueIds.length) return entries
+
+  const heroIssues = await listHeroIssuesByGcdIssueIds({ heroApiId, gcdIssueIds })
+  const heroIssueIdByGcdIssueId = new Map(
+    heroIssues.map((row) => [Number(row.gcd_issue_id), row.id])
+  )
+
+  return entries.map((entry) => {
+    if (entry.heroIssueId ?? entry.hero_issue_id) return entry
+    const gcdIssueId = resolveEntryGcdIssueId(entry)
+    return {
+      ...entry,
+      heroIssueId: heroIssueIdByGcdIssueId.get(gcdIssueId) ?? null,
+    }
+  })
+}
 
 const resolveTimelineGcdIssueId = (entry) => {
   const value = entry?.metadata?.gcdIssueId ?? entry?.metadata?.gcd_issue_id
@@ -747,9 +789,10 @@ export const upsertHeroTimelineEntriesByGcdIssueId = async (heroApiId, entries) 
     return { inserted: [], updated: [], skipped: [] }
   }
 
+  const resolvedEntries = await attachHeroIssueIds(heroApiId, entries)
   const entriesWithId = []
   const entriesWithoutId = []
-  for (const entry of entries) {
+  for (const entry of resolvedEntries) {
     const gcdIssueId = resolveTimelineGcdIssueId(entry)
     if (gcdIssueId) {
       entriesWithId.push({ entry, gcdIssueId })

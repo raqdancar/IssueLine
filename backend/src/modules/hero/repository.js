@@ -28,7 +28,7 @@ export const findHeroBySlug = async (slug) => {
 export const listTimelineEntries = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, special_issue, created_at')
+    .select('id, hero_issue_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, special_issue, created_at')
     .eq('hero_api_id', heroApiId)
     .order('issue_date', { ascending: true })
 
@@ -39,7 +39,7 @@ export const listTimelineEntries = async (heroApiId) => {
 export const listTimelineMetadataRows = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, metadata, stage_id')
+    .select('id, hero_issue_id, metadata, stage_id')
     .eq('hero_api_id', heroApiId)
 
   throwSupabaseError('Failed to load timeline metadata', error)
@@ -123,7 +123,7 @@ export const listHeroIssuesByIds = async ({ heroApiId, heroIssueIds }) => {
 export const findTimelineEntryById = async ({ heroApiId, issueId }) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, hero_api_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, created_at, updated_at')
+    .select('id, hero_api_id, hero_issue_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, created_at, updated_at')
     .eq('hero_api_id', heroApiId)
     .eq('id', issueId)
     .limit(1)
@@ -146,6 +146,43 @@ export const findHeroIssueByGcdIssueId = async ({ heroApiId, gcdIssueId }) => {
 
   throwSupabaseError('Failed to load cached issue metadata', error)
   return data ?? null
+}
+
+export const findHeroIssueById = async ({ heroApiId, heroIssueId }) => {
+  if (!heroIssueId) return null
+
+  const { data, error } = await supabaseServiceClient
+    .from('hero_issues')
+    .select(
+      'id, gcd_issue_id, series_id, series_name, number, volume, title, key_date, on_sale_date, publication_date, price, page_count, cover, cover_original, cover_image_path, raw'
+    )
+    .eq('hero_api_id', heroApiId)
+    .eq('id', heroIssueId)
+    .limit(1)
+    .maybeSingle()
+
+  throwSupabaseError('Failed to load cached issue metadata by id', error)
+  return data ?? null
+}
+
+export const listHeroIssuesByGcdIssueIds = async ({ heroApiId, gcdIssueIds }) => {
+  const normalizedIds = Array.from(
+    new Set(
+      (gcdIssueIds ?? [])
+        .map((value) => Number(value))
+        .filter((value) => Number.isSafeInteger(value) && value > 0)
+    )
+  )
+  if (!heroApiId || !normalizedIds.length) return []
+
+  const { data, error } = await supabaseServiceClient
+    .from('hero_issues')
+    .select('id, gcd_issue_id')
+    .eq('hero_api_id', heroApiId)
+    .in('gcd_issue_id', normalizedIds)
+
+  throwSupabaseError('Failed to resolve cached issue ids', error)
+  return data ?? []
 }
 
 export const insertTimelineRow = async (payload) => {

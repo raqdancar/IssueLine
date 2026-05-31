@@ -109,6 +109,34 @@ VITE_SUPABASE_AVATAR_BUCKET=avatars
 3. (Optional) Store `SUPABASE_SERVICE_ROLE_KEY` in the same `.env` for backend/scripts usage.
 4. Ensure there is at least one user under **Supabase Auth -> Users** for authentication testing.
 
+### Schema migrations
+
+Supabase schema changes are versioned under `supabase/migrations/` and applied through the official CLI flow.
+
+For a new remote project:
+
+```bash
+npm run supabase:link -- --project-ref <project-ref>
+npm run supabase:push:dry
+npm run supabase:push
+```
+
+This repository adopted migrations after the existing Supabase project had already been provisioned manually. Run this one-time baseline after linking that existing project so the CLI records the applied history without replaying it:
+
+```bash
+npx supabase migration repair --status applied 20260305000000 20260306000000 20260307000000 20260310000000 20260313000000 20260416000000 20260419000000 20260420000000 20260427000000 20260531000000
+npm run supabase:migrations:list
+```
+
+For each future schema change:
+
+```bash
+npm run supabase:migration:new -- describe_the_change
+# edit the generated file under supabase/migrations/
+npm run supabase:push:dry
+npm run supabase:push
+```
+
 ### Admin-only editorial API
 
 Editorial HTTP mutations require a valid Supabase bearer token whose user has `app_metadata.role = "admin"` or an `admin` entry in `app_metadata.roles`. Public reads and the internal CLI scripts remain unchanged.
@@ -137,14 +165,14 @@ The following HTTP mutations are admin-only:
 ### `login_audit` table
 
 Every successful login is recorded in `public.login_audit`.
-Schema and RLS should be provisioned through the project migration workflow.
+Schema and RLS are provisioned through `supabase/migrations/`.
 
 ### Private user avatars (account page)
 
 The account page stores avatars in a private bucket on Supabase Storage.
 
 Required migration:
-- `supabase/sql/20260416_user_avatars.sql`
+- `supabase/migrations/20260416000000_user_avatars.sql`
 
 Required frontend env var:
 - `VITE_SUPABASE_AVATAR_BUCKET=avatars`
@@ -169,7 +197,7 @@ Navbar behavior:
    - `SUPABASE_SERVICE_ROLE_KEY` (write-capable key).
    - `VITE_SUPABASE_URL` (reused by both the UI and scripts now that envs load from the root).
    - `VITE_BACKEND_URL` (e.g. `http://localhost:4600`) so the UI can reach the IssueLine backend.
-3. Ensure migration `supabase/sql/20260305_superheroes.sql` is applied (`public.superheroes`).
+3. Ensure migrations are applied with `npm run supabase:push` (`public.superheroes`).
 4. Execute the local ingestor:
 
 ```bash
@@ -191,7 +219,7 @@ Use the Express service in `backend/` to upload and manage hero-specific images 
    - `VITE_SUPABASE_URL`
    - Optional knobs: `HERO_IMAGE_BUCKET=hero-images`, `HERO_IMAGE_MAX_PER_HERO=3`, `HERO_IMAGE_MAX_FILE_SIZE=5242880`, `BACKEND_PORT=4600`, `BACKEND_ALLOWED_ORIGINS=http://localhost:5173`.
 2. Create a public Supabase Storage bucket matching `HERO_IMAGE_BUCKET`.
-3. Ensure migration `supabase/sql/20260306_hero_images.sql` is applied (`hero_images`, trigger, and RLS policies).
+3. Ensure migrations are applied with `npm run supabase:push` (`hero_images`, trigger, and RLS policies).
 4. Install backend dependencies: `npm --prefix backend install`.
 5. Start the API: `npm --prefix backend run dev` (or `run start` for production).
 6. Endpoints (default base URL `http://localhost:4600`):
@@ -206,7 +234,7 @@ The backend verifies the hero exists, enforces per-hero quotas, uploads binaries
 
 Visual hero timelines reuse the [Aceternity UI timeline](https://ui.aceternity.com/components/timeline) styles and expect data from the backend:
 
-1. Ensure migration `supabase/sql/20260307_hero_timelines.sql` is applied (`hero_timelines` and policies).
+1. Ensure migrations are applied with `npm run supabase:push`.
 2. Seed sample entries manually (or wait until the ingest script is ready). Each row links to `superheroes.api_id`.
 3. Ensure the backend is running (`npm --prefix backend run dev`). The UI reads `VITE_BACKEND_URL` to call it.
 4. Use `GET /hero-timelines/:slug` (e.g. `/hero-timelines/batman`) to retrieve entries for a hero slug.
@@ -225,7 +253,7 @@ Click any hero portrait in the dashboard to open `/heroes/:slug`, where the deta
 
 To ingest every Doctor Strange (or any hero) issue from the [Grand Comics Database](https://www.comics.org/):
 
-1. Ensure migration `supabase/sql/20260310_hero_issues.sql` is applied (`hero_issues` cache table).
+1. Ensure migrations are applied with `npm run supabase:push` (`hero_issues` cache table).
 2. Ensure your backend `.env` includes working GCD credentials (`GCD_USERNAME`/`GCD_PASSWORD` or `GCD_SESSION_ID`) plus `GCD_ALLOW_MANUAL_SYNC=true` while testing.
 3. Start the backend (`npm --prefix backend run dev`).
 4. Use the new endpoints:
@@ -244,7 +272,7 @@ Repeat the sync call with subsequent pages until GCD reports no more issues. Bec
 Collected editions are stored in a dedicated table (`collected_editions`) separate from `hero_issues`.
 
 Apply migration:
-- `supabase/sql/20260420_collected_editions.sql`
+- `supabase/migrations/20260420000000_collected_editions.sql`
 
 Run importer:
 

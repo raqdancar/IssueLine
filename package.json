@@ -26,9 +26,14 @@
     "link:collected-edition-issues": "npm --prefix backend run link:collected-edition-issues",
     "upload:collected-cover": "npm --prefix backend run upload:collected-cover --",
     "test-users:create": "npm --prefix backend run test-users:create --",
+    "supabase:link": "npx supabase link",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
-    "supabase:status": "npx supabase status"
+    "supabase:status": "npx supabase status",
+    "supabase:migration:new": "npx supabase migration new",
+    "supabase:migrations:list": "npx supabase migration list",
+    "supabase:push:dry": "npx supabase db push --dry-run",
+    "supabase:push": "npx supabase db push"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

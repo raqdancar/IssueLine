@@ -38,7 +38,7 @@ export const refreshHeroTimelineCovers = async ({ heroApiId, limit = 25 }) => {
 
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, metadata')
+    .select('id, hero_issue_id, metadata')
     .eq('hero_api_id', heroApiId)
 
   if (error) {
@@ -47,7 +47,8 @@ export const refreshHeroTimelineCovers = async ({ heroApiId, limit = 25 }) => {
 
   const targets = []
   for (const row of data ?? []) {
-    // Refresh only entries with missing or malformed cover URLs.
+    // Linked rows render canonical cover data from hero_issues. Refresh only legacy JSON copies.
+    if (row.hero_issue_id) continue
     if (!row?.metadata || !needsCoverRefresh(row.metadata)) continue
     const gcdIssueId = extractGcdIssueId(row.metadata)
     if (!gcdIssueId) continue

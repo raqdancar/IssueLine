@@ -1,7 +1,13 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { coerceIsoDate, extractIssueIdFromUrl, mapIssueToTimelineEntry, pickBestDate } from '../../src/modules/gcd/issueMapper.js'
+import {
+  coerceIsoDate,
+  extractIssueIdFromUrl,
+  mapIssueToTimelineEntry,
+  pickBestDate,
+  toHumanGcdIssueUrl,
+} from '../../src/modules/gcd/issueMapper.js'
 
 test('coerceIsoDate normalizes partial dates', () => {
   assert.equal(coerceIsoDate('2020-05-00'), '2020-05-01')
@@ -50,6 +56,15 @@ test('extractIssueIdFromUrl parses valid GCD issue URLs', () => {
   assert.equal(extractIssueIdFromUrl('https://www.comics.org/api/series/824/'), null)
 })
 
+test('toHumanGcdIssueUrl converts GCD API URLs and preserves unrelated sources', () => {
+  assert.equal(
+    toHumanGcdIssueUrl('https://www.comics.org/api/issue/12345/?format=json'),
+    'https://www.comics.org/issue/12345/'
+  )
+  assert.equal(toHumanGcdIssueUrl(null, 67890), 'https://www.comics.org/issue/67890/')
+  assert.equal(toHumanGcdIssueUrl('https://example.com/issues/12345', 12345), 'https://example.com/issues/12345')
+})
+
 test('mapIssueToTimelineEntry builds a timeline entry from a valid issue payload', () => {
   const entry = mapIssueToTimelineEntry({
     id: 12345,
@@ -70,7 +85,7 @@ test('mapIssueToTimelineEntry builds a timeline entry from a valid issue payload
   assert.equal(entry.issueDate, '1968-07-01')
   assert.equal(entry.severity, 'info')
   assert.equal(entry.summary, 'First appearance in this run')
-  assert.equal(entry.sourceUrl, 'https://www.comics.org/api/issue/12345/')
+  assert.equal(entry.sourceUrl, 'https://www.comics.org/issue/12345/')
   assert.equal(entry.metadata.gcdIssueId, 12345)
   assert.equal(entry.metadata.seriesName, 'Doctor Strange 1968')
   assert.equal(entry.metadata.coverImagePath, 'covers/doctor_strange_1968/12345.jpg')
@@ -109,5 +124,5 @@ test('mapIssueToTimelineEntry falls back to api_url issue id and publication sum
   assert.equal(entry.issueDate, '2021-04-15')
   assert.equal(entry.metadata.gcdIssueId, 55555)
   assert.equal(entry.summary, '2021-04')
-  assert.equal(entry.sourceUrl, 'https://www.comics.org/api/issue/55555/')
+  assert.equal(entry.sourceUrl, 'https://www.comics.org/issue/55555/')
 })
