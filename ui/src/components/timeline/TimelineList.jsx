@@ -25,7 +25,10 @@ function TimelineList({
 
   return (
     <div className="timeline-zoom-container min-w-0 max-w-full overflow-x-hidden md:overflow-x-auto">
-      <div className="timeline-zoom-content min-w-0 max-w-full" style={{ '--timeline-zoom': zoomLevel }}>
+      <div
+        className={`timeline-zoom-content min-w-0 max-w-full ${useAlternatingShowcase ? 'md:px-1 md:pb-1' : ''}`}
+        style={{ '--timeline-zoom': zoomLevel }}
+      >
         <ol className={`relative min-w-0 max-w-full pt-4 ${listSpacingClass} ${useAlternatingShowcase ? 'md:space-y-7' : ''}`}>
           {useAlternatingShowcase ? (
             <span

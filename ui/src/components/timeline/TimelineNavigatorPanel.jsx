@@ -27,7 +27,7 @@ function TimelineNavigatorPanel({
   }`
 
   return (
-    <aside className="flex w-full flex-col overflow-hidden rounded-3xl border border-slate-100/80 bg-linear-to-b from-white/95 via-slate-50/90 to-slate-100/60 p-4 shadow-xl shadow-slate-200/70 ring-1 ring-white/60 backdrop-blur md:h-full md:min-h-0 md:self-start md:max-w-sm">
+    <aside className="flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm shadow-slate-200/50 backdrop-blur md:h-full md:min-h-0 md:self-start md:max-w-sm">
       <div className="flex items-center justify-between gap-2">
         <p className="body-xs font-semibold uppercase tracking-wide text-slate-500">{t('timeline.jumpTo')}</p>
         <button
