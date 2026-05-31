@@ -24,9 +24,9 @@ function TimelineList({
   const useAlternatingShowcase = showcaseMode && timelineDensity === 'detailed'
 
   return (
-    <div className="timeline-zoom-container overflow-x-auto">
-      <div className="timeline-zoom-content" style={{ zoom: zoomLevel }}>
-        <ol className={`relative pt-4 ${listSpacingClass} ${useAlternatingShowcase ? 'md:space-y-7' : ''}`}>
+    <div className="timeline-zoom-container min-w-0 max-w-full overflow-x-hidden md:overflow-x-auto">
+      <div className="timeline-zoom-content min-w-0 max-w-full" style={{ '--timeline-zoom': zoomLevel }}>
+        <ol className={`relative min-w-0 max-w-full pt-4 ${listSpacingClass} ${useAlternatingShowcase ? 'md:space-y-7' : ''}`}>
           {useAlternatingShowcase ? (
             <span
               aria-hidden="true"

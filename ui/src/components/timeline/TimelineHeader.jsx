@@ -137,7 +137,7 @@ function TimelineHeader({
               })}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="hidden flex-wrap items-center gap-2 md:flex">
             <span className="body-xs text-slate-500">{t('timeline.zoomTimeline')}</span>
             <div className="inline-flex items-center rounded-full border border-slate-200 bg-white">
               <button

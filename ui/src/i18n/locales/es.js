@@ -487,7 +487,7 @@ const messages = {
       stageMetadataMissing: 'TodavÃ­a no hay metadatos de etapa. Los elementos aparecerÃ¡n aquÃ­ cuando se etiqueten.',
       uncategorizedStage: 'Etapa sin categorÃ­a',
       issueFallback: 'NÃºmero',
-      stageComplete: 'Etapa Â· Completada',
+      stageComplete: 'Etapa · Completada',
       stage: 'Etapa',
       noStageSummary: 'TodavÃ­a no se ha aÃ±adido resumen para esta etapa.',
       years: 'AÃ±os:',
@@ -564,6 +564,9 @@ const messages = {
       ownershipDialog: {
         eyebrow: 'Formato en coleccion',
         title: 'Como tienes este numero?',
+        singleIssueTitle: 'Grapa individual',
+        singleIssueBody: 'Marca solo este numero como parte de tu coleccion.',
+        collectedEditionsLabel: 'Recopilatorios disponibles',
         loading: 'Cargando recopilatorios...',
         loadError: 'No se pudieron cargar los recopilatorios para este numero.',
         noCollectedEditions: 'Todavia no hay recopilatorios enlazados para este numero. Puedes guardar igualmente.',

@@ -35,7 +35,7 @@ function TimelineIssueCardMicro({
   const showHeadlineContext = Boolean(issueTitle && issueTitle !== entry.headline)
 
   return (
-    <li id={entryDomId} className="relative pl-6">
+    <li id={entryDomId} className="relative min-w-0 max-w-full pl-6">
       <span
         className={`absolute left-0 top-1 h-3 w-3 rounded-full border shadow-[0_0_0_1.5px_rgba(255,255,255,0.95),0_0_0.5rem_rgba(99,102,241,0.24)] ${severityVariant.dot}`}
         aria-hidden="true"
@@ -48,7 +48,7 @@ function TimelineIssueCardMicro({
         tabIndex={0}
         onClick={handleHighlight}
         onKeyDown={handleKeyDown}
-        className={`rounded-lg border border-slate-200 bg-white p-2.5 ${borderGlow}`}
+        className={`min-w-0 max-w-full overflow-hidden rounded-lg border border-slate-200 bg-white p-2.5 ${borderGlow}`}
       >
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -65,12 +65,12 @@ function TimelineIssueCardMicro({
             ) : null}
           </div>
           {showHeadlineContext ? (
-            <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-indigo-500">{entry.headline}</p>
+            <p className="mt-1 break-words text-[10px] font-black uppercase tracking-[0.16em] text-indigo-500 [overflow-wrap:anywhere]">{entry.headline}</p>
           ) : null}
-          <p className="mt-1 text-sm font-black leading-snug text-slate-800">{displayTitle}</p>
-          {entry.summary ? <p className="mt-1 text-[11px] text-slate-500">{entry.summary}</p> : null}
+          <p className="mt-1 break-words text-sm font-black leading-snug text-slate-800 [overflow-wrap:anywhere]">{displayTitle}</p>
+          {entry.summary ? <p className="mt-1 break-words text-[11px] text-slate-500 [overflow-wrap:anywhere]">{entry.summary}</p> : null}
           <div className="mt-1 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">
-            {seriesName ? <span>{seriesName}</span> : null}
+            {seriesName ? <span className="break-words [overflow-wrap:anywhere]">{seriesName}</span> : null}
             {publicationDate ? <span>{publicationDate}</span> : null}
           </div>
           {(haveIt || readIt) && (
@@ -81,7 +81,7 @@ function TimelineIssueCardMicro({
           )}
           {stageName ? (
             <div className={stageLabelClasses}>
-              {stageName}
+              <span className="block break-words [overflow-wrap:anywhere]">{stageName}</span>
             </div>
           ) : null}
         </div>

@@ -9,10 +9,12 @@ import {
 } from '@/hooks/useIssueStates'
 import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
 import IssueDetailsDialog from '@/components/issue-details/IssueDetailsDialog'
+import IssueOwnershipFormatDialog from '@/components/issue-details/IssueOwnershipFormatDialog'
 import StageDetailDialog from '@/components/stage-details/StageDetailDialog'
 import { TimelineInsightsSkeleton } from '@/components/timeline/TimelineLoadingSkeleton'
 import PrintLanguageBadge from '@/components/PrintLanguageBadge'
 import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
+import { fetchIssueDetails } from '@/lib/issueDetailsApi.js'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import {
@@ -62,6 +64,16 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
   const [collectedFormatFilter, setCollectedFormatFilter] = useState(ALL_FILTER_VALUE)
   const [selectedStageKey, setSelectedStageKey] = useState(null)
   const [selectedStageIssueId, setSelectedStageIssueId] = useState(null)
+  const [ownershipDialogState, setOwnershipDialogState] = useState({
+    open: false,
+    loading: false,
+    saving: false,
+    issueId: null,
+    issueTitle: null,
+    editions: [],
+    selectedEditionIds: [],
+    error: null,
+  })
   const { isAuthenticated } = useSessionContext()
   const { statesByIssueId, canFetchStates, isFetching: issueStatesLoading } = useIssueStatesQuery(heroSlug, {
     enabled: Boolean(heroSlug),
@@ -151,9 +163,111 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
     stageReadMutation.mutate({ stageKey: stage.key, issueIds: stage.issueIds })
   }
 
+  const closeOwnershipDialog = (options = {}) => {
+    const force = Boolean(options?.force)
+    setOwnershipDialogState((current) =>
+      current.saving && !force
+        ? current
+        : {
+            open: false,
+            loading: false,
+            saving: false,
+            issueId: null,
+            issueTitle: null,
+            editions: [],
+            selectedEditionIds: [],
+            error: null,
+          },
+    )
+  }
+
+  const openOwnershipDialog = async (issueId) => {
+    if (!issueId || !heroSlug) return
+    setOwnershipDialogState({
+      open: true,
+      loading: true,
+      saving: false,
+      issueId,
+      issueTitle: null,
+      editions: [],
+      selectedEditionIds: statesByIssueId?.[issueId]?.collectedEditionIds ?? [],
+      error: null,
+    })
+
+    try {
+      const payload = await fetchIssueDetails({ heroSlug, issueId })
+      const detailIssue = payload?.issue ?? null
+      const fallbackEntry = state.entries.find((entry) => String(entry?.id) === String(issueId))
+      const issueTitle =
+        detailIssue?.headline ??
+        detailIssue?.issue?.title ??
+        fallbackEntry?.headline ??
+        fallbackEntry?.issue_code ??
+        null
+
+      setOwnershipDialogState((current) => ({
+        ...current,
+        loading: false,
+        issueTitle,
+        editions: payload?.collectedEditions ?? [],
+      }))
+    } catch (error) {
+      setOwnershipDialogState((current) => ({
+        ...current,
+        loading: false,
+        error: error?.message ?? t('issueDetails.ownershipDialog.loadError'),
+      }))
+    }
+  }
+
+  const selectSingleIssueOwnership = () => {
+    setOwnershipDialogState((current) => ({ ...current, selectedEditionIds: [] }))
+  }
+
+  const toggleOwnershipEdition = (editionId, checked) => {
+    if (!editionId) return
+    setOwnershipDialogState((current) => {
+      const selectedSet = new Set(current.selectedEditionIds ?? [])
+      if (checked) {
+        selectedSet.add(editionId)
+      } else {
+        selectedSet.delete(editionId)
+      }
+      return { ...current, selectedEditionIds: Array.from(selectedSet) }
+    })
+  }
+
+  const confirmOwnershipDialog = async () => {
+    const issueId = ownershipDialogState.issueId
+    if (!issueId || !canFetchStates) return
+
+    setOwnershipDialogState((current) => ({ ...current, saving: true, error: null }))
+    try {
+      await issueStateMutation.mutateAsync({
+        issueId,
+        patch: {
+          haveIt: true,
+          collectedEditionIds: ownershipDialogState.selectedEditionIds ?? [],
+        },
+      })
+      closeOwnershipDialog({ force: true })
+    } catch (error) {
+      setOwnershipDialogState((current) => ({
+        ...current,
+        saving: false,
+        error: error?.message ?? t('timeline.unableUpdateIssueState'),
+      }))
+    }
+  }
+
   const handleIssueToggle = (issueId, field, nextValue) => {
     if (!issueId || !canFetchStates) return
-    issueStateMutation.mutate({ issueId, patch: { [field]: nextValue } })
+    if (field === 'haveIt' && nextValue) {
+      void openOwnershipDialog(issueId)
+      return
+    }
+    const patch = field === 'haveIt' && !nextValue ? { haveIt: false, collectedEditionIds: [] } : { [field]: nextValue }
+    issueStateMutation.mutate({ issueId, patch })
   }
 
   const handleOpenStageDetail = (stage) => {
@@ -600,6 +714,20 @@ function HeroTimelineInsights({ heroSlug, heroName }) {
           selectedStageIssueId ? handleIssueToggle(selectedStageIssueId, field, nextValue) : undefined
         }
         onClose={handleCloseIssueDetail}
+      />
+      <IssueOwnershipFormatDialog
+        open={ownershipDialogState.open}
+        heroSlug={heroSlug}
+        issueTitle={ownershipDialogState.issueTitle}
+        editions={ownershipDialogState.editions}
+        selectedEditionIds={ownershipDialogState.selectedEditionIds}
+        loading={ownershipDialogState.loading}
+        saving={ownershipDialogState.saving}
+        error={ownershipDialogState.error}
+        onSelectSingleIssue={selectSingleIssueOwnership}
+        onToggleEdition={toggleOwnershipEdition}
+        onConfirm={confirmOwnershipDialog}
+        onClose={closeOwnershipDialog}
       />
     </section>
   )

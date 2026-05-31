@@ -31,8 +31,7 @@ yarn-error.log*
 .env
 .env.example
 .test-users/
-presentation-screenshoots/
-
+\presentation-screenshots
 # vercel
 .vercel
 

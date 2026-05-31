@@ -252,6 +252,18 @@
     display: none;
   }
 
+  .timeline-zoom-content {
+    zoom: var(--timeline-zoom, 1);
+  }
+
+  @media (max-width: 767px) {
+    .timeline-zoom-content {
+      width: 100%;
+      max-width: 100%;
+      zoom: 1;
+    }
+  }
+
   .editorial-route-scroll {
     scrollbar-width: thin;
     scrollbar-color: var(--primary) color-mix(in srgb, var(--primary) 14%, transparent);

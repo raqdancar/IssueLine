@@ -280,6 +280,10 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
     })
   }, [])
 
+  const selectSingleIssueOwnership = useCallback(() => {
+    setOwnershipDialogState((current) => ({ ...current, selectedEditionIds: [] }))
+  }, [])
+
   const confirmOwnershipDialog = useCallback(async () => {
     const issueId = ownershipDialogState.issueId
     if (!issueId || !isAuthenticated || !apiBaseUrl) return
@@ -531,6 +535,7 @@ function HeroTimeline({ slug, heroName, fallbackImage, timelineLogoSrc = null, t
         loading={ownershipDialogState.loading}
         saving={ownershipDialogState.saving}
         error={ownershipDialogState.error}
+        onSelectSingleIssue={selectSingleIssueOwnership}
         onToggleEdition={toggleOwnershipEdition}
         onConfirm={confirmOwnershipDialog}
         onClose={closeOwnershipDialog}

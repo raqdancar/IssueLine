@@ -2,8 +2,13 @@
 
 const getFullscreenElement = (doc) => doc?.fullscreenElement ?? doc?.webkitFullscreenElement ?? null
 
+export const TIMELINE_FULLSCREEN_MEDIA_QUERY = '(min-width: 768px)'
+
 export const canUseFullscreen = (element) =>
   Boolean(element && (element.requestFullscreen || element.webkitRequestFullscreen))
+
+export const isTimelineFullscreenViewport = (win = typeof window !== 'undefined' ? window : null) =>
+  Boolean(win?.matchMedia?.(TIMELINE_FULLSCREEN_MEDIA_QUERY).matches)
 
 export const isElementFullscreen = (element, doc = typeof document !== 'undefined' ? document : null) =>
   Boolean(element && doc && getFullscreenElement(doc) === element)

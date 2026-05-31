@@ -39,7 +39,7 @@ function TimelineIssueCardCompact({
   const showHeadlineContext = Boolean(issueTitle && issueTitle !== entry.headline)
 
   return (
-    <li id={entryDomId} className="relative pl-7">
+    <li id={entryDomId} className="relative min-w-0 max-w-full pl-7">
       <span
         className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 shadow-[0_0_0_2px_rgba(255,255,255,0.95),0_0_0.65rem_rgba(99,102,241,0.28)] ${severityVariant.dot}`}
         aria-hidden="true"
@@ -52,31 +52,31 @@ function TimelineIssueCardCompact({
         tabIndex={0}
         onClick={handleHighlight}
         onKeyDown={handleKeyDown}
-        className={`rounded-xl border ${severityVariant.panel} p-2.5 transition hover:-translate-y-0.5 ${articleEmphasis}`}
+        className={`min-w-0 max-w-full overflow-hidden rounded-xl border ${severityVariant.panel} p-2.5 transition hover:-translate-y-0.5 ${articleEmphasis}`}
         style={gradientStyle}
       >
         {stageName ? (
           <div className={stageLabelClasses}>
-            {stageName}
+            <span className="block break-words [overflow-wrap:anywhere]">{stageName}</span>
           </div>
         ) : null}
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 max-w-full flex-wrap items-center justify-between gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
               <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
               {issueDateLabel}
             </span>
             {seriesName || number || legacyNumber ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
                 {seriesName || number ? (
                   <span
                     className={
                       legacyMatchesIssueNumber
-                        ? 'inline-flex items-center gap-2 rounded-full border border-amber-300/80 bg-linear-to-r from-white via-amber-50/80 to-indigo-50 px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm shadow-amber-100/70'
-                        : 'inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm'
+                        ? 'inline-flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-xl border border-amber-300/80 bg-linear-to-r from-white via-amber-50/80 to-indigo-50 px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm shadow-amber-100/70 sm:rounded-full'
+                        : 'inline-flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-xl border border-slate-300/70 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700 shadow-sm sm:rounded-full'
                     }
                   >
-                    <span>{seriesName ?? t('timeline.issueFallback')}</span>
+                    <span className="min-w-0 break-words [overflow-wrap:anywhere]">{seriesName ?? t('timeline.issueFallback')}</span>
                     {number ? <span className="text-slate-500">#{number}</span> : null}
                     {legacyMatchesIssueNumber ? (
                       <span className="rounded-full border border-indigo-200 bg-white/80 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-indigo-700">
@@ -95,11 +95,11 @@ function TimelineIssueCardCompact({
           </div>
           <div className="space-y-1.5">
             {showHeadlineContext ? (
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500">{entry.headline}</p>
+              <p className="break-words text-[10px] font-black uppercase tracking-[0.18em] text-indigo-500 [overflow-wrap:anywhere]">{entry.headline}</p>
             ) : null}
-            <h4 className="text-base font-black leading-snug text-slate-800">{displayTitle}</h4>
+            <h4 className="break-words text-base font-black leading-snug text-slate-800 [overflow-wrap:anywhere]">{displayTitle}</h4>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500">
-              {seriesName ? <span className="text-slate-600">{seriesName}</span> : null}
+              {seriesName ? <span className="break-words text-slate-600 [overflow-wrap:anywhere]">{seriesName}</span> : null}
               {number ? <span className="text-slate-500">#{number}</span> : null}
               {publicationDate ? <span>{publicationDate}</span> : null}
             </div>

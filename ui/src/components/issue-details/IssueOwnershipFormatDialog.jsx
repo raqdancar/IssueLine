@@ -1,7 +1,7 @@
 ﻿// Renderitza parts del dialeg de detall d'un issue i les seves edicions.
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, PackageCheck, X } from 'lucide-react'
+import { BookOpenCheck, Loader2, PackageCheck, X } from 'lucide-react'
 import { useModalLayer } from '@/hooks/useModalLayer.js'
 import { formatCollectedEditionFormat } from '@/lib/collectedEditions'
 import { resolveHeroThemeStyle } from '@/lib/heroThemes'
@@ -24,6 +24,7 @@ function IssueOwnershipFormatDialog({
   saving = false,
   error = null,
   onClose,
+  onSelectSingleIssue,
   onToggleEdition,
   onConfirm,
 }) {
@@ -47,6 +48,7 @@ function IssueOwnershipFormatDialog({
   const heroThemeStyle = resolveHeroThemeStyle(heroSlug)
 
   const selectedSet = new Set(selectedEditionIds)
+  const singleIssueSelected = selectedSet.size === 0
 
   return createPortal(
     <div
@@ -79,13 +81,37 @@ function IssueOwnershipFormatDialog({
         </div>
 
         <div className="mt-4">
+          <button
+            type="button"
+            aria-pressed={singleIssueSelected}
+            disabled={saving}
+            onClick={onSelectSingleIssue}
+            className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
+              singleIssueSelected
+                ? 'border-emerald-300 bg-emerald-50/70'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            } disabled:cursor-not-allowed disabled:opacity-60`}
+          >
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700">
+              <BookOpenCheck className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-slate-900">{t('issueDetails.ownershipDialog.singleIssueTitle')}</span>
+              <span className="mt-0.5 block text-xs text-slate-600">{t('issueDetails.ownershipDialog.singleIssueBody')}</span>
+            </span>
+          </button>
+
+          <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            {t('issueDetails.ownershipDialog.collectedEditionsLabel')}
+          </p>
+
           {loading ? (
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-600">
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-4 text-sm text-slate-600">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               {t('issueDetails.ownershipDialog.loading')}
             </div>
           ) : editions.length ? (
-            <div className="max-h-[52vh] space-y-2 overflow-y-auto pr-1">
+            <div className="mt-2 max-h-[42vh] space-y-2 overflow-y-auto pr-1">
               {editions.map((edition) => {
                 const selected = selectedSet.has(edition.id)
                 const coverImage = resolveCollectedCoverImage(edition.coverImageUrl)
@@ -130,7 +156,7 @@ function IssueOwnershipFormatDialog({
               })}
             </div>
           ) : (
-            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+            <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
               {t('issueDetails.ownershipDialog.noCollectedEditions')}
             </p>
           )}

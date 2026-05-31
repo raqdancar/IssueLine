@@ -14,7 +14,14 @@ import { useSessionContext } from '@/lib/sessionContext.jsx'
 import { useIssueStateMutation, useIssueStatesQuery } from '@/hooks/useIssueStates.js'
 import { useHeroTimelineQuery } from '@/hooks/useHeroTimeline.js'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
-import { canUseFullscreen, exitDocumentFullscreen, isElementFullscreen, requestElementFullscreen } from '@/lib/fullscreen.js'
+import {
+  canUseFullscreen,
+  exitDocumentFullscreen,
+  isElementFullscreen,
+  isTimelineFullscreenViewport,
+  requestElementFullscreen,
+  TIMELINE_FULLSCREEN_MEDIA_QUERY,
+} from '@/lib/fullscreen.js'
 import { backendBaseUrl } from '@/utils/backend.js'
 
 const formatDate = (value, locale, t) => {
@@ -162,16 +169,24 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
 
     const syncFullscreenState = () => {
       const element = sectionRef.current
-      setIsFullscreen(isElementFullscreen(element, document))
-      setFullscreenEnabled(canUseFullscreen(element))
+      const isElementActive = isElementFullscreen(element, document)
+      const isAllowedViewport = isTimelineFullscreenViewport(window)
+      setIsFullscreen(isElementActive)
+      setFullscreenEnabled(isAllowedViewport && canUseFullscreen(element))
+      if (isElementActive && !isAllowedViewport) {
+        void exitDocumentFullscreen(document)
+      }
     }
 
+    const fullscreenMediaQuery = window.matchMedia(TIMELINE_FULLSCREEN_MEDIA_QUERY)
     syncFullscreenState()
     document.addEventListener('fullscreenchange', syncFullscreenState)
     document.addEventListener('webkitfullscreenchange', syncFullscreenState)
+    fullscreenMediaQuery.addEventListener('change', syncFullscreenState)
     return () => {
       document.removeEventListener('fullscreenchange', syncFullscreenState)
       document.removeEventListener('webkitfullscreenchange', syncFullscreenState)
+      fullscreenMediaQuery.removeEventListener('change', syncFullscreenState)
     }
   }, [])
 
@@ -193,6 +208,7 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
       await exitDocumentFullscreen(document)
       return
     }
+    if (!isTimelineFullscreenViewport(window)) return
     await requestElementFullscreen(element)
   }
   const shouldShowBackToTop = isMobileViewport && showBackToTop

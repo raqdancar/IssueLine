@@ -47,7 +47,7 @@ function TimelineSpecialEventCard({
     : 'absolute left-0 top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-amber-300 bg-amber-100 text-amber-700 shadow-[0_0_0_2px_rgba(255,251,235,0.96),0_0_0.7rem_rgba(251,191,36,0.34)]'
 
   return (
-    <li id={entryDomId} className={rootClasses}>
+    <li id={entryDomId} className={`min-w-0 max-w-full ${rootClasses}`}>
       <span className={dotClasses} aria-hidden="true">
         <Sparkles className="h-2.5 w-2.5" />
       </span>
@@ -65,7 +65,7 @@ function TimelineSpecialEventCard({
         <span className="absolute left-[0.45rem] top-6 block h-full w-[2px] rounded-full bg-gradient-to-b from-amber-400 via-orange-300/90 to-transparent shadow-[0_0_0.45rem_rgba(251,191,36,0.3)]" />
       ) : null}
       <article
-        className={`rounded-xl border border-amber-300 bg-[linear-gradient(135deg,rgba(255,251,235,1)_0%,rgba(254,243,199,0.86)_46%,rgba(255,237,213,0.92)_100%)] ${densityClasses.panel} ${articleEmphasis}`}
+        className={`min-w-0 max-w-full overflow-hidden rounded-xl border border-amber-300 bg-[linear-gradient(135deg,rgba(255,251,235,1)_0%,rgba(254,243,199,0.86)_46%,rgba(255,237,213,0.92)_100%)] ${densityClasses.panel} ${articleEmphasis}`}
       >
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -73,22 +73,22 @@ function TimelineSpecialEventCard({
               <Flag className="h-3 w-3" aria-hidden="true" />
               {t('timeline.specialEventMarker')}
             </span>
-            <span className={`inline-flex items-center gap-1 rounded-full bg-amber-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-100 ${showcaseMode ? 'hidden md:inline-flex' : ''}`}>
+            <span className={`items-center gap-1 rounded-full bg-amber-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-100 ${showcaseMode ? 'hidden' : 'inline-flex'}`}>
               <CalendarDays className="h-3 w-3" aria-hidden="true" />
               {issueDateLabel}
             </span>
             {specialEventCode ? (
-              <span className="rounded-md bg-white/70 px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-800">
+              <span className="max-w-full break-words rounded-md bg-white/70 px-2 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-800 [overflow-wrap:anywhere]">
                 {specialEventCode}
               </span>
             ) : null}
           </div>
-          <h4 className={`font-black uppercase tracking-[0.08em] text-amber-950 ${densityClasses.title}`}>{title}</h4>
-          {entry.summary ? <p className={`text-amber-900/80 ${densityClasses.summary}`}>{entry.summary}</p> : null}
-          {stageSummary ? <p className={`text-amber-900/75 ${densityClasses.summary}`}>{stageSummary}</p> : null}
+          <h4 className={`break-words font-black uppercase tracking-[0.08em] text-amber-950 [overflow-wrap:anywhere] ${densityClasses.title}`}>{title}</h4>
+          {entry.summary ? <p className={`break-words text-amber-900/80 [overflow-wrap:anywhere] ${densityClasses.summary}`}>{entry.summary}</p> : null}
+          {stageSummary ? <p className={`break-words text-amber-900/75 [overflow-wrap:anywhere] ${densityClasses.summary}`}>{stageSummary}</p> : null}
           <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 font-semibold uppercase tracking-[0.14em] text-amber-700 ${densityClasses.meta}`}>
-            {stageName ? <span>{stageName}</span> : null}
-            {seriesName ? <span>{seriesName}</span> : null}
+            {stageName ? <span className="break-words [overflow-wrap:anywhere]">{stageName}</span> : null}
+            {seriesName ? <span className="break-words [overflow-wrap:anywhere]">{seriesName}</span> : null}
             {number ? <span>#{number}</span> : null}
             {publicationDate ? <span>{publicationDate}</span> : null}
           </div>

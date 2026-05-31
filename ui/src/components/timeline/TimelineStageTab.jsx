@@ -28,12 +28,12 @@ function TimelineStageTab({ label, variant = 'light', layout = 'rail' }) {
   if (layout === 'inline') {
     return (
       <span
-        className={`inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] shadow-sm ${variantClass.inline}`}
+        className={`inline-flex min-w-0 max-w-full items-start gap-2 rounded-xl border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] shadow-sm sm:items-center sm:rounded-full ${variantClass.inline}`}
         aria-label={t('timeline.stageLabel', { label })}
         title={label}
       >
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-75" aria-hidden="true" />
-        <span className="truncate">{label}</span>
+        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-75 sm:mt-0" aria-hidden="true" />
+        <span className="min-w-0 whitespace-normal break-words leading-tight [overflow-wrap:anywhere]">{label}</span>
       </span>
     )
   }

@@ -85,7 +85,7 @@ function TimelineIssueCardDetailed({
   const showHeadlineContext = Boolean(issueTitle && issueTitle !== entry.headline)
 
   return (
-    <li id={entryDomId} className={rootClasses}>
+    <li id={entryDomId} className={`min-w-0 max-w-full ${rootClasses}`}>
       <span className={dotClasses} aria-hidden="true" />
       {showcaseMode ? (
         <span className={showcaseDateClasses}>
@@ -105,30 +105,30 @@ function TimelineIssueCardDetailed({
         tabIndex={0}
         onClick={handleHighlight}
         onKeyDown={handleKeyDown}
-        className={`flex flex-col overflow-hidden rounded-xl border ${severityVariant.panel} transition hover:-translate-y-0.5 ${articleEmphasis}`}
+        className={`flex min-w-0 max-w-full flex-col overflow-hidden rounded-xl border ${severityVariant.panel} transition hover:-translate-y-0.5 ${articleEmphasis}`}
         style={gradientStyle}
       >
-        <div className="flex">
-          <div className="flex-1 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 max-w-full">
+          <div className="min-w-0 max-w-full flex-1 p-3">
+            <div className="flex min-w-0 max-w-full flex-wrap items-center justify-between gap-2">
+              <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
                 {stageName ? <TimelineStageTab label={stageName} layout="inline" /> : null}
-                <span className={`inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm ${showcaseMode ? 'hidden md:inline-flex' : ''}`}>
+                <span className={`inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-3 py-1 text-[11px] font-semibold text-white shadow-sm ${showcaseMode ? 'hidden' : ''}`}>
                   <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
                   {issueDateLabel}
                 </span>
               </div>
               {seriesName || number || legacyNumber ? (
-                <div className="ml-auto flex flex-wrap items-center gap-2">
+                <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2">
                   {seriesName || number ? (
                     <span
                       className={
                         legacyMatchesIssueNumber
-                          ? 'inline-flex items-center gap-3 rounded-full border border-amber-300/80 bg-linear-to-r from-white via-amber-50/80 to-indigo-50 px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm shadow-amber-100/70'
-                          : 'inline-flex items-center gap-3 rounded-full border border-slate-300/70 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm'
+                          ? 'inline-flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-xl border border-amber-300/80 bg-linear-to-r from-white via-amber-50/80 to-indigo-50 px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm shadow-amber-100/70 sm:rounded-full'
+                          : 'inline-flex min-w-0 max-w-full flex-wrap items-center gap-2 rounded-xl border border-slate-300/70 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm sm:rounded-full'
                       }
                     >
-                      <span>{seriesName ?? t('timeline.issueFallback')}</span>
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere]">{seriesName ?? t('timeline.issueFallback')}</span>
                       {number ? (
                         <span
                           className="text-2xl font-black leading-none tracking-tight text-slate-900 drop-shadow-sm"
@@ -188,62 +188,62 @@ function TimelineIssueCardDetailed({
                   )}
                 </div>
               </div>
-              <div className="flex-1 space-y-2">
+              <div className="min-w-0 max-w-full flex-1 space-y-2">
                 <div className="rounded-2xl border border-white/80 bg-white/70 px-3 py-2 shadow-inner shadow-slate-100/80">
                   {showHeadlineContext ? (
-                    <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">
+                    <p className="mb-1 break-words text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 [overflow-wrap:anywhere]">
                       {entry.headline}
                     </p>
                   ) : null}
-                  <h4 className={`text-lg font-black leading-tight sm:text-xl ${severityVariant.title}`}>
+                  <h4 className={`break-words text-lg font-black leading-tight [overflow-wrap:anywhere] sm:text-xl ${severityVariant.title}`}>
                     {displayTitle}
                   </h4>
                   {(seriesName || number) && showHeadlineContext ? (
-                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    <p className="mt-1 break-words text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 [overflow-wrap:anywhere]">
                       {seriesName ? seriesName : t('timeline.issueFallback')}{number ? ` #${number}` : ''}
                     </p>
                   ) : null}
                 </div>
-                {entry.summary ? <p className="body-sm text-slate-600">{entry.summary}</p> : null}
-                {stageSummary ? <p className="body-xs text-indigo-800/80">{stageSummary}</p> : null}
-                <div className="grid gap-1 text-slate-600 body-xs sm:grid-cols-2">
+                {entry.summary ? <p className="body-sm break-words text-slate-600 [overflow-wrap:anywhere]">{entry.summary}</p> : null}
+                {stageSummary ? <p className="body-xs break-words text-indigo-800/80 [overflow-wrap:anywhere]">{stageSummary}</p> : null}
+                <div className="grid min-w-0 gap-1 text-slate-600 body-xs sm:grid-cols-2">
                   {seriesName ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.series')}</span> {seriesName}
                     </p>
                   ) : null}
                   {number ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.issue')}</span> {number}
                     </p>
                   ) : null}
                   {volume ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.volume')}</span> {volume}
                     </p>
                   ) : null}
                   {publicationDate ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.publication')}</span> {publicationDate}
                     </p>
                   ) : null}
                   {price ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.price')}</span> {price}
                     </p>
                   ) : null}
                   {pageCount ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.pages')}</span> {pageCount}
                     </p>
                   ) : null}
                   {editing ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.editing')}</span> {editing}
                     </p>
                   ) : null}
                   {rating ? (
-                    <p>
+                    <p className="min-w-0 break-words [overflow-wrap:anywhere]">
                       <span className="font-semibold text-slate-700">{t('timeline.rating')}</span> {rating}
                     </p>
                   ) : null}

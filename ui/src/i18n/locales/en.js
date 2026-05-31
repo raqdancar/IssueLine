@@ -566,6 +566,9 @@ const messages = {
     ownershipDialog: {
       eyebrow: 'Collection format',
       title: 'How do you own this issue?',
+      singleIssueTitle: 'Single issue',
+      singleIssueBody: 'Mark only this issue as part of your collection.',
+      collectedEditionsLabel: 'Available collected editions',
       loading: 'Loading collected editions...',
       loadError: 'Unable to load collected editions for this issue.',
       noCollectedEditions: 'No collected editions are linked to this issue yet. You can still save ownership if you have it as a single issue.',
