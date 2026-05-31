@@ -83,7 +83,7 @@ function TimelineHeader({
               onClick={onToggleFullscreen}
               aria-pressed={isFullscreen}
               aria-label={isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground shadow-sm transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
               {isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
@@ -91,8 +91,8 @@ function TimelineHeader({
           ) : null}
           {hasCanonicalTimelineOrder && timelineOrderOptions.length ? (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="body-xs text-slate-500">{t('timeline.orderMode')}</span>
-              <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+              <span className="text-xs leading-snug text-muted-foreground">{t('timeline.orderMode')}</span>
+              <div className="inline-flex rounded-full border border-border bg-card p-0.5">
                 {timelineOrderOptions.map((option) => {
                   const isActive = timelineOrderMode === option.value
                   return (
@@ -101,10 +101,10 @@ function TimelineHeader({
                       type="button"
                       aria-pressed={isActive}
                       onClick={() => onTimelineOrderModeChange?.(option.value)}
-                      className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                      className={`rounded-full px-3 py-1 text-xs font-semibold leading-snug transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                         isActive
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:text-slate-900'
+                          ? 'bg-secondary text-secondary-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       {t(option.labelKey)}
@@ -115,8 +115,8 @@ function TimelineHeader({
             </div>
           ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="body-xs text-slate-500">{t('timeline.sortByDate')}</span>
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+            <span className="text-xs leading-snug text-muted-foreground">{t('timeline.sortByDate')}</span>
+            <div className="inline-flex rounded-full border border-border bg-card p-0.5">
               {sortOptions.map((option) => {
                 const isActive = sortDirection === option.value
                 return (
@@ -125,10 +125,10 @@ function TimelineHeader({
                     type="button"
                     aria-pressed={isActive}
                     onClick={() => onSortChange(option.value)}
-                    className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                    className={`rounded-full px-3 py-1 text-xs font-semibold leading-snug transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isActive
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {t(option.labelKey)}
@@ -138,20 +138,20 @@ function TimelineHeader({
             </div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 md:flex">
-            <span className="body-xs text-slate-500">{t('timeline.zoomTimeline')}</span>
-            <div className="inline-flex items-center rounded-full border border-slate-200 bg-white">
+            <span className="text-xs leading-snug text-muted-foreground">{t('timeline.zoomTimeline')}</span>
+            <div className="inline-flex items-center rounded-full border border-border bg-card">
               <button
                 type="button"
                 onClick={onZoomOut}
                 disabled={isZoomedOut}
                 aria-label={t('timeline.zoomOutTimeline')}
-                className={`rounded-l-full p-2 text-slate-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
-                  isZoomedOut ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-900'
+                className={`rounded-l-full p-2 text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  isZoomedOut ? 'cursor-not-allowed opacity-40' : 'hover:text-foreground'
                 }`}
               >
                 <Minus className="h-4 w-4" />
               </button>
-              <span className="min-w-14 text-center text-[11px] font-semibold text-slate-700 tabular-nums">
+              <span className="min-w-14 text-center text-[11px] font-semibold text-foreground tabular-nums">
                 {zoomPercentage}%
               </span>
               <button
@@ -159,8 +159,8 @@ function TimelineHeader({
                 onClick={onZoomIn}
                 disabled={isZoomedIn}
                 aria-label={t('timeline.zoomInTimeline')}
-                className={`rounded-r-full p-2 text-slate-600 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
-                  isZoomedIn ? 'cursor-not-allowed opacity-40' : 'hover:text-slate-900'
+                className={`rounded-r-full p-2 text-muted-foreground transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  isZoomedIn ? 'cursor-not-allowed opacity-40' : 'hover:text-foreground'
                 }`}
               >
                 <Plus className="h-4 w-4" />
@@ -169,8 +169,8 @@ function TimelineHeader({
           </div>
           {publicationFilterOptions.length ? (
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <span className="body-xs text-slate-500">{t('timeline.filterPublication')}</span>
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-0.5">
+            <span className="text-xs leading-snug text-muted-foreground">{t('timeline.filterPublication')}</span>
+            <div className="inline-flex rounded-full border border-border bg-card p-0.5">
               {publicationFilterOptions.map((option) => {
                 const isActive = publicationFilter === option.value
                 return (
@@ -179,10 +179,10 @@ function TimelineHeader({
                     type="button"
                     aria-pressed={isActive}
                     onClick={() => onPublicationFilterChange?.(option.value)}
-                    className={`rounded-full px-3 py-1 body-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                    className={`rounded-full px-3 py-1 text-xs font-semibold leading-snug transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       isActive
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {t(option.labelKey)}
@@ -193,8 +193,8 @@ function TimelineHeader({
           </div>
           ) : null}
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <span className="body-xs text-slate-500">{t('timeline.filterCollection')}</span>
-            <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white p-0.5">
+            <span className="text-xs leading-snug text-muted-foreground">{t('timeline.filterCollection')}</span>
+            <div className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-0.5">
               <button
                 type="button"
                 aria-pressed={Boolean(collectionFilters?.ownedOnly)}
@@ -205,7 +205,7 @@ function TimelineHeader({
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                   collectionFilters?.ownedOnly
                     ? 'bg-emerald-100 text-emerald-800 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    : 'text-muted-foreground hover:text-foreground'
                 } ${!isAuthenticated ? 'cursor-not-allowed opacity-60' : ''}`}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -221,7 +221,7 @@ function TimelineHeader({
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                   collectionFilters?.readOnly
                     ? 'bg-sky-100 text-sky-800 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    : 'text-muted-foreground hover:text-foreground'
                 } ${!isAuthenticated ? 'cursor-not-allowed opacity-60' : ''}`}
               >
                 <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
