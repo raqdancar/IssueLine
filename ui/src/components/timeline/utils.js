@@ -52,6 +52,10 @@ export const isAnnualIssueEntry = (entry) => {
 export const isSpecialTimelineEventEntry = (entry) => {
   if (!entry) return false
   const metadata = entry.metadata ?? {}
+  const eventType = entry.event_type ?? entry.eventType ?? metadata.event_type ?? metadata.eventType
+
+  if (eventType === 'milestone') return true
+  if (eventType === 'issue') return false
 
   // Special milestones may arrive as explicit categories or plain "Special" issue_code labels.
   if (textEquals(metadata.issue_category, 'special') || textEquals(metadata.issueCategory, 'special')) return true

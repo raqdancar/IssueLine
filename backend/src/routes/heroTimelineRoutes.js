@@ -22,11 +22,13 @@ const issueParamsSchema = z.object({
 })
 
 const severityEnum = z.enum(['info', 'success', 'warning', 'critical'])
+const eventTypeEnum = z.enum(['issue', 'milestone'])
 
 const createSchema = z
   .object({
     heroApiId: z.coerce.number().int().positive().optional(),
     heroSlug: z.string().min(1).max(120).optional(),
+    eventType: eventTypeEnum.default('milestone'),
     headline: z.string().min(3).max(160),
     summary: z.string().min(1).max(2000).optional(),
     issueCode: z.string().min(1).max(80).optional(),
@@ -113,6 +115,7 @@ heroTimelineRouter.post('/', authenticateRequest, requireAdminRequest, async (re
 
     const entry = await createHeroTimelineEntry({
       heroApiId,
+      eventType: payload.eventType,
       headline: payload.headline,
       summary: payload.summary,
       issueCode: payload.issueCode,

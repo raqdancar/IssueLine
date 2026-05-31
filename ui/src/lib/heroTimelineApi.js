@@ -10,6 +10,7 @@ import { backendBaseUrl } from '@/utils/backend.js'
  * @property {string|null} [summary]
  * @property {string|null} [issue_code]
  * @property {string|null} [source_url]
+ * @property {'issue'|'milestone'} [event_type]
  * @property {'info'|'success'|'warning'|'critical'} [severity]
  * @property {Record<string, unknown>|null} [metadata]
  * @property {number|null} [stage_id]

@@ -188,8 +188,10 @@ Daily hard-limit errors still abort the run.
 
 - `hero_issues` rows are upserted by `(hero_api_id, gcd_issue_id)`.
 - Timeline rows keep a nullable `hero_issue_id` foreign key. Imported issues write this link; manual milestones may leave it empty.
+- Timeline rows use `event_type = issue|milestone`; GCD imports write `issue` and manual editorial events default to `milestone`.
 - Legacy timeline rows still fall back to `metadata.gcdIssueId` during the gradual migration.
 - Cover updates write to `hero_issues`; timeline metadata is updated only for unlinked legacy rows.
+- Linked timeline rows read canonical issue fields from `hero_issues`. New ingests keep only timeline-owned metadata plus the temporary GCD-id compatibility field in `hero_timelines.metadata`.
 - When variant exclusion is enabled, duplicate/variant timeline rows are filtered from the canonical timeline and deleted from `hero_timelines` (source issue data remains in `hero_issues` for audit fidelity).
 
 ## Internal GCD collected-edition import CLI

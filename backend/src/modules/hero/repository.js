@@ -28,7 +28,7 @@ export const findHeroBySlug = async (slug) => {
 export const listTimelineEntries = async (heroApiId) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, hero_issue_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, special_issue, created_at')
+    .select('id, hero_issue_id, event_type, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, special_issue, created_at')
     .eq('hero_api_id', heroApiId)
     .order('issue_date', { ascending: true })
 
@@ -123,7 +123,7 @@ export const listHeroIssuesByIds = async ({ heroApiId, heroIssueIds }) => {
 export const findTimelineEntryById = async ({ heroApiId, issueId }) => {
   const { data, error } = await supabaseServiceClient
     .from('hero_timelines')
-    .select('id, hero_api_id, hero_issue_id, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, created_at, updated_at')
+    .select('id, hero_api_id, hero_issue_id, event_type, issue_date, headline, summary, issue_code, source_url, severity, metadata, stage_id, legacy_number, created_at, updated_at')
     .eq('hero_api_id', heroApiId)
     .eq('id', issueId)
     .limit(1)
@@ -183,6 +183,45 @@ export const listHeroIssuesByGcdIssueIds = async ({ heroApiId, gcdIssueIds }) =>
 
   throwSupabaseError('Failed to resolve cached issue ids', error)
   return data ?? []
+}
+
+const TIMELINE_OVERLAY_HERO_ISSUE_SELECT =
+  'id, gcd_issue_id, series_name, number, volume, title, key_date, on_sale_date, publication_date, price, page_count, cover, cover_original, cover_image_path, timeline_order'
+
+const chunk = (values, size = 100) => {
+  const batches = []
+  for (let index = 0; index < values.length; index += size) {
+    batches.push(values.slice(index, index + size))
+  }
+  return batches
+}
+
+const listHeroIssueOverlayRowsByColumn = async ({ heroApiId, column, values }) => {
+  const batches = chunk(Array.from(new Set(values ?? [])).filter(Boolean))
+  if (!heroApiId || !batches.length) return []
+
+  const results = await Promise.all(
+    batches.map((batch) =>
+      supabaseServiceClient
+        .from('hero_issues')
+        .select(TIMELINE_OVERLAY_HERO_ISSUE_SELECT)
+        .eq('hero_api_id', heroApiId)
+        .in(column, batch)
+    )
+  )
+
+  const failed = results.find((result) => result.error)
+  throwSupabaseError('Failed to load canonical issue metadata for timeline', failed?.error)
+  return results.flatMap((result) => result.data ?? [])
+}
+
+export const listHeroIssuesForTimelineOverlay = async ({ heroApiId, heroIssueIds, gcdIssueIds }) => {
+  const [linkedRows, legacyRows] = await Promise.all([
+    listHeroIssueOverlayRowsByColumn({ heroApiId, column: 'id', values: heroIssueIds }),
+    listHeroIssueOverlayRowsByColumn({ heroApiId, column: 'gcd_issue_id', values: gcdIssueIds }),
+  ])
+
+  return Array.from(new Map([...linkedRows, ...legacyRows].map((row) => [row.id, row])).values())
 }
 
 export const insertTimelineRow = async (payload) => {

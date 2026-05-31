@@ -11,8 +11,8 @@
  * compatibilitat amb dades parcials i diferents versions de metadades.
  */
 
-import { getHeroIssueCoverMetadataMap, getHeroIssueTimelineOrderMap } from './issuesService.js'
 import { toHumanGcdIssueUrl } from '../gcd/issueMapper.js'
+import { compactLinkedTimelineMetadata } from './timelineMetadata.js'
 import {
   deleteTimelineRowsByIds,
   findHeroBySlug,
@@ -26,6 +26,7 @@ import {
   listCollectedEditionsForHeroIssue,
   listHeroIssuesByIds,
   listHeroIssuesByGcdIssueIds,
+  listHeroIssuesForTimelineOverlay,
   listStageRowsById,
   listStageRowsByIds,
   listTimelineEntries,
@@ -105,6 +106,70 @@ const resolveEntryGcdIssueId = (entry = {}) => {
   return Number.isSafeInteger(numeric) && numeric > 0 ? numeric : null
 }
 
+const isPresent = (value) => value !== null && value !== undefined && value !== ''
+
+const assignMetadataAliases = (metadata, value, ...keys) => {
+  if (!isPresent(value)) return
+  for (const key of keys) {
+    metadata[key] = value
+  }
+}
+
+const applyHeroIssueMetadataOverlay = (entry, heroIssueRow = null) => {
+  const legacyGcdIssueId = resolveEntryGcdIssueId(entry)
+  if (!heroIssueRow) {
+    const sourceUrl = toHumanGcdIssueUrl(entry.source_url, legacyGcdIssueId)
+    return sourceUrl === entry.source_url ? entry : { ...entry, source_url: sourceUrl }
+  }
+
+  const metadata = { ...(entry.metadata ?? {}) }
+  const gcdIssueId = Number(heroIssueRow.gcd_issue_id) || legacyGcdIssueId
+  const issueLabel =
+    isPresent(heroIssueRow.series_name) && isPresent(heroIssueRow.number)
+      ? `${heroIssueRow.series_name} ${heroIssueRow.number}`
+      : null
+
+  assignMetadataAliases(metadata, gcdIssueId, 'gcdIssueId')
+  assignMetadataAliases(metadata, issueLabel, 'issueLabel')
+  assignMetadataAliases(metadata, heroIssueRow.number, 'number')
+  assignMetadataAliases(metadata, heroIssueRow.volume, 'volume')
+  assignMetadataAliases(metadata, heroIssueRow.title, 'title')
+  assignMetadataAliases(metadata, heroIssueRow.key_date, 'keyDate', 'key_date')
+  assignMetadataAliases(metadata, heroIssueRow.on_sale_date, 'onSaleDate', 'on_sale_date')
+  assignMetadataAliases(metadata, heroIssueRow.publication_date, 'publicationDate', 'publication_date')
+  assignMetadataAliases(metadata, heroIssueRow.price, 'price')
+  assignMetadataAliases(metadata, heroIssueRow.page_count, 'pageCount', 'page_count')
+  assignMetadataAliases(metadata, heroIssueRow.cover, 'cover')
+  assignMetadataAliases(metadata, heroIssueRow.cover_original, 'cover_original')
+  assignMetadataAliases(metadata, heroIssueRow.cover_image_path, 'coverImagePath', 'cover_image_path')
+  assignMetadataAliases(metadata, heroIssueRow.series_name, 'seriesName', 'series_name')
+  assignMetadataAliases(metadata, heroIssueRow.timeline_order, 'timelineOrder', 'timeline_order')
+
+  return {
+    ...entry,
+    source_url: toHumanGcdIssueUrl(entry.source_url, gcdIssueId),
+    metadata,
+  }
+}
+
+const loadHeroIssueOverlayLookup = async (heroApiId, entries) => {
+  const heroIssueIds = entries.map((entry) => entry.hero_issue_id).filter(Boolean)
+  const gcdIssueIds = entries
+    .filter((entry) => !entry.hero_issue_id)
+    .map((entry) => resolveEntryGcdIssueId(entry))
+    .filter(Boolean)
+
+  if (!heroIssueIds.length && !gcdIssueIds.length) {
+    return { byId: new Map(), byGcdIssueId: new Map() }
+  }
+
+  const rows = await listHeroIssuesForTimelineOverlay({ heroApiId, heroIssueIds, gcdIssueIds })
+  return {
+    byId: new Map(rows.map((row) => [row.id, row])),
+    byGcdIssueId: new Map(rows.map((row) => [Number(row.gcd_issue_id), row])),
+  }
+}
+
 const resolveEntryTimelineOrder = (entry = {}) => {
   const metadata = entry.metadata ?? {}
   const value = metadata.timelineOrder ?? metadata.timeline_order
@@ -158,70 +223,19 @@ export const getHeroBySlug = async (slug) => {
 
 export const getHeroTimelineEntries = async (heroApiId) => {
   const entries = await listTimelineEntries(heroApiId)
-  let enrichedEntries = entries.map((entry) => {
-    const sourceUrl = toHumanGcdIssueUrl(entry.source_url, resolveEntryGcdIssueId(entry))
-    return sourceUrl === entry.source_url ? entry : { ...entry, source_url: sourceUrl }
-  })
-  const gcdIssueIds = entries
-    .map((entry) => resolveEntryGcdIssueId(entry))
-    .filter((value) => Number.isFinite(value))
+  let enrichedEntries = entries.map((entry) => applyHeroIssueMetadataOverlay(entry))
 
-  let coverLookup = new Map()
-  let timelineOrderLookup = new Map()
-  if (gcdIssueIds.length) {
-    try {
-      coverLookup = await getHeroIssueCoverMetadataMap(heroApiId, gcdIssueIds)
-    } catch (coverLookupError) {
-      // Timeline data should still render even when cover enrichment fails in a partial deploy/migration state.
-      console.warn(
-        `[heroTimeline] cover enrichment skipped for hero ${heroApiId}: ${coverLookupError.message}`
-      )
-      coverLookup = new Map()
-    }
-
-    try {
-      timelineOrderLookup = await getHeroIssueTimelineOrderMap(heroApiId, gcdIssueIds)
-    } catch (timelineOrderLookupError) {
-      // Optional migration: heroes without timeline_order keep the default chronological ordering.
-      console.warn(
-        `[heroTimeline] timeline order enrichment skipped for hero ${heroApiId}: ${timelineOrderLookupError.message}`
-      )
-      timelineOrderLookup = new Map()
-    }
-  }
-
-  if (coverLookup.size || timelineOrderLookup.size) {
-    enrichedEntries = enrichedEntries.map((entry) => {
-      const metadata = entry.metadata ?? null
-      if (!metadata) return entry
-      const gcdIssueId = resolveEntryGcdIssueId(entry)
-      const coverMetadata = coverLookup.get(Number(gcdIssueId))
-      const coverPath = coverMetadata?.coverImagePath
-      const timelineOrder = timelineOrderLookup.get(Number(gcdIssueId))
-      if (!coverMetadata && !timelineOrder) {
-        return entry
-      }
-      return {
-        ...entry,
-        metadata: {
-          ...metadata,
-          ...(coverPath
-            ? {
-                coverImagePath: coverPath,
-                cover_image_path: coverPath,
-              }
-            : {}),
-          ...(coverMetadata?.cover ? { cover: coverMetadata.cover } : {}),
-          ...(coverMetadata?.coverOriginal ? { cover_original: coverMetadata.coverOriginal } : {}),
-          ...(timelineOrder
-            ? {
-                timelineOrder,
-                timeline_order: timelineOrder,
-              }
-            : {}),
-        },
-      }
+  try {
+    const issueLookup = await loadHeroIssueOverlayLookup(heroApiId, entries)
+    enrichedEntries = entries.map((entry) => {
+      const canonicalIssue =
+        issueLookup.byId.get(entry.hero_issue_id) ??
+        issueLookup.byGcdIssueId.get(resolveEntryGcdIssueId(entry))
+      return applyHeroIssueMetadataOverlay(entry, canonicalIssue)
     })
+  } catch (overlayError) {
+    // Legacy metadata remains a valid fallback during partial deploys and migrations.
+    console.warn(`[heroTimeline] canonical issue overlay skipped for hero ${heroApiId}: ${overlayError.message}`)
   }
 
   const stageIds = Array.from(
@@ -303,6 +317,7 @@ const resolveTimelineIssueDetailPayload = (timelineEntry, heroIssueRow) => {
   return {
     id: timelineEntry.id,
     heroApiId: timelineEntry.hero_api_id,
+    eventType: timelineEntry.event_type ?? (heroIssueRow || gcdIssueId ? 'issue' : 'milestone'),
     headline: timelineEntry.headline,
     summary: timelineEntry.summary,
     issueCode: timelineEntry.issue_code,
@@ -332,8 +347,8 @@ const resolveTimelineIssueDetailPayload = (timelineEntry, heroIssueRow) => {
       summary: stageSummary,
     },
     credits: {
-      editing: metadata.editing ?? null,
-      rating: metadata.rating ?? null,
+      editing: heroIssueRow?.raw?.editing ?? metadata.editing ?? null,
+      rating: heroIssueRow?.raw?.rating ?? metadata.rating ?? null,
     },
     pricing: {
       price: heroIssueRow?.price ?? metadata.price ?? null,
@@ -649,6 +664,7 @@ export const getHeroTimelineIssueDetailById = async ({ heroApiId, issueId }) => 
 
 export const createHeroTimelineEntry = async ({
   heroApiId,
+  eventType = 'milestone',
   headline,
   summary,
   issueCode,
@@ -661,6 +677,7 @@ export const createHeroTimelineEntry = async ({
 
   return insertTimelineRow({
     hero_api_id: heroApiId,
+    event_type: eventType,
     headline,
     summary,
     issue_code: issueCode ?? null,
@@ -679,10 +696,12 @@ export const createHeroTimelineEntry = async ({
 
 export const getExistingGcdIssueIds = async (heroApiId) => {
   const data = await listTimelineMetadataRows(heroApiId)
+  const heroIssueGcdIssueIdById = await loadHeroIssueGcdIssueIdLookup(heroApiId, data)
 
   const identifiers = new Set()
   for (const row of data ?? []) {
     const gcdIssueId =
+      heroIssueGcdIssueIdById.get(row.hero_issue_id) ??
       row?.metadata?.gcdIssueId ??
       row?.metadata?.gcd_issue_id ??
       row?.metadata?.metronIssueId
@@ -721,13 +740,17 @@ const chunk = (values, size = 100) => {
 const buildTimelinePayload = (heroApiId, entry) => ({
   hero_api_id: heroApiId,
   hero_issue_id: entry.heroIssueId ?? entry.hero_issue_id ?? null,
+  event_type: entry.eventType ?? entry.event_type ?? 'issue',
   headline: entry.headline,
   summary: entry.summary ?? null,
   issue_code: entry.issueCode ?? null,
   issue_date: normalizeIssueDate(entry.issueDate),
   source_url: entry.sourceUrl ?? null,
   severity: entry.severity ?? 'info',
-  metadata: entry.metadata ?? null,
+  metadata:
+    (entry.heroIssueId ?? entry.hero_issue_id)
+      ? compactLinkedTimelineMetadata(entry.metadata)
+      : entry.metadata ?? null,
 })
 
 const attachHeroIssueIds = async (heroApiId, entries) => {
@@ -759,15 +782,31 @@ const resolveTimelineGcdIssueId = (entry) => {
   return String(numeric)
 }
 
+const loadHeroIssueGcdIssueIdLookup = async (heroApiId, timelineRows) => {
+  const heroIssueIds = Array.from(new Set((timelineRows ?? []).map((row) => row.hero_issue_id).filter(Boolean)))
+  if (!heroIssueIds.length) return new Map()
+
+  const heroIssues = await listHeroIssuesByIds({ heroApiId, heroIssueIds })
+  return new Map(
+    heroIssues
+      .filter((row) => isPresent(row.gcd_issue_id))
+      .map((row) => [row.id, String(row.gcd_issue_id)])
+  )
+}
+
+const resolveTimelineRowGcdIssueId = (row, heroIssueGcdIssueIdById = new Map()) =>
+  heroIssueGcdIssueIdById.get(row.hero_issue_id) ?? resolveTimelineGcdIssueId(row)
+
 const loadTimelineRowsByGcdIssueId = async (heroApiId, gcdIssueIds) => {
   if (!gcdIssueIds.length) return new Map()
 
   const data = await listTimelineMetadataRows(heroApiId)
+  const heroIssueGcdIssueIdById = await loadHeroIssueGcdIssueIdLookup(heroApiId, data)
 
   const targetSet = new Set(gcdIssueIds)
   const lookup = new Map()
   for (const row of data ?? []) {
-    const gcdIssueId = resolveTimelineGcdIssueId({ metadata: row.metadata })
+    const gcdIssueId = resolveTimelineRowGcdIssueId(row, heroIssueGcdIssueIdById)
     if (!gcdIssueId || !targetSet.has(gcdIssueId) || lookup.has(gcdIssueId)) {
       continue
     }
@@ -866,11 +905,12 @@ export const deleteHeroTimelineEntriesByGcdIssueIds = async (heroApiId, gcdIssue
   }
 
   const data = await listTimelineMetadataRows(heroApiId)
+  const heroIssueGcdIssueIdById = await loadHeroIssueGcdIssueIdLookup(heroApiId, data)
 
   const targetSet = new Set(targets)
   const idsToDelete = (data ?? [])
     .filter((row) => {
-      const value = resolveTimelineGcdIssueId({ metadata: row.metadata })
+      const value = resolveTimelineRowGcdIssueId(row, heroIssueGcdIssueIdById)
       return value ? targetSet.has(value) : false
     })
     .map((row) => row.id)

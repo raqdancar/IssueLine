@@ -249,6 +249,8 @@ curl -X POST http://localhost:4600/hero-timelines ^
 
 Click any hero portrait in the dashboard to open `/heroes/:slug`, where the detailed profile and Aceternity-inspired timeline component now live. If a slug is missing, rerun `npm run seed:superheroes` so the ingestor re-slugifies older rows.
 
+Timeline rows use `event_type` to distinguish imported comics (`issue`) from editorial events (`milestone`). The editorial `POST /hero-timelines` endpoint defaults to `milestone`; GCD ingestion writes `issue`.
+
 ## Grand Comics Database ingestion
 
 To ingest every Doctor Strange (or any hero) issue from the [Grand Comics Database](https://www.comics.org/):

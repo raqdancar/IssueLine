@@ -133,107 +133,6 @@ export const getHeroIssuesByNumberRange = async ({ heroApiId, startNumber, endNu
     })
 }
 
-const normalizeGcdIssueIds = (values = []) => {
-  const normalized = new Set()
-  for (const value of values) {
-    const numeric = Number(value)
-    if (!Number.isFinite(numeric)) continue
-    normalized.add(numeric)
-  }
-  return Array.from(normalized)
-}
-
-export const getHeroIssueCoverPathMap = async (heroApiId, gcdIssueIds) => {
-  if (!heroApiId || !gcdIssueIds?.length) {
-    return new Map()
-  }
-
-  const identifiers = normalizeGcdIssueIds(gcdIssueIds)
-  if (!identifiers.length) {
-    return new Map()
-  }
-
-  const { data, error } = await supabaseServiceClient
-    .from('hero_issues')
-    .select('gcd_issue_id, cover_image_path')
-    .eq('hero_api_id', heroApiId)
-    .in('gcd_issue_id', identifiers)
-
-  if (error) {
-    throw new Error(`Failed to load hero issue covers: ${error.message}`)
-  }
-
-  const lookup = new Map()
-  for (const row of data ?? []) {
-    if (!row.cover_image_path) continue
-    lookup.set(row.gcd_issue_id, row.cover_image_path)
-  }
-
-  return lookup
-}
-
-export const getHeroIssueCoverMetadataMap = async (heroApiId, gcdIssueIds) => {
-  if (!heroApiId || !gcdIssueIds?.length) {
-    return new Map()
-  }
-
-  const identifiers = normalizeGcdIssueIds(gcdIssueIds)
-  if (!identifiers.length) {
-    return new Map()
-  }
-
-  const { data, error } = await supabaseServiceClient
-    .from('hero_issues')
-    .select('gcd_issue_id, cover_image_path, cover, cover_original')
-    .eq('hero_api_id', heroApiId)
-    .in('gcd_issue_id', identifiers)
-
-  if (error) {
-    throw new Error(`Failed to load hero issue cover metadata: ${error.message}`)
-  }
-
-  return new Map(
-    (data ?? []).map((row) => [
-      row.gcd_issue_id,
-      {
-        coverImagePath: row.cover_image_path ?? null,
-        cover: row.cover ?? null,
-        coverOriginal: row.cover_original ?? null,
-      },
-    ])
-  )
-}
-
-export const getHeroIssueTimelineOrderMap = async (heroApiId, gcdIssueIds) => {
-  if (!heroApiId || !gcdIssueIds?.length) {
-    return new Map()
-  }
-
-  const identifiers = normalizeGcdIssueIds(gcdIssueIds)
-  if (!identifiers.length) {
-    return new Map()
-  }
-
-  const { data, error } = await supabaseServiceClient
-    .from('hero_issues')
-    .select('gcd_issue_id, timeline_order')
-    .eq('hero_api_id', heroApiId)
-    .in('gcd_issue_id', identifiers)
-
-  if (error) {
-    throw new Error(`Failed to load hero issue timeline order: ${error.message}`)
-  }
-
-  const lookup = new Map()
-  for (const row of data ?? []) {
-    const timelineOrder = Number(row.timeline_order)
-    if (!Number.isSafeInteger(timelineOrder) || timelineOrder <= 0) continue
-    lookup.set(row.gcd_issue_id, timelineOrder)
-  }
-
-  return lookup
-}
-
 const buildIssuePayloadFromRow = (row) => {
   if (row.raw) {
     const payload = {
@@ -310,6 +209,7 @@ export const mapHeroIssueRowToTimelineEntry = (row) => {
     fallback: row.title ?? `Issue ${row.number}`,
   })
   return attachLegacyMetadata({
+    eventType: 'issue',
     issueDate: fallbackIssueDate,
     headline: timelineHeadline,
     summary: row.publication_date ?? null,

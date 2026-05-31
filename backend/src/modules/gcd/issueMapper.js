@@ -90,6 +90,7 @@ export const mapIssueToTimelineEntry = (issue) => {
   })
 
   return {
+    eventType: 'issue',
     issueDate: isoDate,
     headline: timelineHeadline,
     summary: issue.notes?.trim() || issue.publication_date || null,

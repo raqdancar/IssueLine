@@ -10,6 +10,7 @@ const t = (key, values = {}) => {
 const createEntry = (overrides) => ({
   id: overrides.id,
   headline: overrides.headline ?? `Issue ${overrides.id}`,
+  event_type: overrides.eventType,
   issue_code: overrides.issueCode ?? String(overrides.id),
   issue_date: overrides.issueDate,
   metadata: {
@@ -85,5 +86,37 @@ describe('buildTimelineViewModel', () => {
 
     expect(viewModel.filteredEntries.map((entry) => entry.id)).toEqual(['3'])
     expect(entries.map((entry) => entry.id)).toEqual(['1', '2', '3'])
+  })
+
+  it('uses explicit event type before legacy special-text heuristics', () => {
+    const entries = [
+      createEntry({
+        id: 'special-issue',
+        eventType: 'issue',
+        issueCode: 'Special 1',
+        issueDate: '2020-01-01',
+        stageName: 'Main',
+      }),
+      createEntry({
+        id: 'milestone',
+        eventType: 'milestone',
+        issueCode: '50',
+        issueDate: '2020-02-01',
+        stageName: 'Main',
+      }),
+    ]
+
+    const viewModel = buildTimelineViewModel({
+      entries,
+      sortDirection: 'asc',
+      timelineOrderMode: 'publication',
+      publicationFilter: 'all',
+      collectionFilters: { ownedOnly: false, readOnly: false },
+      issueStatesById: {},
+      t,
+    })
+
+    expect(viewModel.issueAnchors.map((anchor) => anchor.targetId)).toEqual(['timeline-entry-special-issue'])
+    expect(viewModel.monthAnchors.map((anchor) => anchor.targetId)).toEqual(['timeline-entry-special-issue'])
   })
 })

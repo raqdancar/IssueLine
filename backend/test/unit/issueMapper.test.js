@@ -82,6 +82,7 @@ test('mapIssueToTimelineEntry builds a timeline entry from a valid issue payload
   })
 
   assert.ok(entry)
+  assert.equal(entry.eventType, 'issue')
   assert.equal(entry.issueDate, '1968-07-01')
   assert.equal(entry.severity, 'info')
   assert.equal(entry.summary, 'First appearance in this run')
