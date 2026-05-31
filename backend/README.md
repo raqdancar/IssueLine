@@ -75,6 +75,20 @@ Set these in the Render service:
 In your Vercel project, set:
 - `VITE_BACKEND_URL=https://<your-render-service-domain>`
 
+## Admin-only editorial mutations
+
+Public reads remain open, but HTTP endpoints that mutate editorial data require:
+1. `Authorization: Bearer <supabase-access-token>`
+2. A Supabase user with `app_metadata.role = "admin"` or `app_metadata.roles` containing `"admin"`
+
+This applies to:
+- `POST /hero-images`
+- `PATCH /hero-images/:id`
+- `POST /hero-timelines`
+- All `POST /gcd/*` endpoints
+
+Internal CLI scripts use the backend service client directly and do not require an HTTP bearer token.
+
 ## Internal GCD import CLI
 
 Use the internal CLI to import a full GCD series into Supabase without creating public endpoints:

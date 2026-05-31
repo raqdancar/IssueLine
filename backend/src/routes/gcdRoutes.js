@@ -2,6 +2,8 @@
 import express from 'express'
 import { z } from 'zod'
 import { environment } from '../config/environment.js'
+import { authenticateRequest } from '../middlewares/authenticate.js'
+import { requireAdminRequest } from '../middlewares/authorizeAdmin.js'
 import { getHeroBySlug, getExistingGcdIssueIds, insertHeroTimelineEntries } from '../modules/hero/timelineService.js'
 import { getSeriesMatchesForHero, searchSeriesByName } from '../modules/gcd/seriesService.js'
 import { fetchSeriesIssues, getIssueById } from '../modules/gcd/issueService.js'
@@ -82,7 +84,7 @@ gcdRouter.get('/heroes/:slug', async (req, res, next) => {
   }
 })
 
-gcdRouter.post('/heroes/:slug/issues', async (req, res, next) => {
+gcdRouter.post('/heroes/:slug/issues', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     const { slug } = slugSchema.parse(req.params)
     const { issueId } = singleIssueSchema.parse(req.body ?? {})
@@ -118,7 +120,7 @@ gcdRouter.post('/heroes/:slug/issues', async (req, res, next) => {
   }
 })
 
-gcdRouter.post('/heroes/:slug/issues/sync', async (req, res, next) => {
+gcdRouter.post('/heroes/:slug/issues/sync', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     const { slug } = slugSchema.parse(req.params)
     const options = syncSchema.parse(req.body ?? {})
@@ -158,7 +160,7 @@ gcdRouter.post('/heroes/:slug/issues/sync', async (req, res, next) => {
   }
 })
 
-gcdRouter.post('/heroes/:slug/timeline/refresh-covers', async (req, res, next) => {
+gcdRouter.post('/heroes/:slug/timeline/refresh-covers', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     const { slug } = slugSchema.parse(req.params)
     const { limit } = coverRefreshSchema.parse(req.body ?? {})
@@ -176,7 +178,7 @@ gcdRouter.post('/heroes/:slug/timeline/refresh-covers', async (req, res, next) =
   }
 })
 
-gcdRouter.post('/heroes/:slug/timeline/from-cache', async (req, res, next) => {
+gcdRouter.post('/heroes/:slug/timeline/from-cache', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     const { slug } = slugSchema.parse(req.params)
     const range = timelineCacheSchema.parse(req.body ?? {})
@@ -226,7 +228,7 @@ gcdRouter.post('/heroes/:slug/timeline/from-cache', async (req, res, next) => {
   }
 })
 
-gcdRouter.post('/heroes/:slug/series/:seriesId/sync', async (req, res, next) => {
+gcdRouter.post('/heroes/:slug/series/:seriesId/sync', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     if (!environment.gcd.allowManualSync) {
       return res.status(423).json({

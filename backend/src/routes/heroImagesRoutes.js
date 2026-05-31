@@ -2,6 +2,8 @@
 import express from 'express'
 import multer from 'multer'
 import { z } from 'zod'
+import { authenticateRequest } from '../middlewares/authenticate.js'
+import { requireAdminRequest } from '../middlewares/authorizeAdmin.js'
 import {
   enforceHeroQuota,
   ensureBucket,
@@ -39,7 +41,7 @@ const listQuerySchema = z.object({
 
 export const heroImagesRouter = express.Router()
 
-heroImagesRouter.post('/', upload.single('image'), async (req, res, next) => {
+heroImagesRouter.post('/', authenticateRequest, requireAdminRequest, upload.single('image'), async (req, res, next) => {
   try {
     // Ensure storage target exists before validating/uploading incoming files.
     await ensureBucket()
@@ -92,7 +94,7 @@ heroImagesRouter.get('/:heroApiId', async (req, res, next) => {
   }
 })
 
-heroImagesRouter.patch('/:id', async (req, res, next) => {
+heroImagesRouter.patch('/:id', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     const payload = updateImageSchema.parse(req.body)
     const image = await updateHeroImage(req.params.id, payload)

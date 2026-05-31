@@ -2,6 +2,8 @@
 
 import express from 'express'
 import { z } from 'zod'
+import { authenticateRequest } from '../middlewares/authenticate.js'
+import { requireAdminRequest } from '../middlewares/authorizeAdmin.js'
 import {
   createHeroTimelineEntry,
   getHeroBySlug,
@@ -96,7 +98,7 @@ heroTimelineRouter.get('/:slug', async (req, res, next) => {
   }
 })
 
-heroTimelineRouter.post('/', async (req, res, next) => {
+heroTimelineRouter.post('/', authenticateRequest, requireAdminRequest, async (req, res, next) => {
   try {
     const payload = createSchema.parse(req.body)
     let heroApiId = payload.heroApiId

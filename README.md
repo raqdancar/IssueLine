@@ -109,6 +109,31 @@ VITE_SUPABASE_AVATAR_BUCKET=avatars
 3. (Optional) Store `SUPABASE_SERVICE_ROLE_KEY` in the same `.env` for backend/scripts usage.
 4. Ensure there is at least one user under **Supabase Auth -> Users** for authentication testing.
 
+### Admin-only editorial API
+
+Editorial HTTP mutations require a valid Supabase bearer token whose user has `app_metadata.role = "admin"` or an `admin` entry in `app_metadata.roles`. Public reads and the internal CLI scripts remain unchanged.
+
+Assign the role only to trusted accounts. From the Supabase SQL Editor:
+
+```sql
+update auth.users
+set raw_app_meta_data = jsonb_set(
+  coalesce(raw_app_meta_data, '{}'::jsonb),
+  '{role}',
+  '"admin"',
+  true
+)
+where email = 'your-admin@example.com';
+```
+
+Sign out and sign in again after changing `app_metadata` so the frontend session receives a fresh token.
+
+The following HTTP mutations are admin-only:
+- `POST /hero-images`
+- `PATCH /hero-images/:id`
+- `POST /hero-timelines`
+- All `POST /gcd/*` endpoints
+
 ### `login_audit` table
 
 Every successful login is recorded in `public.login_audit`.
@@ -189,6 +214,7 @@ Visual hero timelines reuse the [Aceternity UI timeline](https://ui.aceternity.c
 
 ```bash
 curl -X POST http://localhost:4600/hero-timelines ^
+  -H "Authorization: Bearer <admin-access-token>" ^
   -H "Content-Type: application/json" ^
   -d "{\"heroSlug\":\"batman\",\"headline\":\"Joker sighting downtown\",\"summary\":\"Confirmed attack stopped by Batman.\",\"issueDate\":\"2026-03-05\",\"severity\":\"warning\",\"issueCode\":\"BATS-001\"}"
 ```
@@ -208,7 +234,7 @@ To ingest every Doctor Strange (or any hero) issue from the [Grand Comics Databa
 5. Example (Doctor Strange, Strange Tales series #824):
 
 ```powershell
-curl -X POST http://localhost:4600/gcd/heroes/doctor-strange/series/824/sync -H "Content-Type: application/json" -d "{\"limit\":50,\"startPage\":1}"
+curl -X POST http://localhost:4600/gcd/heroes/doctor-strange/series/824/sync -H "Authorization: Bearer <admin-access-token>" -H "Content-Type: application/json" -d "{\"limit\":50,\"startPage\":1}"
 ```
 
 Repeat the sync call with subsequent pages until GCD reports no more issues. Because the backend writes to Supabase first, the UI and future jobs always read from your database instead of hitting GCD directly.
