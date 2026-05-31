@@ -1,6 +1,5 @@
 ﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 import { ArrowDown, ArrowRight, Sparkles } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { getDisplayHeroes, getHeroImage, heroAccentPalettes } from './homeData'
@@ -44,8 +43,15 @@ function CoverRail({ heroes, reverse = false }) {
 function HomeHeroSection({ heroes }) {
   const { t } = useI18n()
   const displayHeroes = getDisplayHeroes(heroes)
-  const primaryHero = displayHeroes.find((hero) => hero.slug && hero.hasTimelineIssues)
-  const primaryHref = primaryHero?.slug ? `/heroes/${primaryHero.slug}` : '#timeline-preview'
+  const focusHeroSelector = (event) => {
+    const selector = document.getElementById('character-showcase')
+    if (!selector) return
+
+    event.preventDefault()
+    selector.focus({ preventScroll: true })
+    selector.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    window.history.replaceState(null, '', '#character-showcase')
+  }
 
   return (
     <section className="relative isolate min-h-[calc(88svh-4.25rem)] overflow-hidden bg-slate-950 text-white">
@@ -72,10 +78,10 @@ function HomeHeroSection({ heroes }) {
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg">{t('home.hero.subtitle')}</p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild size="lg" className="bg-red-600 text-white shadow-xl shadow-red-950/30 hover:bg-red-500">
-              <Link to={primaryHref}>
+              <a href="#character-showcase" onClick={focusHeroSelector}>
                 {t('home.hero.primaryCta')}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              </a>
             </Button>
             <Button
               asChild

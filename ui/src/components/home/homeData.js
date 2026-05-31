@@ -176,12 +176,6 @@ export const estimateStageCount = (hero, index = 0) => {
   return 3 + (index % 3)
 }
 
-export const estimateCompletion = (hero, index = 0) => {
-  const issueCount = Number(hero?.timelineCoverage?.count ?? 0)
-  if (!issueCount) return [68, 54, 41, 73][index % 4]
-  return Math.max(34, Math.min(96, 48 + (issueCount % 47)))
-}
-
 export const getDisplayHeroes = (heroes = []) => {
   const liveHeroes = heroes.filter((hero) => hero?.hasTimelineIssues || hero?.timelineCoverage?.count > 0)
   const source = liveHeroes.length ? liveHeroes : heroes.length ? heroes : fallbackHeroes

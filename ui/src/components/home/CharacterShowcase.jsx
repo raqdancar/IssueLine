@@ -6,7 +6,6 @@ import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { useSessionContext } from '@/lib/sessionContext.jsx'
 import SectionHeading from './SectionHeading'
 import {
-  estimateCompletion,
   estimateStageCount,
   getDisplayHeroes,
   getHeroImage,
@@ -14,7 +13,7 @@ import {
   heroAccentPalettes,
 } from './homeData'
 
-function CharacterVisual({ hero, palette, index, href }) {
+function CharacterVisual({ hero, palette, href }) {
   const image = getHeroImage(hero)
 
   return (
@@ -45,8 +44,7 @@ function CharacterVisual({ hero, palette, index, href }) {
         {hero.publisher ?? 'Editorial'}
       </div>
       <div className="absolute bottom-4 left-4 right-4">
-        <span className="text-xs font-bold uppercase tracking-[0.24em] text-white/70">Archive {index + 1}</span>
-        <h3 className={`mt-1 text-2xl font-black leading-none ${palette.ink}`}>{hero.name}</h3>
+        <h3 className={`text-2xl font-black leading-none ${palette.ink}`}>{hero.name}</h3>
       </div>
     </Link>
   )
@@ -58,7 +56,11 @@ function CharacterShowcase({ heroes, heroesStatus }) {
   const displayHeroes = getDisplayHeroes(heroes)
 
   return (
-    <section id="character-showcase" className="bg-white px-4 py-18 sm:px-6 lg:px-10 lg:py-24 xl:px-16 2xl:px-24">
+    <section
+      id="character-showcase"
+      tabIndex={-1}
+      className="scroll-mt-4 bg-white px-4 py-18 outline-none transition focus:ring-4 focus:ring-inset focus:ring-red-500/70 sm:px-6 lg:px-10 lg:py-24 xl:px-16 2xl:px-24"
+    >
       <div className="mx-auto w-full max-w-400">
         <div className="max-w-3xl">
           <SectionHeading
@@ -77,7 +79,6 @@ function CharacterShowcase({ heroes, heroesStatus }) {
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {displayHeroes.map((hero, index) => {
             const palette = heroAccentPalettes[index % heroAccentPalettes.length]
-            const completion = estimateCompletion(hero, index)
             const issueCount = Number(hero.timelineCoverage?.count ?? 0)
             const detailHref = hero.slug && hero.hasTimelineIssues ? `/heroes/${hero.slug}` : '#timeline-preview'
 
@@ -86,7 +87,7 @@ function CharacterShowcase({ heroes, heroesStatus }) {
                 key={hero.api_id ?? hero.name}
                 className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/70 transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-300/70"
               >
-                <CharacterVisual hero={hero} palette={palette} index={index} href={detailHref} />
+                <CharacterVisual hero={hero} palette={palette} href={detailHref} />
                 <div className="space-y-5 p-5">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -107,16 +108,6 @@ function CharacterShowcase({ heroes, heroesStatus }) {
                         <p className="mt-1 font-bold text-slate-900">{hero.collectedEditionsCount ?? index + 4}</p>
                       </div>
                     ) : null}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-                      <span>{t('home.showcase.completion')}</span>
-                      <span>{completion}%</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-linear-to-r from-red-600 via-amber-400 to-indigo-700" style={{ width: `${completion}%` }} />
-                    </div>
                   </div>
 
                   <Button asChild variant="outline" className="w-full justify-between border-slate-300 bg-white">

@@ -134,7 +134,6 @@ const messages = {
       issues: 'Issues',
       stages: 'Stages',
       collected: 'Collected',
-      completion: 'Indexed',
       cta: 'Explore timeline',
       noteTimeline: 'Chronological coverage from first appearances to modern relaunches.',
       noteStages: 'Runs and editorial eras grouped into readable stages.',

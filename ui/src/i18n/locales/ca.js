@@ -134,7 +134,6 @@ const messages = {
         issues: 'Numeros',
         stages: 'Etapes',
         collected: 'Recopilats',
-        completion: 'Indexat',
         cta: 'Explorar timeline',
         noteTimeline: 'Cobertura cronologica des de primeres aparicions fins a rellancaments moderns.',
         noteStages: 'Runs i eres editorials agrupades en etapes llegibles.',
