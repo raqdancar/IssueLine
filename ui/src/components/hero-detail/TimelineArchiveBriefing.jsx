@@ -7,6 +7,7 @@ import {
   resolveIssueQuickLabel,
   resolveTimelineRange,
 } from '@/components/timeline/timelineInsightsViewModel'
+import { isSpecialTimelineEventEntry } from '@/components/timeline/utils'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import RandomCoverFan from '@/components/hero-detail/RandomCoverFan'
@@ -48,20 +49,23 @@ function TimelineArchiveBriefing({
   const { t, locale } = useI18n()
   const numberFormatter = getNumberFormatter(locale)
 
-  const sortedEntries = useMemo(() => getSortedEntries(entries), [entries])
-  const stageGroups = useMemo(() => buildStageGroups(entries, statesByIssueId, t, locale), [entries, statesByIssueId, t, locale])
-  const timelineRange = useMemo(() => resolveTimelineRange(entries, t), [entries, t])
+  const briefingEntries = useMemo(() => entries.filter((entry) => !isSpecialTimelineEventEntry(entry)), [entries])
+  const sortedEntries = useMemo(() => getSortedEntries(briefingEntries), [briefingEntries])
+  const stageGroups = useMemo(
+    () => buildStageGroups(briefingEntries, statesByIssueId, t, locale),
+    [briefingEntries, statesByIssueId, t, locale],
+  )
+  const timelineRange = useMemo(() => resolveTimelineRange(briefingEntries, t), [briefingEntries, t])
   const coverImages = useMemo(() => {
-    const covers = entries.map((entry) => resolveIssueCoverImage(entry?.metadata ?? {}, null)).filter(Boolean)
+    const covers = briefingEntries.map((entry) => resolveIssueCoverImage(entry?.metadata ?? {}, null)).filter(Boolean)
     return Array.from(new Set(covers))
-  }, [entries])
+  }, [briefingEntries])
 
   const firstEntry = sortedEntries[0] ?? null
   const latestEntry = sortedEntries[sortedEntries.length - 1] ?? null
-  const issueStates = Object.values(statesByIssueId ?? {})
-  const ownedCount = issueStates.filter((state) => state.haveIt).length
-  const readCount = issueStates.filter((state) => state.readIt).length
-  const totalIssues = entries.length
+  const ownedCount = briefingEntries.filter((entry) => entry?.id && statesByIssueId?.[entry.id]?.haveIt).length
+  const readCount = briefingEntries.filter((entry) => entry?.id && statesByIssueId?.[entry.id]?.readIt).length
+  const totalIssues = briefingEntries.length
   const readPercent = totalIssues > 0 ? Math.round((readCount / totalIssues) * 100) : 0
   const ownedPercent = totalIssues > 0 ? Math.round((ownedCount / totalIssues) * 100) : 0
   const routeStages = stageGroups
