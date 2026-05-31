@@ -466,6 +466,7 @@ const messages = {
       issueStateSyncUnavailable: "La sincronitzaciÃ³ de l'estat no estÃ  disponible ara mateix.",
       cinematicTimeline: 'Timeline cinematogrÃ fica',
       groupedByYear: "Agrupat per any de publicaciÃ³",
+      publicationYear: 'Any de publicació',
       sort: 'Ordre',
       coverTbd: 'Portada pendent',
       addOneInSupabase: 'Afegeix-ne una a Supabase',

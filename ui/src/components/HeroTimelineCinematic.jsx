@@ -1,7 +1,7 @@
 ﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { CalendarDays, Clapperboard, ExternalLink, Flag, Layers3, Maximize2, Minimize2, Sparkles } from 'lucide-react'
 import { resolveIssueCoverImage } from '@/lib/issueImages'
 import { normalizeIntegerText } from '@/utils/numberFormatters'
 import { compareTimelineEntries, resolveTimelineOrder } from '@/utils/timeline'
@@ -20,7 +20,6 @@ import {
   isElementFullscreen,
   isTimelineFullscreenViewport,
   requestElementFullscreen,
-  TIMELINE_FULLSCREEN_MEDIA_QUERY,
 } from '@/lib/fullscreen.js'
 import { backendBaseUrl } from '@/utils/backend.js'
 
@@ -178,15 +177,14 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
       }
     }
 
-    const fullscreenMediaQuery = window.matchMedia(TIMELINE_FULLSCREEN_MEDIA_QUERY)
     syncFullscreenState()
     document.addEventListener('fullscreenchange', syncFullscreenState)
     document.addEventListener('webkitfullscreenchange', syncFullscreenState)
-    fullscreenMediaQuery.addEventListener('change', syncFullscreenState)
+    window.addEventListener('resize', syncFullscreenState)
     return () => {
       document.removeEventListener('fullscreenchange', syncFullscreenState)
       document.removeEventListener('webkitfullscreenchange', syncFullscreenState)
-      fullscreenMediaQuery.removeEventListener('change', syncFullscreenState)
+      window.removeEventListener('resize', syncFullscreenState)
     }
   }, [])
 
@@ -221,6 +219,24 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
     () => groupEntriesByYear(entries, sortDirection, timelineOrderMode),
     [entries, sortDirection, timelineOrderMode],
   )
+  const cinematicStats = useMemo(() => {
+    const timelineYears = entries
+      .map((entry) => resolveYear(entry))
+      .filter((year) => year !== 'Unknown')
+      .map(Number)
+      .filter(Number.isFinite)
+    const uniqueYears = Array.from(new Set(timelineYears)).sort((a, b) => a - b)
+
+    return {
+      eventCount: entries.filter(isSpecialTimelineEventEntry).length,
+      issueCount: entries.filter((entry) => !isSpecialTimelineEventEntry(entry)).length,
+      yearRange: uniqueYears.length
+        ? uniqueYears.length === 1
+          ? String(uniqueYears[0])
+          : `${uniqueYears[0]} - ${uniqueYears.at(-1)}`
+        : t('timeline.dateTba'),
+    }
+  }, [entries, t])
 
   if (!slug) {
     return (
@@ -241,71 +257,116 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
   return (
     <section
       ref={sectionRef}
-      className={`relative mt-4 border bg-slate-900 p-6 text-slate-100 shadow-2xl transition ${
+      className={`cinematic-timeline-shell relative isolate mt-4 min-w-0 max-w-full border p-3 text-slate-100 shadow-2xl transition sm:p-6 lg:p-8 ${
         isFullscreen
-          ? 'h-screen min-h-screen overflow-y-auto rounded-none border-slate-700/60 bg-[radial-gradient(circle_at_15%_0%,rgba(129,140,248,0.2),transparent_36%),radial-gradient(circle_at_88%_8%,rgba(56,189,248,0.16),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.98)_0%,rgba(15,23,42,0.98)_40%,rgba(2,6,23,0.98)_100%)]'
-          : 'overflow-hidden rounded-3xl border-slate-900/10'
+          ? 'h-screen min-h-screen overflow-y-auto rounded-none border-white/15'
+          : 'overflow-hidden rounded-[2rem] border-white/10'
       }`}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-30" aria-hidden>
-        <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-linear-to-b from-transparent via-indigo-500 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(79,70,229,0.35),transparent_55%)]" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        {fallbackImage ? (
+          <img
+            src={fallbackImage}
+            alt=""
+            className="cinematic-timeline-portrait absolute -right-16 top-0 h-[34rem] w-[24rem] object-cover opacity-20 mix-blend-screen sm:right-0 sm:w-[32rem]"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(2,6,23,0.98)_0%,rgba(15,23,42,0.94)_48%,rgba(2,6,23,0.88)_100%)]" />
+        <div className="cinematic-timeline-aurora absolute -left-20 top-16 h-72 w-72 rounded-full bg-primary/35 blur-3xl" />
+        <div className="cinematic-timeline-aurora absolute right-0 top-80 h-80 w-80 rounded-full bg-accent/20 blur-3xl [animation-delay:-7s]" />
+        <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] [background-size:34px_34px]" />
       </div>
-      {isFullscreen ? (
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div className="absolute left-10 top-12 h-36 w-36 rounded-full bg-indigo-400/20 blur-3xl" />
-          <div className="absolute right-8 top-24 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl" />
-          <div className="absolute inset-x-0 top-0 h-36 bg-linear-to-b from-indigo-200/10 via-sky-200/5 to-transparent" />
+      <header className="relative overflow-hidden rounded-[1.75rem] border border-white/15 bg-slate-950/55 p-4 shadow-2xl shadow-black/35 ring-1 ring-white/5 backdrop-blur-md sm:p-6">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -right-10 -top-20 h-56 w-56 rounded-full bg-primary/30 blur-3xl" />
+          <div className="absolute -bottom-20 left-1/3 h-44 w-44 rounded-full bg-accent/15 blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-accent/80 to-transparent" />
         </div>
-      ) : null}
-      <div className="relative flex flex-wrap items-baseline justify-between gap-3">
-        <div>
-          {isFullscreen ? (
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.35em] text-indigo-200">{t('timeline.showcaseMode')}</p>
-          ) : null}
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{t('timeline.cinematicTimeline')}</p>
-          {timelineLogoSrc && logoVisible ? (
-            <img
-              src={timelineLogoSrc}
-              alt={timelineLogoAlt ?? heroName}
-              className="mt-1 h-12 w-auto max-w-full object-contain sm:h-16 sm:max-w-90"
-              loading="lazy"
-              onError={() => setLogoVisible(false)}
-            />
-          ) : (
-            <h3 className="title-sm text-white">{heroName}</h3>
-          )}
-          <p className="body-xs text-slate-400">{t('timeline.groupedByYear')}</p>
-        </div>
-        <div className="flex flex-col items-end gap-3 text-xs text-slate-300 sm:flex-row sm:items-center">
-          {fullscreenEnabled ? (
-            <button
-              type="button"
-              onClick={handleToggleFullscreen}
-              aria-pressed={isFullscreen}
-              aria-label={isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-100 transition hover:-translate-y-0.5 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-            >
-              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
-              {isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
-            </button>
-          ) : null}
-          <div className="flex items-center gap-2">
-            {hasCanonicalTimelineOrder ? (
-              <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
-                {[
-                  { label: t('timeline.canonicalOrder'), value: 'canonical' },
-                  { label: t('timeline.publicationOrder'), value: 'publication' },
-                ].map((option) => {
-                  const isActive = timelineOrderMode === option.value
+        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] text-accent">
+              <Clapperboard className="h-4 w-4" aria-hidden="true" />
+              <span>{t('timeline.cinematicTimeline')}</span>
+              {isFullscreen ? <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-1">{t('timeline.showcaseMode')}</span> : null}
+            </div>
+            {timelineLogoSrc && logoVisible ? (
+              <img
+                src={timelineLogoSrc}
+                alt={timelineLogoAlt ?? heroName}
+                className="mt-3 h-14 w-auto max-w-full object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.55)] sm:h-20 sm:max-w-xl"
+                loading="lazy"
+                onError={() => setLogoVisible(false)}
+              />
+            ) : (
+              <h3 className="mt-3 text-2xl font-black uppercase tracking-[0.08em] text-white sm:text-4xl">{heroName}</h3>
+            )}
+            <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">{t('timeline.groupedByYear')}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-[11px] font-semibold text-slate-100">
+                <CalendarDays className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                {cinematicStats.yearRange}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-[11px] font-semibold text-slate-100">
+                <Layers3 className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                {t('timeline.trackedIssues', { count: cinematicStats.issueCount })}
+              </span>
+              {cinematicStats.eventCount ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1.5 text-[11px] font-semibold text-amber-100">
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('timeline.specialEventMarker')}: {cinematicStats.eventCount}
+                </span>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex max-w-full flex-col items-start gap-3 text-xs text-slate-300 xl:items-end">
+            {fullscreenEnabled ? (
+              <button
+                type="button"
+                onClick={handleToggleFullscreen}
+                aria-pressed={isFullscreen}
+                aria-label={isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent/35 bg-accent/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-accent transition hover:-translate-y-0.5 hover:bg-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              >
+                {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />}
+                {isFullscreen ? t('timeline.exitFullscreen') : t('timeline.enterFullscreen')}
+              </button>
+            ) : null}
+            <div className="flex max-w-full flex-wrap items-center gap-2">
+              {hasCanonicalTimelineOrder ? (
+                <div className="inline-flex max-w-full rounded-full border border-white/20 bg-white/5 p-0.5">
+                  {[
+                    { label: t('timeline.canonicalOrder'), value: 'canonical' },
+                    { label: t('timeline.publicationOrder'), value: 'publication' },
+                  ].map((option) => {
+                    const isActive = timelineOrderMode === option.value
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setTimelineOrderMode(option.value)}
+                        className={`rounded-full px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
+                          isActive ? 'bg-accent text-accent-foreground shadow' : 'text-slate-200 hover:text-white'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{t('timeline.sort')}</span>
+              <div className="inline-flex max-w-full rounded-full border border-white/20 bg-white/5 p-0.5">
+                {[{ label: t('timeline.newestFirst'), value: 'desc' }, { label: t('timeline.oldestFirst'), value: 'asc' }].map((option) => {
+                  const isActive = sortDirection === option.value
                   return (
                     <button
                       key={option.value}
                       type="button"
                       aria-pressed={isActive}
-                      onClick={() => setTimelineOrderMode(option.value)}
+                      onClick={() => setSortDirection(option.value)}
                       className={`rounded-full px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
-                        isActive ? 'bg-indigo-200 text-slate-950 shadow' : 'text-slate-200 hover:text-white'
+                        isActive ? 'bg-white text-slate-900 shadow' : 'text-slate-200 hover:text-white'
                       }`}
                     >
                       {option.label}
@@ -313,30 +374,11 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                   )
                 })}
               </div>
-            ) : null}
-            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">{t('timeline.sort')}</span>
-            <div className="inline-flex rounded-full border border-white/20 bg-white/5 p-0.5">
-              {[{ label: t('timeline.newestFirst'), value: 'desc' }, { label: t('timeline.oldestFirst'), value: 'asc' }].map((option) => {
-                const isActive = sortDirection === option.value
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    aria-pressed={isActive}
-                    onClick={() => setSortDirection(option.value)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
-                      isActive ? 'bg-white text-slate-900 shadow' : 'text-slate-200 hover:text-white'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                )
-              })}
             </div>
           </div>
         </div>
-      </div>
-      <div className="relative mt-6 space-y-6">
+      </header>
+      <div className="relative mt-8 space-y-10 sm:mt-10">
         {status === 'loading' ? (
           <TimelineLoadingSkeleton variant="dark" showNavigator={false} cardCount={5} />
         ) : status === 'error' ? (
@@ -345,14 +387,20 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
           <p className="body-sm text-slate-300">{t('timeline.noIssuesLogged')}</p>
         ) : (
           groupedEntries.map(({ year, entries: yearEntries }) => (
-            <div key={year} className="space-y-4">
-              <div className="flex items-center gap-3 text-slate-300">
-                <div className="h-px flex-1 bg-slate-700/60" />
-                <span className="text-sm font-semibold tracking-widest text-slate-200">{year}</span>
-                <div className="h-px flex-1 bg-slate-700/60" />
-              </div>
-              <div className="space-y-4">
-                {yearEntries.map((entry) => {
+            <section key={year} className="relative">
+              <header className="relative z-10 mx-auto mb-6 flex max-w-3xl items-center gap-3 text-slate-300">
+                <div className="h-px flex-1 bg-linear-to-r from-transparent to-accent/55" />
+                <div className="rounded-2xl border border-accent/35 bg-slate-950/80 px-4 py-2 text-center shadow-xl shadow-black/25 ring-1 ring-white/5 backdrop-blur">
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-accent">
+                    {t('timeline.publicationYear')}
+                  </p>
+                  <h3 className="mt-0.5 text-xl font-black tracking-[0.18em] text-white">{year}</h3>
+                </div>
+                <div className="h-px flex-1 bg-linear-to-l from-transparent to-accent/55" />
+              </header>
+              <div className="relative grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] lg:gap-y-6">
+                <div className="cinematic-timeline-spine absolute bottom-0 left-[1.15rem] top-0 w-px lg:left-1/2 lg:-translate-x-1/2" aria-hidden="true" />
+                {yearEntries.map((entry, entryIndex) => {
                   const meta = entry.metadata ?? {}
                   const issueLabel = meta.issueLabel ?? entry.issue_code ?? entry.headline
                   const issueId = entry.id ?? null
@@ -365,16 +413,50 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                   const stageSummary =
                     meta.stage_summary ?? meta.stageSummary ?? meta.stage?.short_summary ?? meta.stage?.summary ?? null
                   const pageCount = normalizeIntegerText(meta.page_count ?? meta.pageCount ?? null)
+                  const entryKey = entry.id ?? `${issueLabel}-${entry.issue_date}`
+                  const entrySide = entryIndex % 2 === 0 ? 'left' : 'right'
+
+                  if (isSpecialEvent) {
+                    return (
+                      <div key={entryKey} className="relative min-w-0 pl-11 lg:col-span-3 lg:pl-0">
+                        <span className="absolute left-[0.72rem] top-7 h-3.5 w-3.5 rounded-full border-2 border-amber-100 bg-amber-400 shadow-[0_0_0_5px_rgba(251,191,36,0.14),0_0_22px_rgba(251,191,36,0.75)] lg:left-1/2 lg:-translate-x-1/2" aria-hidden="true" />
+                        <article className="relative mx-auto max-w-4xl overflow-hidden rounded-[1.5rem] border border-amber-300/35 bg-[linear-gradient(135deg,rgba(120,53,15,0.86),rgba(69,26,3,0.92))] p-4 shadow-2xl shadow-amber-950/45 ring-1 ring-amber-100/10 backdrop-blur sm:p-5">
+                          <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-amber-300/15 blur-3xl" aria-hidden="true" />
+                          <div className="relative flex items-start gap-3">
+                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-amber-200/35 bg-amber-300/15 text-amber-100 shadow-lg shadow-amber-950/30">
+                              <Flag className="h-4.5 w-4.5" aria-hidden="true" />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200">
+                                <span>{t('timeline.specialEventMarker')}</span>
+                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/25 bg-black/15 px-2 py-1 text-amber-100">
+                                  <CalendarDays className="h-3 w-3" aria-hidden="true" />
+                                  {formatDate(entry.issue_date, locale, t)}
+                                </span>
+                              </div>
+                              <h4 className="mt-2 break-words text-lg font-black uppercase tracking-[0.06em] text-amber-50 [overflow-wrap:anywhere]">{entry.headline ?? t('timeline.specialEventFallbackTitle')}</h4>
+                              {entry.summary ? <p className="mt-2 text-sm leading-relaxed text-amber-50/85">{entry.summary}</p> : null}
+                            </div>
+                          </div>
+                        </article>
+                      </div>
+                    )
+                  }
+
                   return (
-                    <article
-                      key={entry.id ?? `${issueLabel}-${entry.issue_date}`}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/30 backdrop-blur transition duration-300 hover:border-white/30 hover:bg-white/10"
+                    <div
+                      key={entryKey}
+                      className={`cinematic-entry cinematic-entry-${entrySide} relative min-w-0 pl-11 lg:pl-0 ${
+                        entrySide === 'left' ? 'lg:col-start-1' : 'lg:col-start-3'
+                      }`}
                     >
-                      <div className="flex">
-                        {stageName ? <TimelineStageTab label={stageName} variant="dark" /> : null}
-                        <div className="flex-1 p-4">
-                          <div className="flex flex-1 flex-col gap-4 md:flex-row">
-                            <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 md:w-40">
+                      <span className="absolute left-[0.78rem] top-8 h-3 w-3 rounded-full border-2 border-slate-950 bg-accent shadow-[0_0_0_4px_rgba(255,255,255,0.08),0_0_18px_rgba(255,255,255,0.35)] lg:hidden" aria-hidden="true" />
+                      <article className="cinematic-entry-card group relative flex h-full min-w-0 flex-col overflow-hidden rounded-[1.4rem] border border-white/12 bg-slate-950/72 shadow-2xl shadow-black/35 ring-1 ring-white/5 backdrop-blur-md">
+                        <div className="h-px bg-linear-to-r from-transparent via-accent/80 to-transparent" aria-hidden="true" />
+                        <div className="min-w-0 flex-1 p-3 sm:p-4">
+                          {stageName ? <TimelineStageTab label={stageName} variant="dark" layout="inline" /> : null}
+                          <div className="mt-3 flex min-w-0 gap-3">
+                            <div className="relative w-20 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-slate-900/60 shadow-xl shadow-black/45 sm:w-24">
                               <div className="aspect-2/3 w-full">
                                 {coverImage ? (
                                   <button
@@ -386,87 +468,94 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                                     <img
                                       src={coverImage}
                                       alt={issueLabel ?? t('common.issueCover')}
-                                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                      className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                                       loading="lazy"
                                     />
                                   </button>
                                 ) : (
                                   <div className="flex h-full w-full flex-col items-center justify-center bg-linear-to-b from-slate-800/70 to-slate-900 text-center text-slate-400">
-                                    <span className="text-[12px] font-semibold uppercase tracking-[0.2em]">
+                                    <span className="px-1 text-[9px] font-semibold uppercase tracking-[0.16em]">
                                       {t('timeline.coverTbd')}
                                     </span>
-                                    <span className="text-[11px] text-slate-500">{t('timeline.addOneInSupabase')}</span>
                                   </div>
                                 )}
                               </div>
-                              <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-transparent" />
-                              <p className="absolute bottom-2 left-2 text-xs font-semibold text-slate-100">{issueLabel}</p>
+                              <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/75 via-transparent to-transparent" />
+                              <p className="absolute inset-x-1.5 bottom-1.5 truncate text-[10px] font-semibold text-slate-100">{issueLabel}</p>
                             </div>
-                            <div className="flex-1 space-y-2">
-                              <div className="flex flex-wrap items-center gap-2 text-xs text-indigo-200">
-                                <span className="rounded-full border border-indigo-400/40 px-2 py-0.5">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-accent">
+                                <span className="max-w-full break-words rounded-full border border-accent/30 bg-accent/10 px-2 py-1 [overflow-wrap:anywhere]">
                                   {meta.series_name ?? meta.seriesName ?? t('timeline.issueFallback')}
                                 </span>
-                                {meta.number ? <span>{t('timeline.noPrefix', { number: meta.number })}</span> : null}
-                                {meta.volume ? <span>{t('timeline.volume')} {meta.volume}</span> : null}
+                                {meta.number ? <span className="rounded-full border border-white/15 bg-white/5 px-2 py-1 text-slate-200">{t('timeline.noPrefix', { number: meta.number })}</span> : null}
                               </div>
-                              <h4 className="text-base font-semibold leading-tight text-slate-50 sm:text-lg">{entry.headline}</h4>
-                              {entry.summary ? <p className="text-sm leading-relaxed text-slate-100/90">{entry.summary}</p> : null}
-                              {stageSummary ? (
-                                <p className="text-xs text-emerald-100/80">{stageSummary}</p>
-                              ) : null}
-                              <dl className="grid gap-2 text-xs text-slate-100 sm:grid-cols-2">
-                                  <div>
-                                  <dt className="font-semibold text-slate-100">{t('timeline.release')}</dt>
-                                  <dd className="font-semibold text-amber-100">{formatDate(entry.issue_date, locale, t)}</dd>
+                              <h4 className="mt-2 break-words text-base font-black leading-tight text-white [overflow-wrap:anywhere] sm:text-lg">{entry.headline ?? issueLabel}</h4>
+                              <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-100">
+                                <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                                {formatDate(entry.issue_date, locale, t)}
+                              </p>
+                            </div>
+                          </div>
+                          {entry.summary ? <p className="mt-3 text-sm leading-relaxed text-slate-100/88">{entry.summary}</p> : null}
+                          {stageSummary ? (
+                            <p className="mt-3 border-l-2 border-emerald-300/45 pl-3 text-xs leading-relaxed text-emerald-100/80">{stageSummary}</p>
+                          ) : null}
+                          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+                            <dl className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-slate-300">
+                              {meta.volume ? (
+                                <div>
+                                  <dt className="font-bold uppercase tracking-[0.12em] text-slate-500">{t('timeline.volume')}</dt>
+                                  <dd className="font-semibold text-slate-100">{meta.volume}</dd>
                                 </div>
+                              ) : null}
                                 {meta.price ? (
                                   <div>
-                                    <dt className="font-semibold text-slate-100">{t('timeline.price')}</dt>
-                                    <dd className="font-semibold text-amber-100">{meta.price}</dd>
+                                  <dt className="font-bold uppercase tracking-[0.12em] text-slate-500">{t('timeline.price')}</dt>
+                                  <dd className="font-semibold text-slate-100">{meta.price}</dd>
                                   </div>
                                 ) : null}
                                 {pageCount ? (
                                   <div>
-                                    <dt className="font-semibold text-slate-100">{t('timeline.pages')}</dt>
-                                    <dd className="font-semibold text-amber-100">{pageCount}</dd>
+                                  <dt className="font-bold uppercase tracking-[0.12em] text-slate-500">{t('timeline.pages')}</dt>
+                                  <dd className="font-semibold text-slate-100">{pageCount}</dd>
                                   </div>
                                 ) : null}
                                 {meta.rating ? (
                                   <div>
-                                    <dt className="font-semibold text-slate-100">{t('timeline.rating')}</dt>
-                                    <dd className="font-semibold text-amber-100">{meta.rating}</dd>
+                                  <dt className="font-bold uppercase tracking-[0.12em] text-slate-500">{t('timeline.rating')}</dt>
+                                  <dd className="font-semibold text-slate-100">{meta.rating}</dd>
                                   </div>
                                 ) : null}
-                              </dl>
-                              {entry.source_url && !isSpecialEvent ? (
+                            </dl>
+                            {entry.source_url ? (
                                 <a
                                   href={entry.source_url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-200 hover:text-white"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent transition hover:text-white"
                                 >
                                   {t('timeline.viewIssue')}
+                                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                                 </a>
                               ) : null}
-                            </div>
                           </div>
                         </div>
-                      </div>
-                      {showIssueToolbar ? (
-                        <TimelineIssueToolbar
-                          issueState={issueState}
-                          pending={pendingIssueId === issueId}
-                          onToggle={(field, nextValue) => handleIssueStateToggle(issueId, field, nextValue)}
-                          variant="dark"
-                          className="rounded-none border-x-0 border-b-0"
-                        />
-                      ) : null}
-                    </article>
+                        {showIssueToolbar ? (
+                          <TimelineIssueToolbar
+                            issueState={issueState}
+                            pending={pendingIssueId === issueId}
+                            onToggle={(field, nextValue) => handleIssueStateToggle(issueId, field, nextValue)}
+                            variant="dark"
+                            className="rounded-none border-x-0 border-b-0"
+                          />
+                        ) : null}
+                      </article>
+                    </div>
                   )
                 })}
               </div>
-            </div>
+            </section>
           ))
         )}
       </div>

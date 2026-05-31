@@ -160,6 +160,104 @@
     }
   }
 
+  @keyframes cinematic-ambient-drift {
+    from {
+      transform: translate3d(-2%, -1%, 0) scale(1);
+    }
+    to {
+      transform: translate3d(4%, 3%, 0) scale(1.14);
+    }
+  }
+
+  @keyframes cinematic-portrait-drift {
+    from {
+      transform: translate3d(0, -1%, 0) scale(1.04);
+    }
+    to {
+      transform: translate3d(-3%, 2%, 0) scale(1.11);
+    }
+  }
+
+  .cinematic-timeline-shell {
+    background:
+      radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--primary) 36%, transparent), transparent 28rem),
+      radial-gradient(circle at 90% 16%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 24rem),
+      linear-gradient(145deg, #020617 0%, #111827 48%, #020617 100%);
+  }
+
+  .cinematic-timeline-aurora {
+    animation: cinematic-ambient-drift 18s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .cinematic-timeline-portrait {
+    animation: cinematic-portrait-drift 22s ease-in-out infinite alternate;
+    filter: saturate(0.85) contrast(1.08);
+    mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.7) 62%, transparent 100%);
+  }
+
+  .cinematic-timeline-spine {
+    background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 76%, white 24%) 7%, color-mix(in srgb, var(--primary) 78%, white 22%) 92%, transparent);
+    box-shadow: 0 0 1.3rem color-mix(in srgb, var(--accent) 62%, transparent);
+  }
+
+  .cinematic-entry-card {
+    transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms ease, background-color 300ms ease;
+  }
+
+  .cinematic-entry-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 52%, transparent);
+    background-color: rgba(15, 23, 42, 0.9);
+    box-shadow: 0 1.6rem 3.4rem rgba(0, 0, 0, 0.42);
+    transform: translateY(-0.22rem);
+  }
+
+  @media (min-width: 1024px) {
+    .cinematic-entry::before,
+    .cinematic-entry::after {
+      content: '';
+      position: absolute;
+      top: 2rem;
+    }
+
+    .cinematic-entry::before {
+      width: 2rem;
+      height: 1px;
+      background: linear-gradient(to right, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent) 84%, white 16%));
+    }
+
+    .cinematic-entry::after {
+      width: 0.75rem;
+      height: 0.75rem;
+      margin-top: -0.34rem;
+      border: 2px solid #020617;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 84%, white 16%);
+      box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.07), 0 0 1.2rem color-mix(in srgb, var(--accent) 72%, transparent);
+    }
+
+    .cinematic-entry-left::before {
+      right: -2rem;
+    }
+
+    .cinematic-entry-left::after {
+      right: -2.375rem;
+    }
+
+    .cinematic-entry-right::before {
+      left: -2rem;
+      transform: scaleX(-1);
+    }
+
+    .cinematic-entry-right {
+      margin-top: 1.25rem;
+    }
+
+    .cinematic-entry-right::after {
+      left: -2.375rem;
+    }
+  }
+
   .timeline-logo-cover-track {
     display: flex;
     align-items: center;
@@ -202,6 +300,15 @@
 
     .timeline-logo-cover-track {
       animation: none;
+    }
+
+    .cinematic-timeline-aurora,
+    .cinematic-timeline-portrait {
+      animation: none;
+    }
+
+    .cinematic-entry-card {
+      transition: none;
     }
   }
 

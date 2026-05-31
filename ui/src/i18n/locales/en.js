@@ -467,6 +467,7 @@ const messages = {
     issueStateSyncUnavailable: 'Issue state sync is unavailable right now.',
     cinematicTimeline: 'Cinematic timeline',
     groupedByYear: 'Grouped by publication year',
+    publicationYear: 'Publication year',
     sort: 'Sort',
     coverTbd: 'Cover TBD',
     addOneInSupabase: 'Add one in Supabase',

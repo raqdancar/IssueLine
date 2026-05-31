@@ -6,7 +6,6 @@ import {
   isElementFullscreen,
   isTimelineFullscreenViewport,
   requestElementFullscreen,
-  TIMELINE_FULLSCREEN_MEDIA_QUERY,
 } from '@/lib/fullscreen.js'
 
 export const useTimelineFullscreen = (containerRef) => {
@@ -27,15 +26,14 @@ export const useTimelineFullscreen = (containerRef) => {
       }
     }
 
-    const fullscreenMediaQuery = window.matchMedia(TIMELINE_FULLSCREEN_MEDIA_QUERY)
     syncFullscreenState()
     document.addEventListener('fullscreenchange', syncFullscreenState)
     document.addEventListener('webkitfullscreenchange', syncFullscreenState)
-    fullscreenMediaQuery.addEventListener('change', syncFullscreenState)
+    window.addEventListener('resize', syncFullscreenState)
     return () => {
       document.removeEventListener('fullscreenchange', syncFullscreenState)
       document.removeEventListener('webkitfullscreenchange', syncFullscreenState)
-      fullscreenMediaQuery.removeEventListener('change', syncFullscreenState)
+      window.removeEventListener('resize', syncFullscreenState)
     }
   }, [containerRef])
 
