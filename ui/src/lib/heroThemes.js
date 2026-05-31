@@ -127,11 +127,44 @@ const tintinTheme = {
   '--ring': '#1E3A5F',
 }
 
+const invincibleTheme = {
+  '--color-slate-50': '#FFFBE6',
+  '--color-slate-100': '#FFF3B0',
+  '--color-slate-200': '#F7D83E',
+  '--color-slate-300': '#F2C230',
+  '--color-slate-400': '#25AEEB',
+  '--color-slate-500': '#168AC2',
+  '--color-slate-600': '#126A96',
+  '--color-slate-700': '#1F2933',
+  '--color-slate-800': '#111820',
+  '--color-slate-900': '#0B1016',
+  '--color-slate-950': '#05070A',
+  '--background': '#FFFBE6',
+  '--foreground': '#111820',
+  '--card': '#FFFFFF',
+  '--card-foreground': '#111820',
+  '--popover': '#FFFFFF',
+  '--popover-foreground': '#111820',
+  '--primary': '#F7D83E',
+  '--primary-foreground': '#111820',
+  '--secondary': '#25AEEB',
+  '--secondary-foreground': '#FFFFFF',
+  '--muted': '#FFF3B0',
+  '--muted-foreground': '#126A96',
+  '--accent': '#25AEEB',
+  '--accent-foreground': '#FFFFFF',
+  '--destructive': '#C1121F',
+  '--border': '#8CD8F7',
+  '--input': '#8CD8F7',
+  '--ring': '#168AC2',
+}
+
 const heroThemesBySlug = {
   'doctor-strange': doctorStrangeTheme,
   'moon-knight': moonKnightTheme,
   'black-adam': blackAdamTheme,
   "tintin": tintinTheme,
+  "invincible": invincibleTheme,
 }
 
 export const resolveHeroThemeStyle = (slug) => {

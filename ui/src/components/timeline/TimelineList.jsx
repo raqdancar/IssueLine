@@ -33,7 +33,7 @@ function TimelineList({
           {useAlternatingShowcase ? (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-0 hidden h-full w-[3px] -translate-x-1/2 rounded-full bg-linear-to-b from-indigo-500/35 via-fuchsia-400/80 to-cyan-400/45 shadow-[0_0_1.1rem_rgba(99,102,241,0.45)] md:block"
+              className="pointer-events-none absolute left-1/2 top-0 hidden h-full w-0.75 -translate-x-1/2 rounded-full bg-linear-to-b from-indigo-500/35 via-fuchsia-400/80 to-cyan-400/45 shadow-[0_0_1.1rem_rgba(99,102,241,0.45)] md:block"
             />
           ) : null}
           {entries.map((entry, index) => {
