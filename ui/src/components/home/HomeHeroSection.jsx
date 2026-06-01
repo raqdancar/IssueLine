@@ -1,5 +1,6 @@
 ﻿// Renderitza una seccio visual de la pagina inicial d'IssueLine.
 import { ArrowDown, ArrowRight, Sparkles } from 'lucide-react'
+import BrandLogo from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { getDisplayHeroes, getHeroImage, heroAccentPalettes } from './homeData'
@@ -69,9 +70,12 @@ function HomeHeroSection({ heroes }) {
             <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="min-w-0 whitespace-normal break-words leading-5">{t('home.hero.eyebrow')}</span>
           </div>
-          <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.92] tracking-normal text-white sm:text-6xl lg:text-7xl">
-            {t('common.appName')}
-          </h1>
+          <div className="mt-6 flex items-center gap-3 sm:gap-4">
+            <BrandLogo className="h-16 w-16 shrink-0 drop-shadow-xl sm:h-20 sm:w-20" />
+            <h1 className="max-w-3xl text-5xl font-black leading-[0.92] tracking-normal text-white sm:text-6xl lg:text-7xl">
+              {t('common.appName')}
+            </h1>
+          </div>
           <p className="mt-6 max-w-2xl text-xl font-semibold leading-8 text-amber-50 sm:text-2xl">
             {t('home.hero.title')}
           </p>

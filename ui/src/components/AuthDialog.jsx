@@ -1,5 +1,6 @@
 ﻿// Renderitza un component reutilitzable de la interfície d'IssueLine.
 import { X } from 'lucide-react'
+import BrandLogo from '@/components/BrandLogo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,10 +52,13 @@ function AuthDialog({
           <X className="h-4 w-4" aria-hidden="true" />
           <span className="sr-only">{t('authDialog.closeDialog')}</span>
         </button>
-        <div className="space-y-1 pr-10">
-          <p className="eyebrow text-indigo-500">{t('authDialog.accountAccess')}</p>
-          <h2 className="title-md">{t('authDialog.title')}</h2>
-          <p className="text-sm text-slate-600">{t('authDialog.subtitle')}</p>
+        <div className="flex items-start gap-3 pr-10">
+          <BrandLogo className="h-12 w-12 shrink-0 rounded-xl bg-slate-900 p-1.5" />
+          <div className="space-y-1">
+            <p className="eyebrow text-indigo-500">{t('authDialog.accountAccess')}</p>
+            <h2 className="title-md">{t('authDialog.title')}</h2>
+            <p className="text-sm text-slate-600">{t('authDialog.subtitle')}</p>
+          </div>
         </div>
         <div className="mt-4 flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
           {['sign-in', 'sign-up'].map((value) => {

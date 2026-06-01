@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Check, ChevronDown, Languages, Menu, X } from 'lucide-react'
+import BrandLogo, { BRAND_LOGO_SRC } from '@/components/BrandLogo'
 import { useI18n } from '@/i18n/I18nProvider.jsx'
 import { SUPPORTED_LOCALES } from '@/i18n/locales'
 
@@ -39,9 +40,10 @@ function AppHeader({
           <Link
             to="/"
             onClick={closeMobileMenu}
-            className="rounded-sm text-slate-50 transition hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="flex items-center gap-2 rounded-sm text-slate-50 transition hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
-            {t('common.appName')}
+            <BrandLogo className="h-10 w-10 shrink-0" />
+            <span>{t('common.appName')}</span>
           </Link>
         </h1>
 
@@ -96,7 +98,7 @@ function AppHeader({
           {session ? (
             <>
               <img
-                src={navAvatarUrl || '/vite.svg'}
+                src={navAvatarUrl || BRAND_LOGO_SRC}
                 alt={t('header.userAvatarAlt')}
                 className="h-8 w-8 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
                 loading="lazy"
@@ -142,7 +144,7 @@ function AppHeader({
             <>
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                 <img
-                  src={navAvatarUrl || '/vite.svg'}
+                  src={navAvatarUrl || BRAND_LOGO_SRC}
                   alt={t('header.userAvatarAlt')}
                   className="h-7 w-7 rounded-full border border-white/20 bg-white/10 object-cover p-0.5"
                   loading="lazy"

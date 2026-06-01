@@ -455,8 +455,8 @@ function HeroTimelineCinematic({ slug, heroName, fallbackImage, timelineLogoSrc 
                         <div className="h-px bg-linear-to-r from-transparent via-accent/80 to-transparent" aria-hidden="true" />
                         <div className="min-w-0 flex-1 p-3 sm:p-4">
                           {stageName ? <TimelineStageTab label={stageName} variant="dark" layout="inline" /> : null}
-                          <div className="mt-3 flex min-w-0 gap-3">
-                            <div className="relative w-20 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-slate-900/60 shadow-xl shadow-black/45 sm:w-24">
+                          <div className="mt-3 flex min-w-0 flex-col gap-3 sm:flex-row">
+                            <div className="relative mx-auto w-full max-w-[17rem] shrink-0 overflow-hidden rounded-xl border border-white/15 bg-slate-900/60 shadow-xl shadow-black/45 sm:mx-0 sm:w-24">
                               <div className="aspect-2/3 w-full">
                                 {coverImage ? (
                                   <button
