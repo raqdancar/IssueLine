@@ -88,7 +88,7 @@ describe('buildTimelineViewModel', () => {
     expect(entries.map((entry) => entry.id)).toEqual(['1', '2', '3'])
   })
 
-  it('uses explicit event type before legacy special-text heuristics', () => {
+  it('uses only explicit event_type for editorial milestones', () => {
     const entries = [
       createEntry({
         id: 'special-issue',
@@ -104,6 +104,12 @@ describe('buildTimelineViewModel', () => {
         issueDate: '2020-02-01',
         stageName: 'Main',
       }),
+      createEntry({
+        id: 'legacy-special-text',
+        issueCode: 'Special legacy',
+        issueDate: '2020-03-01',
+        stageName: 'Main',
+      }),
     ]
 
     const viewModel = buildTimelineViewModel({
@@ -116,7 +122,13 @@ describe('buildTimelineViewModel', () => {
       t,
     })
 
-    expect(viewModel.issueAnchors.map((anchor) => anchor.targetId)).toEqual(['timeline-entry-special-issue'])
-    expect(viewModel.monthAnchors.map((anchor) => anchor.targetId)).toEqual(['timeline-entry-special-issue'])
+    expect(viewModel.issueAnchors.map((anchor) => anchor.targetId)).toEqual([
+      'timeline-entry-special-issue',
+      'timeline-entry-legacy-special-text',
+    ])
+    expect(viewModel.monthAnchors.map((anchor) => anchor.targetId)).toEqual([
+      'timeline-entry-special-issue',
+      'timeline-entry-legacy-special-text',
+    ])
   })
 })

@@ -155,7 +155,7 @@ const main = async () => {
     while (processed < queue.length) {
       const chunk = queue.slice(processed, processed + options.batch)
       const chunkUrls = chunk.map((entry) => entry.url)
-      const chunkLabels = `${chunk[0].descriptor}â€“${chunk.at(-1).descriptor}`
+      const chunkLabels = `${chunk[0].descriptor}–${chunk.at(-1).descriptor}`
       const result = await syncSeriesIssuesForHero({
         hero,
         seriesId,

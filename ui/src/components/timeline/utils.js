@@ -4,11 +4,6 @@ const textIncludes = (value, keyword) => {
   return value.toLowerCase().includes(keyword)
 }
 
-const textEquals = (value, keyword) => {
-  if (typeof value !== 'string') return false
-  return value.toLowerCase() === keyword
-}
-
 const isAnnualLike = (value) => textIncludes(value, 'annual')
 
 const isSpecialLike = (value) => textIncludes(value, 'special')
@@ -27,17 +22,6 @@ const extractIssueTextCandidates = (entry) => {
   ]
 }
 
-const extractSpecialEventTextCandidates = (entry) => {
-  const metadata = entry?.metadata ?? {}
-  return [
-    entry?.issue_code,
-    metadata.issue_code,
-    metadata.issueCode,
-    metadata.issueLabel,
-    metadata.issue_label,
-  ]
-}
-
 export const isAnnualIssueEntry = (entry) => {
   if (!entry) return false
   const metadata = entry.metadata ?? {}
@@ -50,21 +34,7 @@ export const isAnnualIssueEntry = (entry) => {
 }
 
 export const isSpecialTimelineEventEntry = (entry) => {
-  if (!entry) return false
-  const metadata = entry.metadata ?? {}
-  const eventType = entry.event_type ?? entry.eventType ?? metadata.event_type ?? metadata.eventType
-
-  if (eventType === 'milestone') return true
-  if (eventType === 'issue') return false
-
-  // Special milestones may arrive as explicit categories or plain "Special" issue_code labels.
-  if (textEquals(metadata.issue_category, 'special') || textEquals(metadata.issueCategory, 'special')) return true
-  if (textEquals(metadata.special_issue_type, 'special') || textEquals(metadata.specialIssueType, 'special')) return true
-  if ((entry.special_issue || entry.specialIssue || metadata.special_issue || metadata.specialIssue) && !isAnnualIssueEntry(entry)) {
-    return true
-  }
-
-  return extractSpecialEventTextCandidates(entry).some((value) => isSpecialLike(value))
+  return entry?.event_type === 'milestone'
 }
 
 export const isSpecialIssueEntry = (entry) => {

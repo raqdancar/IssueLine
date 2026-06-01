@@ -249,7 +249,7 @@ curl -X POST http://localhost:4600/hero-timelines ^
 
 Click any hero portrait in the dashboard to open `/heroes/:slug`, where the detailed profile and Aceternity-inspired timeline component now live. If a slug is missing, rerun `npm run seed:superheroes` so the ingestor re-slugifies older rows.
 
-Timeline rows use `event_type` to distinguish imported comics (`issue`) from editorial events (`milestone`). The editorial `POST /hero-timelines` endpoint defaults to `milestone`; GCD ingestion writes `issue`.
+Timeline rows use `event_type` to distinguish imported comics (`issue`) from editorial events (`milestone`). The editorial `POST /hero-timelines` endpoint defaults to `milestone`; GCD ingestion writes `issue`. The UI renders editorial milestones exclusively from `event_type`; it no longer infers them from labels or legacy metadata.
 
 ## Grand Comics Database ingestion
 
@@ -259,8 +259,8 @@ To ingest every Doctor Strange (or any hero) issue from the [Grand Comics Databa
 2. Ensure your backend `.env` includes working GCD credentials (`GCD_USERNAME`/`GCD_PASSWORD` or `GCD_SESSION_ID`) plus `GCD_ALLOW_MANUAL_SYNC=true` while testing.
 3. Start the backend (`npm --prefix backend run dev`).
 4. Use the new endpoints:
-   - `POST /gcd/heroes/:slug/series/:seriesId/sync` â†’ fetches issues from a specific GCD series, upserts them into `hero_issues`, and adds timeline rows for any new issues. Payload accepts `{ "limit": 50, "startPage": 1 }`.
-   - `POST /gcd/heroes/:slug/timeline/refresh-covers` â†’ fixes cover URLs (also used automatically by the sync).
+   - `POST /gcd/heroes/:slug/series/:seriesId/sync` → fetches issues from a specific GCD series, upserts them into `hero_issues`, and adds timeline rows for any new issues. Payload accepts `{ "limit": 50, "startPage": 1 }`.
+   - `POST /gcd/heroes/:slug/timeline/refresh-covers` → fixes cover URLs (also used automatically by the sync).
 5. Example (Doctor Strange, Strange Tales series #824):
 
 ```powershell
@@ -290,7 +290,7 @@ To upload a local cover image to storage and sync `cover_image_url`:
 npm run upload:collected-cover -- --collected-id=<uuid> --file=<local-image-path>
 ```
 
-To automate multi-page imports without hitting GCDâ€™s 20-requests/min limit, use the helper script:
+To automate multi-page imports without hitting GCD’s 20-requests/min limit, use the helper script:
 
 ```bash
 npm --prefix backend run sync:gcd -- doctor-strange 824 --batch=12 --delay=65000 --issue-start=131 --issue-end=168
