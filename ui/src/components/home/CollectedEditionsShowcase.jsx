@@ -40,8 +40,7 @@ function CollectedEditionsShowcase() {
               </article>
             ))}
           </div>
-          <div className="mt-6 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm font-semibold text-slate-600">{t('home.editions.note')}</p>
+          <div className="mt-6 flex justify-end border-t border-slate-200 pt-5">
             <a
               href="#timeline-preview"
               className="inline-flex items-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"

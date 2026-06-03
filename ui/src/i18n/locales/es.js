@@ -188,20 +188,20 @@ const messages = {
           'IssueLine mantiene simples los flujos de coleccionista y conserva el contexto editorial que hace importante cada issue.',
         steps: {
           track: {
-            title: 'Track collection',
-            body: 'Marca lo que tienes en grapas y recopilatorios sin perder el orden de publicacion.',
+            title: 'Controla tu colección',
+            body: 'Marca lo que tienes en grapas y recopilatorios sin perder el orden de publicación.',
           },
           read: {
-            title: 'Mark as read',
-            body: 'Separa posesion y lectura para convertir cada run en una cola de lectura guiada.',
+            title: 'Marca como leído',
+            body: 'Separa posesión y lectura para convertir cada run en una cola de lectura guiada.',
           },
           missing: {
-            title: 'Discover missing issues',
-            body: 'Detecta issues faltantes, eras saltadas y etapas incompletas antes de buscar la siguiente edicion.',
+            title: 'Descubre números que faltan',
+            body: 'Detecta números que faltan, eras saltadas y etapas incompletas antes de buscar la siguiente edición.',
           },
           history: {
-            title: 'Explore publishing history',
-            body: 'Recorre decadas de continuidad por ano, etapa, issue e hito editorial.',
+            title: 'Explora la historia editorial',
+            body: 'Recorre décadas de continuidad por año, etapa, número e hito editorial.',
           },
         },
       },
@@ -242,7 +242,6 @@ const messages = {
         title: 'Las grapas son solo una parte de la estanteria.',
         description:
           'IssueLine esta preparado para mostrar omnibus, TPBs, ediciones deluxe, lineas tipo Marvel Gold y futura cobertura de recopilatorios junto a la timeline.',
-        note: 'Showcase estatico hoy, mapeo dinamico de recopilatorios manana.',
         cta: 'Ver contexto timeline',
         items: {
           omnibus: { title: 'Omnibus', meta: 'Runs completos' },

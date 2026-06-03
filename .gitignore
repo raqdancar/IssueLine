@@ -20,6 +20,9 @@ backend/node_modules/*
 # misc
 .DS_Store
 *.pem
+tmp*.txt
+*.patch
+*.diff
 
 # debug
 npm-debug.log*

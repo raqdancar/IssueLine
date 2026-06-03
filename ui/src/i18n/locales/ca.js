@@ -118,7 +118,7 @@ const messages = {
     home: {
       hero: {
         eyebrow: 'Timelines editorials per a col leccionistes',
-        title: 'Explora decades d historia editorial com una col leccio viva.',
+        title: 'Explora decades d`historia editorial com una col·leccio viva.',
         subtitle:
           'Segueix runs, eres, portades, buits, recopilatoris i progres de lectura amb timelines visuals pensades per a arxius de comic.',
         primaryCta: 'Explorar timeline',
@@ -188,20 +188,20 @@ const messages = {
           'IssueLine mante simples els fluxos de col leccionista i conserva el context editorial que fa important cada numero.',
         steps: {
           track: {
-            title: 'Track collection',
-            body: 'Marca el que tens en grapa i recopilatoris sense perdre l ordre de publicacio.',
+            title: 'Segueix la col·lecció',
+            body: "Marca el que tens en grapa i recopilatoris sense perdre l'ordre de publicació.",
           },
           read: {
-            title: 'Mark as read',
-            body: 'Separa possessio i lectura per convertir cada run en una cua de lectura guiada.',
+            title: 'Marca com a llegit',
+            body: 'Separa possessió i lectura per convertir cada run en una cua de lectura guiada.',
           },
           missing: {
-            title: 'Discover missing issues',
-            body: 'Detecta numeros que falten, eres saltades i etapes incompletes abans de buscar la seguent edicio.',
+            title: 'Descobreix números que falten',
+            body: 'Detecta números que falten, eres saltades i etapes incompletes abans de buscar la següent edició.',
           },
           history: {
-            title: 'Explore publishing history',
-            body: 'Recorre decades de continuitat per any, etapa, numero i fita editorial.',
+            title: 'Explora la història editorial',
+            body: 'Recorre dècades de continuïtat per any, etapa, número i fita editorial.',
           },
         },
       },
@@ -242,7 +242,6 @@ const messages = {
         title: 'Les grapes son nomes una part de la prestatgeria.',
         description:
           'IssueLine esta preparat per mostrar omnibus, TPBs, edicions deluxe, linies tipus Marvel Gold i futura cobertura de recopilatoris al costat de la timeline.',
-        note: 'Showcase estatic avui, mapatge dinamic de recopilatoris dema.',
         cta: 'Veure context timeline',
         items: {
           omnibus: { title: 'Omnibus', meta: 'Runs complets' },

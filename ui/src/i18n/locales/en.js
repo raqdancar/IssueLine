@@ -242,7 +242,6 @@ const messages = {
       title: 'Singles are only one part of the shelf.',
       description:
         'IssueLine shows omnibus, trade paperbacks, deluxe editions, Marvel Gold style lines, and future collected-format coverage beside the timeline.',
-      note: 'Static showcase today, dynamic collected-edition mapping tomorrow.',
       cta: 'See timeline context',
       items: {
         omnibus: { title: 'Omnibus', meta: 'Oversized runs' },
