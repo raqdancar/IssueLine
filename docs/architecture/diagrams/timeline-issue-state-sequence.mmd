@@ -1,0 +1,63 @@
+sequenceDiagram
+  autonumber
+  actor User as Usuari
+  participant UI as React UI / React Query
+  participant Client as Client anònim de Supabase
+  participant API as Backend Express
+  participant Auth as Supabase Auth
+  participant DB as Supabase Postgres
+
+  User->>UI: Obre /heroes/:slug
+
+  par Perfil públic de l'heroi
+    UI->>Client: Selecciona superhero i hero_images actives
+    Client->>DB: SELECT anònim protegit per RLS
+    DB-->>Client: Perfil i imatges de l'heroi
+    Client-->>UI: Dades del catàleg de l'heroi
+  and Payload públic de timeline
+    UI->>API: GET /hero-timelines/:slug
+    API->>DB: Selecciona hero_timelines
+    API->>DB: Carrega dades canòniques de hero_issues via hero_issue_id
+    API->>DB: Carrega etapes, recopilatoris i enllaços
+    DB-->>API: Files del domini de timeline
+    API-->>UI: entries + collectedEditionsOverview
+  end
+
+  Note over UI: Renderitza targetes editorials només quan event_type = milestone
+
+  opt Usuari autenticat
+    UI->>API: GET /issue-states?heroSlug=... amb Bearer JWT
+    API->>Auth: auth.getUser(token)
+    Auth-->>API: ID d'usuari vàlid
+    API->>DB: Selecciona user_issue_states i formats seleccionats
+    DB-->>API: Estat de col·lecció per número
+    API-->>UI: states[]
+  end
+
+  User->>UI: Marca El tinc, Llegit o un format recopilat
+  UI->>UI: Aplica l'actualització optimista de React Query
+  UI->>API: PATCH /issue-states/:issueId amb Bearer JWT
+  API->>Auth: auth.getUser(token)
+  Auth-->>API: ID d'usuari vàlid
+  API->>DB: Cerca la fila hero_timelines i el hero_issue_id enllaçat
+
+  opt S'ha indicat una selecció de recopilatori
+    API->>DB: Valida collected_edition_issue_links
+  end
+
+  alt Estat buit després del patch
+    API->>DB: Elimina la fila user_issue_states i les seleccions de format
+  else L'estat continua registrat
+    API->>DB: Upsert de user_issue_states i sincronitza les seleccions de format
+  end
+
+  opt Recopilatori seleccionat en propietat
+    API->>DB: Propaga have_it pels enllaços hero_issue_id
+  end
+
+  DB-->>API: Estat consolidat i ids de números propagats
+  API-->>UI: Estat del número actualitzat
+  UI->>UI: Reconcilia la memòria cau i revalida
+  UI-->>User: Controls de col·lecció actualitzats
+
+  Note over UI,API: Les variants massives usen endpoints POST autenticats<br/>per a lectura d'etapes i propietat o lectura de recopilatoris

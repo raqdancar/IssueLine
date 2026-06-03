@@ -2,13 +2,13 @@
 
 Aquest document descriu els scripts CLI principals d'IssueLine, com executar-los i quins paràmetres fan servir.
 
-**Darrera actualització:** 1 de maig de 2026.
+**Darrera actualització:** 1 de juny de 2026.
 
 **Nota:** document elaborat amb l'ajuda del model Codex 5.3.
 
 ## 1. Requisits previs
 
-- Node.js `20` (o superior on s'indica al subprojecte).
+- Node.js `24`. El repositori fixa `v24.16.0` a `.nvmrc`; si tens `nvm`, executa `nvm use`.
 - Dependències instal·lades:
   - Arrel del repo: `npm install`
   - Backend: `npm --prefix backend install`

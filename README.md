@@ -57,6 +57,11 @@ npm run check
 
 The repository also includes a GitHub Actions workflow at `.github/workflows/ci.yml` that runs the same lint, test, and build flow on pull requests and pushes to `main`.
 
+## Diagrames d'arquitectura
+
+Els diagrames actualitzats d'infraestructura, arquitectura de l'aplicació i model
+de dades de Supabase són a [`docs/architecture/`](docs/architecture/README.md).
+
 ## Deploy: Render (backend) + Vercel (frontend)
 
 This repo now includes:

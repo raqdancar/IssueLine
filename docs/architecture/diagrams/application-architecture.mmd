@@ -1,0 +1,80 @@
+flowchart TB
+  subgraph browser["Navegador: React/Vite SPA"]
+    pages["Pàgines + rutes<br/>inici, detall de l'heroi, compte, polítiques"]
+    components["UI de timeline<br/>clàssica, cinemàtica, anàlisi, diàlegs"]
+    hooks["Hooks de React Query<br/>timeline, detall dels números, estats dels números"]
+    uiSupabase["Client anònim de Supabase<br/>lectures del catàleg, auth, avatars"]
+    http["Clients REST<br/>VITE_BACKEND_URL"]
+
+    pages --> components
+    pages --> hooks
+    components --> hooks
+    hooks --> http
+    pages --> uiSupabase
+  end
+
+  subgraph backend["Backend a Render: Node/Express"]
+    routes["Rutes REST<br/>/hero-timelines<br/>/hero-images<br/>/gcd<br/>/issue-states"]
+    guards["Middleware d'auth<br/>token bearer de Supabase<br/>control del rol admin"]
+    hero["Domini de timeline d'heroi<br/>dades canòniques + fites"]
+    issueState["Domini d'estat dels números<br/>en propietat, llegits, formats recopilats"]
+    gcd["Domini GCD<br/>mapatge, sincronització, portades, límits de taxa"]
+    collected["Domini de recopilatoris<br/>importació + enllaçat"]
+    repositories["Repositoris<br/>client de servei de Supabase"]
+
+    routes --> guards
+    routes --> hero
+    routes --> issueState
+    routes --> gcd
+    gcd --> hero
+    gcd --> collected
+    hero --> repositories
+    issueState --> repositories
+    gcd --> repositories
+    collected --> repositories
+  end
+
+  subgraph cli["CLI operativa local"]
+    seed["seed:superheroes"]
+    gcdCli["import:gcd<br/>import:gcd:issue<br/>sync:gcd"]
+    collectedCli["import:collected-edition<br/>link:collected-edition-issues<br/>upload:collected-cover"]
+    migrationCli["supabase link<br/>migration list<br/>db push"]
+  end
+
+  subgraph data["Supabase"]
+    auth["Auth"]
+    db["Postgres + RLS"]
+    storage["Buckets d'Storage"]
+  end
+
+  externalGcd["Grand Comics Database"]
+  externalHeroes["SuperHero API"]
+
+  http --> routes
+  uiSupabase --> auth
+  uiSupabase --> db
+  uiSupabase --> storage
+  guards --> auth
+  repositories --> db
+  repositories --> storage
+  gcd --> externalGcd
+
+  seed --> externalHeroes
+  seed --> db
+  gcdCli --> externalGcd
+  gcdCli --> repositories
+  collectedCli --> externalGcd
+  collectedCli --> repositories
+  collectedCli --> storage
+  migrationCli --> db
+
+  classDef browser fill:#eef2ff,stroke:#4f46e5,color:#312e81;
+  classDef backend fill:#ecfdf5,stroke:#059669,color:#064e3b;
+  classDef operation fill:#fff7ed,stroke:#ea580c,color:#7c2d12;
+  classDef data fill:#fdf4ff,stroke:#c026d3,color:#701a75;
+  classDef external fill:#f8fafc,stroke:#64748b,color:#0f172a;
+  class pages,components,hooks,uiSupabase,http browser;
+  class routes,guards,hero,issueState,gcd,collected,repositories backend;
+  class seed,gcdCli,collectedCli,migrationCli operation;
+  class auth,db,storage data;
+  class externalGcd,externalHeroes external;

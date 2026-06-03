@@ -1,0 +1,43 @@
+sequenceDiagram
+  autonumber
+  actor Operator as Operador
+  participant CLI as CLI / scripts backend
+  participant GCD as Mòduls GCD del backend
+  participant API as Grand Comics Database API
+  participant DB as Supabase Postgres
+  participant Storage as Supabase Storage
+
+  Operator->>CLI: Executa import:gcd o sync:gcd amb heroi i sèrie
+  CLI->>GCD: Inicia la ingesta de la sèrie amb filtres i opcions de lot
+  GCD->>API: GET /series/:seriesId/
+  API-->>GCD: URLs i descriptors dels números actius
+
+  loop Per cada número seleccionat, respectant els límits de taxa
+    GCD->>API: GET /issue/:gcdIssueId/
+    API-->>GCD: Metadades del número
+  end
+
+  GCD->>DB: Upsert de la memòria cau canònica hero_issues
+  GCD->>GCD: Mapeja els números a entrades de timeline i filtra variants
+
+  alt Reingesta amb import:gcd
+    GCD->>DB: Upsert de hero_timelines per heroi + id de número GCD
+    Note over GCD,DB: event_type = issue<br/>enllaça hero_issue_id<br/>compacta metadades canòniques duplicades
+  else Lot limitat de sync:gcd
+    GCD->>DB: Insereix només les files absents de hero_timelines
+    Note over GCD,DB: event_type = issue<br/>enllaça hero_issue_id
+  end
+
+  opt Filtratge de variants activat
+    GCD->>DB: Elimina les files de timeline de variants excloses
+  end
+
+  opt Portades ja pujades
+    GCD->>Storage: Resol els objectes de portada coincidents
+    GCD->>DB: Desa hero_issues.cover_image_path
+    GCD->>DB: Actualitza les metadades de compatibilitat de timeline
+  end
+
+  DB-->>GCD: Files desades i recomptes d'operacions
+  GCD-->>CLI: Obtinguts, amb upsert, inserits, actualitzats, omesos
+  CLI-->>Operator: Resum final al terminal

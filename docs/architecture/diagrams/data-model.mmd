@@ -1,0 +1,113 @@
+erDiagram
+  AUTH_USERS ||--o{ USER_ISSUE_STATES : posseeix
+  AUTH_USERS ||--o{ USER_ISSUE_COLLECTED_EDITIONS : selecciona
+  AUTH_USERS ||--o{ LOGIN_AUDIT : registra
+
+  SUPERHEROES ||--o{ HERO_IMAGES : te
+  SUPERHEROES ||--o{ HERO_ISSUE_STAGES : agrupa
+  SUPERHEROES ||--o{ HERO_ISSUES : desa_cache
+  SUPERHEROES ||--o{ HERO_TIMELINES : publica
+  SUPERHEROES ||--o{ COLLECTED_EDITIONS : cataloga
+
+  HERO_ISSUE_STAGES o|--o{ HERO_TIMELINES : etiqueta
+  HERO_ISSUES o|--o{ HERO_TIMELINES : numero_canonic
+  HERO_ISSUES ||--o{ COLLECTED_EDITION_ISSUE_LINKS : numero_inclos
+  COLLECTED_EDITIONS ||--o{ COLLECTED_EDITION_ISSUE_LINKS : conte
+
+  HERO_TIMELINES ||--o{ USER_ISSUE_STATES : registra
+  HERO_TIMELINES ||--o{ USER_ISSUE_COLLECTED_EDITIONS : registra
+  COLLECTED_EDITIONS ||--o{ USER_ISSUE_COLLECTED_EDITIONS : format_seleccionat
+
+  AUTH_USERS {
+    uuid id PK
+    jsonb app_metadata
+    jsonb user_metadata
+  }
+
+  SUPERHEROES {
+    int api_id PK
+    text slug
+    text name
+    text publisher
+    jsonb raw
+  }
+
+  HERO_IMAGES {
+    uuid id PK
+    int hero_api_id FK
+    text storage_path
+    text public_url
+    bool is_active
+  }
+
+  HERO_ISSUE_STAGES {
+    bigint id PK
+    int hero_api_id FK
+    text key
+    text name
+    text summary
+  }
+
+  HERO_ISSUES {
+    uuid id PK
+    int hero_api_id FK
+    int gcd_issue_id
+    int timeline_order
+    text series_name
+    text number
+    text cover_image_path
+    jsonb raw
+  }
+
+  HERO_TIMELINES {
+    uuid id PK
+    int hero_api_id FK
+    uuid hero_issue_id FK
+    bigint stage_id FK
+    text event_type "issue | milestone"
+    text headline
+    date issue_date
+    text legacy_number
+    bool special_issue
+    jsonb metadata
+  }
+
+  COLLECTED_EDITIONS {
+    uuid id PK
+    int hero_api_id FK
+    text title
+    text format
+    text print_language
+    text cover_image_url
+    text source_external_id
+  }
+
+  COLLECTED_EDITION_ISSUE_LINKS {
+    uuid id PK
+    uuid collected_edition_id FK
+    uuid hero_issue_id FK
+    text notes
+  }
+
+  USER_ISSUE_STATES {
+    uuid id PK
+    uuid user_id FK
+    uuid issue_id FK
+    bool have_it
+    bool read_it
+  }
+
+  USER_ISSUE_COLLECTED_EDITIONS {
+    uuid id PK
+    uuid user_id FK
+    uuid issue_id FK
+    uuid collected_edition_id FK
+  }
+
+  LOGIN_AUDIT {
+    uuid id PK
+    uuid user_id FK
+    text email
+    text source
+    timestamptz created_at
+  }

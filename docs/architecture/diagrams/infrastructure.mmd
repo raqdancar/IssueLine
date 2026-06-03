@@ -1,0 +1,51 @@
+flowchart LR
+  visitor["Visitant / usuari autenticat"]
+  admin["Administrador editorial"]
+  operator["Operador<br/>scripts CLI locals"]
+  github["Repositori GitHub"]
+  ci["GitHub Actions<br/>npm run check"]
+
+  subgraph vercel["Vercel"]
+    spa["React 19 + Vite SPA<br/>ui/dist"]
+  end
+
+  subgraph render["Render"]
+    api["Node 24 + Express API<br/>servei Docker<br/>GET /health"]
+  end
+
+  subgraph supabase["Projecte Supabase"]
+    auth["Auth<br/>sessions + rols a app_metadata"]
+    postgres["Postgres + RLS<br/>migracions versionades"]
+    storage["Storage<br/>avatars: privat<br/>hero-images: públic<br/>issue-images: públic<br/>collected-edition-images: públic"]
+  end
+
+  gcd["Grand Comics Database<br/>comics.org/api"]
+  superhero["SuperHero API"]
+
+  visitor -->|"HTTPS"| spa
+  admin -->|"HTTPS"| spa
+  spa -->|"clau anon<br/>lectures públiques del catàleg"| postgres
+  spa -->|"inici de sessió, actualitzacions del perfil"| auth
+  spa -->|"URLs signats d'avatar<br/>URLs públiques de portades"| storage
+  spa -->|"REST<br/>VITE_BACKEND_URL"| api
+
+  api -->|"service role<br/>lectures + escriptures de domini"| postgres
+  api -->|"verifica el token bearer"| auth
+  api -->|"pujades d'imatges"| storage
+  api -->|"ingesta amb límit de taxa"| gcd
+
+  operator -->|"service role<br/>seed + importació + manteniment"| postgres
+  operator -->|"sèries, números, recopilatoris"| gcd
+  operator -->|"seed d'herois"| superhero
+  operator -->|"pujades de portades"| storage
+
+  github --> ci
+  github -->|"desplegament frontend"| spa
+  github -->|"desplegament Docker Blueprint"| api
+
+  classDef actor fill:#f8fafc,stroke:#64748b,color:#0f172a;
+  classDef platform fill:#eff6ff,stroke:#2563eb,color:#1e3a8a;
+  classDef external fill:#fff7ed,stroke:#ea580c,color:#7c2d12;
+  class visitor,admin,operator actor;
+  class spa,api,auth,postgres,storage,ci platform;
+  class github,gcd,superhero external;
