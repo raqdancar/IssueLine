@@ -1,13 +1,8 @@
-# IssueLine (Català)
+# IssueLine (Catala)
 
-## Requisits
+IssueLine es una app per gestionar col.leccions de comics, timelines editorials, recopilatoris i progres de lectura.
 
-- Node.js 24 LTS. El repo fixa `v24.16.0` a `.nvmrc`; si tens `nvm`, executa `nvm use`.
-- Compte de Supabase amb projecte actiu.
-
-En Windows PowerShell, si `npm` queda bloquejat per la politica d'execucio, usa `npm.cmd ...` (per exemple `npm.cmd run dev:all`) o habilita scripts locals amb `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
-
-## Inici ràpid
+## Inici Rapid
 
 ```bash
 npm install
@@ -16,119 +11,34 @@ npm --prefix backend install
 npm run dev:all
 ```
 
-## Execució en local
+Frontend: `http://localhost:5173`
 
-Des de l'arrel del repositori:
+Backend: `http://localhost:4600/health`
 
-```bash
-# Frontend en mode desenvolupament (Vite + HMR)
-npm run dev
+## Requisits
 
-# Frontend + backend alhora
-npm run dev:all
+- Node.js 24 LTS. La versio fixada es a `.nvmrc`.
+- Projecte de Supabase amb taules, politiques, Auth i buckets necessaris.
+- `.env` a l'arrel amb variables de Supabase i backend.
 
-# Àlies d'inici local (actualment apunta a dev)
-npm run start
-```
+En Windows PowerShell, usa `npm.cmd ...` si `npm` queda bloquejat.
 
-Comportament actual dels scripts de l'arrel:
-- `npm run dev`: arrenca el frontend (`ui`).
-- `npm run dev:all`: arrenca frontend i backend alhora.
-- `npm run start`: és un àlies de `npm run dev`.
-
-Si també vols arrencar el backend en local:
+## Comandes Habituals
 
 ```bash
-# Backend amb autorecàrrega (nodemon)
-npm run backend:dev
-
-# Backend sense autorecàrrega
-npm run backend:start
+npm run dev          # nomes frontend
+npm run dev:all      # frontend + backend
+npm run check        # lint, tests i build UI
+npm run build        # build UI de produccio
 ```
 
-## Deploy: Render (backend) + Vercel (frontend)
+## Documentacio
 
-El repositori inclou:
-- `render.yaml` per al backend (`backend/Dockerfile`, health check `/health`)
-- `vercel.json` per al build del frontend (`ui/dist`) amb reescriptures SPA
+- [Guia del projecte](docs/project-guide-ca.md)
+- [Guia del projecte en angles](docs/project-guide.md)
+- [Arquitectura](docs/architecture/README.md)
+- [Manual CLI](docs/manuals/manual-cli-ca.md)
 
-### 1) Desplegar backend a Render
+## Release
 
-1. Puja el repo a GitHub.
-2. A Render, crea un **Blueprint** des del repositori (`render.yaml`).
-3. Configura variables secretes al servei `issueline-backend`:
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-4. Opcional però recomanat:
-   - `BACKEND_ALLOWED_ORIGINS=https://<domini-vercel>`
-   - mantenir `BACKEND_ALLOWED_ORIGIN_PATTERNS=https://*.vercel.app`
-5. Desplega i copia la URL del backend.
-
-### 2) Desplegar frontend a Vercel
-
-1. Importa el mateix repositori a Vercel.
-2. Mantén la root del projecte al repo root (el `vercel.json` ja construeix `ui/`).
-3. Afegeix variables:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_BACKEND_URL=https://<domini-render>`
-4. Desplega.
-
-### 3) Validació final de CORS
-
-Quan tinguis la URL final de Vercel:
-- actualitza `BACKEND_ALLOWED_ORIGINS` a Render amb aquesta URL
-- torna a desplegar el backend
-
-## Configurar Supabase
-
-1. Copia `ui/.env.example` a `.env` a l'arrel del repo.
-2. Omple credencials:
-
-```bash
-VITE_SUPABASE_URL=https://<projecte>.supabase.co
-VITE_SUPABASE_ANON_KEY=<anon-key>
-VITE_SUPABASE_AVATAR_BUCKET=avatars
-```
-
-3. (Opcional) afegeix `SUPABASE_SERVICE_ROLE_KEY` al mateix `.env` per scripts/backend.
-4. Assegura almenys un usuari a **Supabase Auth > Users**.
-
-## Hero timeline i backend
-
-Per funcionalitats de timeline i imatges:
-
-1. Instal·la dependències backend:
-```bash
-npm --prefix backend install
-```
-2. Arrenca backend:
-```bash
-npm --prefix backend run dev
-```
-3. El frontend consumeix `VITE_BACKEND_URL` (exemple local: `http://localhost:4600`).
-
-## Comandes útils
-
-- `npm run dev`: arrenca frontend (Vite).
-- `npm run dev:all`: arrenca frontend i backend alhora.
-- `npm run start`: àlies de dev (actualment).
-- `npm run build`: build de producció frontend.
-- `npm run preview`: previsualització del build.
-- `npm run ui:test`: tests unitaris del frontend (Vitest).
-- `npm run ui:test:watch`: tests del frontend en mode watch.
-- `npm run backend:test`: tests unitaris del backend.
-- `npm run backend:test:coverage`: tests del backend amb coverage.
-- `npm run backend:dev`: backend en desenvolupament.
-- `npm run backend:start`: backend en mode execució.
-- `npm run verify:prod`: comprovació ràpida frontend/backend desplegats.
-- `npm run seed:superheroes`: omplir cache d'herois.
-- `npm run import:gcd`: importador intern GCD (sèrie).
-- `npm run import:gcd:issue`: importador intern GCD (issue).
-- `npm run import:collected-edition`: importador de recopilatoris.
-- `npm run upload:collected-cover`: pujada de portada de recopilatori.
-
-## Notes
-
-- El frontend viu a `ui/`: quan treballis directament aquí, pots usar `npm --prefix ui <comanda>`.
-- El backend viu a `backend/` i està preparat per deploy via Docker a Render.
+Release major actual: `v1.0.0`
