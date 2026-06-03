@@ -164,12 +164,6 @@ Duplicate and re-import behavior:
 - Example: for hero `doctor-strange` and folder `doctor_strange_2018`, importer first scans `covers/doctor-strange/doctor_strange_2018`
 - Backward compatibility: if no files are found, importer falls back to legacy `covers/<folder>`
 
-### Doctor Strange migration SQL
-
-To migrate existing Doctor Strange cover paths to hero-scoped folders:
-
-- [20260419_doctor_strange_cover_paths.sql](c:\Users\danil\OneDrive\Desktop\IssueLine\supabase\sql\20260419_doctor_strange_cover_paths.sql)
-
 ### Deterministic cover matching
 
 The importer matches covers in this order:
@@ -219,8 +213,7 @@ Duplicate handling:
 Data model:
 - `collected_editions` is intentionally separate from `hero_issues`.
 - `collected_edition_issue_links` is created for future manual linking to contained single issues (not used by this first CLI version).
-- Apply migrations with `npm run supabase:push`.
-- Existing projects should follow the one-time migration baseline instructions in the root `README.md`.
+- The target Supabase project must already include the collected-edition tables and policies.
 
 ### Linking collected editions to single issues (manual CLI)
 

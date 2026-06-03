@@ -33,7 +33,7 @@ Les exportacions SVG es troben al costat de les fonts Mermaid:
   és el flux de presentació i enllaça els números importats mitjançant `hero_issue_id`.
 - `hero_timelines.event_type` és l'única font de veritat de la UI per a les fites
   editorials: `issue` per als còmics importats i `milestone` per als esdeveniments editorials.
-- Els canvis d'esquema es versionen a `supabase/migrations/`.
+- L'esquema de Supabase es considera ja provisionat en l'entorn de producciÃ³.
 
 ## Regeneració de les exportacions SVG
 
